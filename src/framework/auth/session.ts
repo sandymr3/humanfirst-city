@@ -17,7 +17,7 @@ import {
   signOut,
   type User,
 } from 'firebase/auth';
-import { appConfig } from '@/config/appConfig';
+import { appConfig, isApiConfigured } from '@/config/appConfig';
 import { api } from '@/framework/api/client';
 import { setTokenProvider } from '@/framework/api/client';
 import { events } from '@/framework/events';
@@ -43,6 +43,9 @@ export interface LoginOutcome {
 
 const CONFIG_MISSING_MSG =
   "The city isn't configured yet (missing Firebase key). Copy .env.example to .env and set VITE_FIREBASE_API_KEY.";
+
+const API_CONFIG_MISSING_MSG =
+  "This deployment isn't configured with a backend (missing VITE_API_BASE_URL). Contact the site admin.";
 
 // Set while an interactive login() owns the upcoming bootstrap, so the
 // onIdTokenChanged listener in AuthProvider (which fires on the same sign-in)
@@ -76,6 +79,7 @@ export async function login(
 
   const auth = getFirebaseAuth();
   if (!auth) return { status: 'config_missing', message: CONFIG_MISSING_MSG };
+  if (!isApiConfigured()) return { status: 'config_missing', message: API_CONFIG_MISSING_MSG };
 
   interactiveLoginInFlight = true;
   try {

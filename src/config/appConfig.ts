@@ -86,7 +86,11 @@ function resolve() {
 
   const mockAuth = fromEnv('VITE_CITY_MOCK_AUTH') === '1';
 
-  return { ...cfg, mockAuth };
+  // Nobody explicitly set an API base URL — we're still on the localhost dev
+  // default. Harmless on a local dev server; unreachable from any real deploy.
+  const apiBaseUrlIsDefault = !envBase && !w?.apiBaseUrl;
+
+  return { ...cfg, mockAuth, apiBaseUrlIsDefault };
 }
 
 export const appConfig = resolve();
@@ -94,6 +98,18 @@ export const appConfig = resolve();
 /** True when login can proceed — real Firebase key present, or dev-mock mode. */
 export function isConfigured(): boolean {
   return appConfig.mockAuth || appConfig.firebaseApiKey.trim() !== '';
+}
+
+/**
+ * True when the backend base URL has been explicitly configured (or we're in
+ * dev-mock mode). In a production build (import.meta.env.PROD) that's still
+ * on the localhost:8080 default, no request can ever reach a real backend —
+ * that's a deploy-config bug (missing VITE_API_BASE_URL), not a network blip.
+ */
+export function isApiConfigured(): boolean {
+  if (appConfig.mockAuth) return true;
+  if (!appConfig.apiBaseUrlIsDefault) return true;
+  return !import.meta.env.PROD;
 }
 
 /** Build a full backend URL from a "/api/v1/..." path. */
