@@ -14,4 +14,9 @@ describe('normalizeBaseUrl', () => {
   it('leaves a bare origin intact', () => {
     expect(normalizeBaseUrl('http://localhost:8080')).toBe('http://localhost:8080');
   });
+
+  it('strips a trailing /api/v1 (pasted-with-path mistake) to avoid doubled paths', () => {
+    expect(normalizeBaseUrl('https://svc-uc.a.run.app/api/v1')).toBe('https://svc-uc.a.run.app');
+    expect(normalizeBaseUrl('https://svc-uc.a.run.app/api/v1/')).toBe('https://svc-uc.a.run.app');
+  });
 });

@@ -44,6 +44,15 @@ export interface LoginOutcome {
 const CONFIG_MISSING_MSG =
   "The city isn't configured yet (missing Firebase key). Copy .env.example to .env and set VITE_FIREBASE_API_KEY.";
 
+// Set while an interactive login() owns the upcoming bootstrap, so the
+// onIdTokenChanged listener in AuthProvider (which fires on the same sign-in)
+// doesn't race it with a second, duplicate bootstrap() call.
+let interactiveLoginInFlight = false;
+
+export function isInteractiveLoginInFlight(): boolean {
+  return interactiveLoginInFlight;
+}
+
 /** Interactive login: Firebase sign-in → bootstrap. Returns a renderable outcome. */
 export async function login(
   email: string,
@@ -68,15 +77,18 @@ export async function login(
   const auth = getFirebaseAuth();
   if (!auth) return { status: 'config_missing', message: CONFIG_MISSING_MSG };
 
+  interactiveLoginInFlight = true;
   try {
     await setPersistence(auth, remember ? browserLocalPersistence : inMemoryPersistence);
     await signInWithEmailAndPassword(auth, email.trim(), password);
   } catch (e) {
+    interactiveLoginInFlight = false;
     useSessionStore.getState().reset();
     return outcomeForFirebase(firebaseErrorCode(e));
   }
 
   const ok = await bootstrap();
+  interactiveLoginInFlight = false;
   if (!ok) {
     return {
       status: 'network',

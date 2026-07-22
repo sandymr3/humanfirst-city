@@ -7,7 +7,7 @@ import { onIdTokenChanged } from 'firebase/auth';
 import { appConfig } from '@/config/appConfig';
 import { useSessionStore } from '@/framework/stores/sessionStore';
 import { getFirebaseAuth } from './firebase';
-import { bootstrap, installFirebaseTokenProvider } from './session';
+import { bootstrap, installFirebaseTokenProvider, isInteractiveLoginInFlight } from './session';
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
@@ -25,7 +25,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           displayName: user.displayName ?? '',
         });
         // Remember-me cold start: a restored session lands here — bootstrap once.
-        if (useSessionStore.getState().status !== 'ready') {
+        // Skip when login() is already driving this same sign-in's bootstrap,
+        // otherwise both fire GET /registry/modules in a race.
+        if (useSessionStore.getState().status !== 'ready' && !isInteractiveLoginInFlight()) {
           await bootstrap();
         }
       } else {

@@ -51,7 +51,8 @@ function fromEnv(...names: string[]): string {
  */
 export function normalizeBaseUrl(raw: string): string {
   let u = raw.trim().replace(/\/+$/, '');
-  if (u.endsWith('/api')) u = u.slice(0, -4);
+  if (u.endsWith('/api/v1')) u = u.slice(0, -7);
+  else if (u.endsWith('/api')) u = u.slice(0, -4);
   return u.replace(/\/+$/, '');
 }
 
