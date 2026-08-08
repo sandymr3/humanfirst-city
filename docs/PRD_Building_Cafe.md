@@ -839,6 +839,10 @@ These go to the generator verbatim and are mirrored into `internal/registry/cont
 | C8 | a customer asks, directly, what changed | the supplier offers the good beans at the cheap price, once | `beans` |
 | C9 | the new place runs an opening promotion | the new place quietly closes at three on weekdays | `rival` |
 
+**Status: authored.** All eighteen live at `internal/registry/content/followups/cafe.json` in `backend-academy`, with the persona cards of §9.6.2 alongside them so the fallback and the generated beat are written from one description of each character. They pass the §11.5 machine pass — one of each tier per trio, 13–33 words per option, ≤ 8 words of spread, every option self-justifying, no verdict language, prompts under 60 words. **Not yet loaded**: `internal/registry/loader.go` reads only `content/c*.json`, so wiring the pack up is part of BE-17.
+
+**Still owed:** the fresh-reader pass (§18.2.1). The machine pass is green; the human one has not run.
+
 **A missing entry is a blocking defect** — `validate_registry` fails the build ([PRD_Backend_Missions §5.4](PRD_Backend_Missions.md)). This is what makes "no breaking at edge case" a property of the Café rather than an intention.
 
 #### 9.6.5 The one thing a Café author must not do
