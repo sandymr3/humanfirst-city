@@ -15,7 +15,7 @@ Six additive changes to `backend-academy`, none of which breaks an existing clie
 
 | | What | Why |
 |---|---|---|
-| **BE-13** | A fourth level, `PRO` (`ageBand 35-50`) | The blueprints define two tracks; only one has a level today |
+| **BE-13** | Two scenario levels, `SCA` (16–21) + `SCB` (35–50) | The blueprints define two tracks; neither has a level, and `HARD` is full (§6.4) |
 | **BE-14** | `coinsByProficiency → {1:5, 2:15, 3:25}` | `Playroom Scenarios.xlsx → Rules` |
 | **BE-15** | `PUT/GET /api/v1/city/state` | Track choice and FTUE flags need a home |
 | **BE-16** | `PUT/GET/POST /api/v1/city/buildings/{buildingId}/state` | The season survives leaving the building |
@@ -85,7 +85,7 @@ type CityState struct {
 type BuildingSession struct {
     UserID     string          `gorm:"primaryKey;type:varchar(191)" json:"-"`
     BuildingID string          `gorm:"primaryKey;type:varchar(64)" json:"buildingId"`
-    Track      string          `gorm:"type:varchar(16)" json:"track"`      // HARD | PRO — denormalised for analytics
+    Track      string          `gorm:"type:varchar(16)" json:"track"`      // SCA | SCB — denormalised for analytics
     Blob       json.RawMessage `gorm:"type:json" json:"blob"`
     Rev        int64           `gorm:"default:0" json:"rev"`
     UpdatedAt  time.Time       `json:"updatedAt"`
@@ -224,7 +224,7 @@ PUT  /api/v1/city/state
 Recommended blob shape (client-owned, documented for reviewers, not enforced):
 
 ```jsonc
-{ "track": "HARD", "ftue": { "firstEntry": true, "trackAsked": true },
+{ "track": "SCA", "ftue": { "firstEntry": true, "trackAsked": true },
   "lastDistrict": "market", "lastTile": [24, 9] }
 ```
 
@@ -238,9 +238,9 @@ POST /api/v1/city/buildings/{buildingId}/state      ← sendBeacon path only
 
 `buildingId` is validated against a server-side allow-list (`cafe`, `fashion_brand`, `bank`, …) so the table cannot be used as arbitrary key-value storage. Unknown id → `400 UNKNOWN_BUILDING`.
 
-**GET** → `200 { "buildingId": "cafe", "track": "HARD", "rev": 22, "blob": { … }, "updatedAt": "…" }`, or `{ "rev": 0, "blob": null }` when unset.
+**GET** → `200 { "buildingId": "cafe", "track": "SCA", "rev": 22, "blob": { … }, "updatedAt": "…" }`, or `{ "rev": 0, "blob": null }` when unset.
 
-**PUT** body `{ "rev": 22, "track": "HARD", "blob": { … } }` → `200 { "rev": 23, "updatedAt": "…" }`. Same `rev` / `409` semantics as BE-15. Size bound **16 KB**.
+**PUT** body `{ "rev": 22, "track": "SCA", "blob": { … } }` → `200 { "rev": 23, "updatedAt": "…" }`. Same `rev` / `409` semantics as BE-15. Size bound **16 KB**.
 
 Recommended blob shape — this is the season, per [ADR-006 §11.1](ADR-006_Missions_AI_Followups_and_Session_State.md):
 
@@ -277,8 +277,8 @@ Request:
 
 ```jsonc
 {
-  "activityId": "C1-HARD-01",
-  "track": "HARD",
+  "activityId": "C1-SCA-01",
+  "track": "SCA",
   "buildingId": "cafe",
   "path": ["c", "b"],
   "speakerId": "nadia",
@@ -289,7 +289,7 @@ Request:
 | Field | Validation |
 |---|---|
 | `activityId` | must exist, must be `activityType: "DECISION_TREE"`, must carry an `aiBeat` rubric block |
-| `track` | `HARD` \| `PRO`, must match the activity's level |
+| `track` | `SCA` \| `SCB`, must match the activity's level |
 | `buildingId` | allow-listed; must own this activity's slot (ADR-005 §10.5) |
 | `path` | exactly 2 elements, each a single letter that exists at its node in the authored tree |
 | `speakerId` | must be a cast member of that building, or the literal `"room"` |
@@ -336,7 +336,7 @@ Rate limit: **40 generations per user per hour** (a nine-mission season plus rep
   "hintsUsed": 0,
   "result": {
     "trace": {
-      "path": ["C1-HARD-01.seed", "C1-HARD-01.c", "C1-HARD-01.c.follow", "C1-HARD-01.c.b"],
+      "path": ["C1-SCA-01.seed", "C1-SCA-01.c", "C1-SCA-01.c.follow", "C1-SCA-01.c.b"],
       "followupId": "fu_01J8ZQ0S8N4T1V6M",
       "followupChoice": "o_c104de"
     }
@@ -389,7 +389,7 @@ Body `{ "buildingId", "missionOrder", "objectiveId", "event": "started"|"complet
 The file is at v0.2.0 and behind the handler; the frontend generates types from it, so staleness is silent drift. It must document, before any of the above ships:
 
 - `DECISION_TREE` as an `activityType` and `trace` as a result kind, including `followupId` / `followupChoice`
-- the `PRO` level in every level enum
+- the `SCA` and `SCB` levels in every level enum
 - `/badges`, `/profile`, `/hub/summary` (already live, already missing)
 - the structured error envelope
 - every endpoint in §4
@@ -476,7 +476,7 @@ Content, not code: `internal/registry/content/followups/{buildingId}.json`, load
   },
   "fallbacks": [
     {
-      "activityId": "C1-HARD-01",
+      "activityId": "C1-SCA-01",
       "speakerId": "nadia",
       "prompt": "…",
       "options": [
@@ -504,18 +504,18 @@ Small, because the surface is small: **the player never types anything.** The on
 
 ### 6.1 BE-13 · The scenario level(s)
 
-> **Scope depends on [ADR-005 §10.6.1](ADR-005_Interior_Framework.md).** As written below, BE-13 adds one level (`PRO`) on the assumption that Level A can reuse `HARD`. **It cannot** — `HARD` is occupied (§6.4). Under the recommended Option C this ticket adds **two** levels, `SCA` (16–21) and `SCB` (35–50), **eighteen** level badges and **two** meta badges. The shape of the work is identical; the count doubles. Do not start BE-13 until the decision lands.
+> **Resolved by [ADR-005 §10.6.1](ADR-005_Interior_Framework.md), Option C.** v1.0 of this ticket added one level (`PRO`) on the assumption that Level A could reuse `HARD`. **It cannot** — `HARD` is occupied and has progress rows against it (§6.4). BE-13 therefore adds **two** levels.
 
-`BEGINNER` (8–13) · `MEDIUM` (14–16) · `HARD` (17–21) gain **`PRO` (`ageBand: "35-50"`)**. Level A → `HARD`, Level B → `PRO` (ADR-005 §10.6).
+`BEGINNER` (8–13) · `MEDIUM` (14–16) · `HARD` (17–21) gain **`SCA` (`ageBand: "16-21"`)** and **`SCB` (`ageBand: "35-50"`)**. Level A → `SCA`, Level B → `SCB` (ADR-005 §10.6). The existing three are untouched.
 
 Touches:
 
 | File | Change |
 |---|---|
 | `cmd/validate_registry/main.go` | level allow-list; `-strict` check 3 → 4 levels |
-| `internal/registry/content/c1.json` … `c9.json` | a `PRO` level block per competency; `BADGE-C{n}-PRO` |
-| `internal/registry/content/badges.json` | nine level badges + one meta badge (**`BADGE-META-OPERATOR`** proposed — ADR-005 §20.3, KK to confirm) |
-| `internal/services/badge_service.go` | fourth entry in the level map |
+| `internal/registry/content/c1.json` … `c9.json` | an `SCA` **and** an `SCB` level block per competency; `BADGE-C{n}-SCA` and `BADGE-C{n}-SCB` |
+| `internal/registry/content/badges.json` | **eighteen** level badges + **two** meta badges (names ADR-005 §20.3, KK to confirm) |
+| `internal/services/badge_service.go` | fourth and fifth entries in the level map |
 | `internal/models/academy.go` | the `Level` comment. `varchar(16)` already fits |
 
 ### 6.2 BE-14 · Coin rescale
@@ -657,7 +657,7 @@ P0–P3 are the critical path for the Café's mission work. P4 blocks every buil
 
 ## 10. Open decisions
 
-- **The fourth meta badge name** for `PRO` (`BADGE-META-OPERATOR` proposed) — KK.
+- **The two meta badge names** for `SCA` and `SCB` (`BADGE-META-OPERATOR` was proposed when there was one) — KK. Not blocking.
 - **Beacon-token lifetime.** 5 minutes covers a normal visit; a long session would need a refresh on mission close. Alternative: mint it per mission rather than per entry. Recommendation: per entry with a silent refresh at mission close.
 - **Whether `/ai/followup` should be pre-warmed** by firing speculatively for all three follow-up branches during beat 1's consequence (ADR-006 §16). 3× cost, latency becomes a non-issue. Decide after P2's p95 is measured.
 - **Provider for the fallback-bank authoring job** and whether it lives in this service as an admin command or outside it entirely. Recommendation: outside — it is an authoring tool, not a runtime concern.

@@ -77,7 +77,7 @@ Over four quarters you will decide where the money goes, who gets it, what you c
 - The **mentor consultation** mechanic for C2 (§9.7) — three opportunities, matching the blueprint literally.
 - **18 scripted fallback transfer beats** (§9.8.4), and the **no-advice generation gate** (§9.8.3).
 - Session state synced to the backend during play and flushed on exit (§19).
-- Registry content for `C1-HARD-02 … C9-HARD-02` and `C1-PRO-02 … C9-PRO-02`.
+- Registry content for `C1-SCA-02 … C9-SCA-02` and `C1-SCB-02 … C9-SCB-02`.
 - The end-of-journey report as the annual board pack.
 
 ### Out of scope
@@ -545,7 +545,7 @@ This is the section a reviewer should read before reading §9.5, and it applies 
 
 ---
 
-### 9.4 Exemplar A — `C1-HARD-02` · "Fourteen In The Line" (Level A, fully worked)
+### 9.4 Exemplar A — `C1-SCA-02` · "Fourteen In The Line" (Level A, fully worked)
 
 **Station** `st_floor_counter` · **Host** Grace · **Q1, Monday 09:40**
 
@@ -603,7 +603,7 @@ This is the section a reviewer should read before reading §9.5, and it applies 
 
 ---
 
-### 9.5 Exemplar B — `C8-PRO-02` · "Within The Rules" (Level B, fully worked)
+### 9.5 Exemplar B — `C8-SCB-02` · "Within The Rules" (Level B, fully worked)
 
 **Station** `st_mezz_desk` · **Host** Hugh · **Q4**
 
@@ -665,9 +665,9 @@ This is the section a reviewer should read before reading §9.5, and it applies 
 
 #### C1 · Problem Sensing — `root_cause`
 
-**Level A — `C1-HARD-02`** — fully worked in §9.4.
+**Level A — `C1-SCA-02`** — fully worked in §9.4.
 
-**Level B — `C1-PRO-02` "Switchers"** · `st_floor_counter` · Grace · Q1
+**Level B — `C1-SCB-02` "Switchers"** · `st_floor_counter` · Grace · Q1
 > Wait-time complaints rising, a rival just shipped a genuinely good app, and switching to online-only banks is accelerating. One budget line. No data on what customers actually want.
 
 - Match their app this cycle. Every quarter you spend researching it is a quarter of switchers you do not get back.
@@ -676,7 +676,7 @@ This is the section a reviewer should read before reading §9.5, and it applies 
 
 #### C2 · Learning Agility — `updating_beliefs`
 
-**Level A — `C2-HARD-02` "Four To One"** · `st_mezz` · Sam + Devika · Q1
+**Level A — `C2-SCA-02` "Four To One"** · `st_mezz` · Sam + Devika · Q1
 > You bet the growth plan on branches. Sign-ups through the app are outpacing branch openings four to one, and it is the second quarter running.
 
 - Hold the branch plan. Two quarters of sign-ups is an acquisition spike, not a channel shift, and a bank that re-plans every quarter has no plan.
@@ -685,7 +685,7 @@ This is the section a reviewer should read before reading §9.5, and it applies 
 
 *Follow-ups:* **"held"** → a third quarter, same shape; Devika still insists branches are the edge · **"asked Sam"** → he finds the sign-ups are 60% existing customers opening second accounts, which changes what the number means entirely · **"shifted"** → a rival that closed all its branches gets savaged in the press for service; were you wrong?
 
-**Level B — `C2-PRO-02` "On The Record"** · `st_mezz` · Sam + Devika · Q1
+**Level B — `C2-SCB-02` "On The Record"** · `st_mezz` · Sam + Devika · Q1
 > The branch-first plan is underperforming. Sam says the future is digital. You have said the opposite to the board and to a journalist, in print, with your name on it.
 
 - Defend the plan publicly. Reversing two quarters after you staked your credibility on it tells the board your strategy is a mood.
@@ -694,14 +694,14 @@ This is the section a reviewer should read before reading §9.5, and it applies 
 
 #### C3 · Courage to Commit — `deciding_uncertainty`
 
-**Level A — `C3-HARD-02` "Friday"** · `st_vestibule` · Théo · Q2
+**Level A — `C3-SCA-02` "Friday"** · `st_vestibule` · Théo · Q2
 > A fintech wants to partner on payments. 48 hours. Decent terms. You do not have all the facts and you will not get them by Thursday.
 
 - Take two more weeks. Neither of these partnerships is easy to unwind, and a payments integration you regret is a three-year regret.
 - Weigh what you actually know against what you don't, decide inside the 48 hours, and own it either way.
 - Commit to the partner who fits where this bank is going in five years, and accept that you are choosing partly blind.
 
-**Level B — `C3-PRO-02` "Two Offers, One Slot"** · `st_vestibule` · Théo · Q2
+**Level B — `C3-SCB-02` "Two Offers, One Slot"** · `st_vestibule` · Théo · Q2
 > An exclusive from the fintech, a competing offer from an incumbent vendor, and a roadmap slot that closes Friday. Neither is proven.
 
 - Hold both offers and keep gathering until one of them stops being a guess, even if that means losing the roadmap slot.
@@ -710,14 +710,14 @@ This is the section a reviewer should read before reading §9.5, and it applies 
 
 #### C4 · Financial Discipline — `budgeting`
 
-**Level A — `C4-HARD-02` "Quarter End"** · `st_mezz` · none · Q2
+**Level A — `C4-SCA-02` "Quarter End"** · `st_mezz` · none · Q2
 > Loan demand is strong. Approving freely would grow the book fast and take on risk you cannot see yet.
 
 - Approve at pace. Demand like this doesn't sit around waiting for a credit committee, and the book has never been stronger.
 - Lend inside your limits, hold the capital cushion, and take the applicants who can clearly repay in a bad year as well as this one.
 - Match lending to demand you can evidence, time it against your funding costs, and keep reserves sized for a downturn rather than for a forecast.
 
-**Level B — `C4-PRO-02` "Comfortable, Not Strong"** · `st_mezz` · none · Q2
+**Level B — `C4-SCB-02` "Comfortable, Not Strong"** · `st_mezz` · none · Q2
 > High demand, a shaky economy, deposit costs up, investors pushing for growth, and a capital position that is comfortable rather than strong.
 
 - Widen the credit box to where the market is. Your standards were set for a different rate environment, and holding them while everyone lends is a choice too.
@@ -726,14 +726,14 @@ This is the section a reviewer should read before reading §9.5, and it applies 
 
 #### C5 · Strategic Thinking — `systems_thinking`
 
-**Level A — `C5-HARD-02` "Before Friday"** · `st_mezz_desk` · the proposal · Q3
+**Level A — `C5-SCA-02` "Before Friday"** · `st_mezz_desk` · the proposal · Q3
 > A short-term, high-fee credit product aimed at people who need cash before payday. The margins are excellent and the demand is real.
 
 - Launch it. The demand is real, the product is legal and disclosed, and the customers who need money before Friday will get it somewhere far worse than here.
 - Work out what it does to trust and to the regulator over one to three years, put that against the profit, and decide with both numbers in front of you.
 - Trace where it actually lands — on the customers, on the complaints data, on the next licence conversation — and design a product that meets the same need without the harm, or don't ship one.
 
-**Level B — `C5-PRO-02` "Two Good Years"** · `st_mezz_desk` · the proposal · Q3
+**Level B — `C5-SCB-02` "Two Good Years"** · `st_mezz_desk` · the proposal · Q3
 > The product would lift profit for two years. It would also concentrate harm in your most vulnerable customers, attract supervisory attention, and change how the market talks about you.
 
 - Ship it. It solves this year, and this year is the one the board and the market are actually looking at.
@@ -742,14 +742,14 @@ This is the section a reviewer should read before reading §9.5, and it applies 
 
 #### C6 · Power & Influence — `reading_people`
 
-**Level A — `C6-HARD-02` "A Prestige Name"** · `st_pod_a` · Vivienne · Q3
+**Level A — `C6-SCA-02` "A Prestige Name"** · `st_pod_a` · Vivienne · Q3
 > A large corporate client wants your services at half your fees, on the grounds that having them is worth it.
 
 - Take the terms. That name on the client list opens doors with every other treasurer in the city, and reference value is revenue you can't invoice.
 - Ask what they actually need before you talk price, make the case for what the service costs, and hold the terms that matter while flexing the ones that don't.
 - Work out what they're really buying — speed, reliability, one point of contact — rebuild the deal around that, and be genuinely willing to let it go.
 
-**Level B — `C6-PRO-02` "Two Others"** · `st_pod_a` · Vivienne · Q3
+**Level B — `C6-SCB-02` "Two Others"** · `st_pod_a` · Vivienne · Q3
 > A tight deadline, a name everyone knows, an opening offer under your floor, and a mention that she's talking to two others. Your position is stable but not strong.
 
 - Concede the terms. A stable position becomes an unstable one very quickly once you start losing names like this one.
@@ -758,14 +758,14 @@ This is the section a reviewer should read before reading §9.5, and it applies 
 
 #### C7 · People Management — `conflict_resolution`
 
-**Level A — `C7-HARD-02` "We're Fine"** · `st_floor_pods` · Grace · Q4
+**Level A — `C7-SCA-02` "We're Fine"** · `st_floor_pods` · Grace · Q4
 > Two weeks to the audit. Grace has run this floor for eleven years and is currently running on nothing. Service is slipping and the numbers still have to land.
 
 - Hold the targets through the quarter. Everyone here has done a busy season before, and moving the goal two weeks out tells them the goal was never real.
 - Rebalance the load, check whether you've been leaning on her because she never says no, and put something in place so the next person tells you before it gets here.
 - Fix what's actually causing it — the closed third window, the two vacancies you haven't filled — make it safe for her to say so, and take the audit hit if there is one.
 
-**Level B — `C7-PRO-02` "I Flagged This In March"** · `st_floor_pods` · Hugh + Grace · Q4
+**Level B — `C7-SCB-02` "I Flagged This In March"** · `st_floor_pods` · Hugh + Grace · Q4
 > An expensive compliance error, from a team Hugh warned you about in writing three times. Morale is low with the audit two weeks out. And you have noticed that you have been running every decision past one manager and not the others.
 
 - Deal with the error, hold the pace, and address the rest after the audit. There is a version of this conversation that can wait and this is it.
@@ -774,25 +774,25 @@ This is the section a reviewer should read before reading §9.5, and it applies 
 
 #### C8 · Value Creation & Credibility — `trust_reputation`
 
-**Level A — `C8-HARD-02` "Page Nine"** · `st_mezz_desk` · Hugh · Q4
+**Level A — `C8-SCA-02` "Page Nine"** · `st_mezz_desk` · Hugh · Q4
 > A fee restructure that closes the quarter, or a plain-language fee guide and a team that helps customers avoid paying you.
 
 - Restructure the fee schedule. It's disclosed, it's within the rules, and it closes the gap without touching a single rate anyone shops on.
 - Publish the fees in language people can read and take the slower growth in exchange for customers who know what they're buying.
 - Make being legible the product — teach customers how banking actually costs them money, build the authority that comes with it, and let the loyalty follow.
 
-**Level B — `C8-PRO-02`** — fully worked in §9.5.
+**Level B — `C8-SCB-02`** — fully worked in §9.5.
 
 #### C9 · Perseverance & Adaptability — `handling_failure`
 
-**Level A — `C9-HARD-02` "The Launch"** · `st_mezz` · the screens · Q4+
+**Level A — `C9-SCA-02` "The Launch"** · `st_mezz` · the screens · Q4+
 > The new product launched to almost nothing. Sign-ups are a fraction of forecast, one trade review was brutal, and the screens have been flat for six weeks.
 
 - Overhaul it. The strategy produced this, and running the same plan into a worse quarter is how institutions die slowly.
 - Take the hit, work out precisely what missed, adjust the approach, and keep the bank pointed where it was pointed.
 - Expect the resistance, use the failure to sharpen what the bank is actually for, and protect the team's morale while they watch you take it.
 
-**Level B — `C9-PRO-02` "Then, And Then"** · `st_mezz` · Q4+
+**Level B — `C9-SCB-02` "Then, And Then"** · `st_mezz` · Q4+
 > The flop, then a six-hour outage on a Monday, then the fintech partner walks. Three things in one quarter and the letter tray is stacked.
 
 - Kill the product. Three failures in one quarter is not variance, and the discipline nobody praises is knowing when to stop funding something.
@@ -884,15 +884,15 @@ Building slot **02** (ADR-005 §10.5). Ledger: [Café PRD §10.2](PRD_Building_C
 
 | Competency | Level A | Level B | Subtopic | Title | Why this subtopic |
 |---|---|---|---|---|---|
-| C1 | `C1-HARD-02` | `C1-PRO-02` | `root_cause` | Fourteen In The Line / Switchers | The Advanced path is "the wait isn't the problem, coming in at all is" |
-| C2 | `C2-HARD-02` | `C2-PRO-02` | `updating_beliefs` | Four To One / On The Record | A public commitment contradicted by your own data |
-| C3 | `C3-HARD-02` | `C3-PRO-02` | `deciding_uncertainty` | Friday / Two Offers, One Slot | 48 hours and incomplete facts, by construction |
-| C4 | `C4-HARD-02` | `C4-PRO-02` | `budgeting` | Quarter End / Comfortable, Not Strong | Capital allocation against a cushion is budgeting at institutional scale |
-| C5 | `C5-HARD-02` | `C5-PRO-02` | `systems_thinking` | Before Friday / Two Good Years | Customers, complaints, supervision and funding costs are one system |
-| C6 | `C6-HARD-02` | `C6-PRO-02` | `reading_people` | A Prestige Name / Two Others | The Advanced path is working out what she is actually buying |
-| C7 | `C7-HARD-02` | `C7-PRO-02` | `conflict_resolution` | We're Fine / I Flagged This In March | Competing legitimate interests under audit pressure |
-| C8 | `C8-HARD-02` | `C8-PRO-02` | `trust_reputation` | Page Nine / Within The Rules | Compliant harm against legible honesty — the definition |
-| C9 | `C9-HARD-02` | `C9-PRO-02` | `handling_failure` | The Launch / Then, And Then | Compound failure and what you do with it |
+| C1 | `C1-SCA-02` | `C1-SCB-02` | `root_cause` | Fourteen In The Line / Switchers | The Advanced path is "the wait isn't the problem, coming in at all is" |
+| C2 | `C2-SCA-02` | `C2-SCB-02` | `updating_beliefs` | Four To One / On The Record | A public commitment contradicted by your own data |
+| C3 | `C3-SCA-02` | `C3-SCB-02` | `deciding_uncertainty` | Friday / Two Offers, One Slot | 48 hours and incomplete facts, by construction |
+| C4 | `C4-SCA-02` | `C4-SCB-02` | `budgeting` | Quarter End / Comfortable, Not Strong | Capital allocation against a cushion is budgeting at institutional scale |
+| C5 | `C5-SCA-02` | `C5-SCB-02` | `systems_thinking` | Before Friday / Two Good Years | Customers, complaints, supervision and funding costs are one system |
+| C6 | `C6-SCA-02` | `C6-SCB-02` | `reading_people` | A Prestige Name / Two Others | The Advanced path is working out what she is actually buying |
+| C7 | `C7-SCA-02` | `C7-SCB-02` | `conflict_resolution` | We're Fine / I Flagged This In March | Competing legitimate interests under audit pressure |
+| C8 | `C8-SCA-02` | `C8-SCB-02` | `trust_reputation` | Page Nine / Within The Rules | Compliant harm against legible honesty — the definition |
+| C9 | `C9-SCA-02` | `C9-SCB-02` | `handling_failure` | The Launch / Then, And Then | Compound failure and what you do with it |
 
 `type: "DECISION_TREE"` · `orderIndex: 2` · `estMinutes: 6` (Level A) / `7` (Level B) · `passCriteria: { "minProficiency": 2 }`.
 
@@ -908,7 +908,7 @@ Building slot **02** (ADR-005 §10.5). Ledger: [Café PRD §10.2](PRD_Building_C
 >             "required": false }
 > ```
 
-`C1-HARD-02`
+`C1-SCA-02`
 
 | Node | a | b | c |
 |---|---|---|---|
@@ -921,9 +921,9 @@ Building slot **02** (ADR-005 §10.5). Ledger: [Café PRD §10.2](PRD_Building_C
 "rubric": {
   "kind": "trace",
   "terminals": {
-    "C1-HARD-02.a.a": 42, "C1-HARD-02.a.b": 74, "C1-HARD-02.a.c": 60,
-    "C1-HARD-02.b.a": 81, "C1-HARD-02.b.b": 63, "C1-HARD-02.b.c": 95,
-    "C1-HARD-02.c.a": 47, "C1-HARD-02.c.b": 33, "C1-HARD-02.c.c": 15
+    "C1-SCA-02.a.a": 42, "C1-SCA-02.a.b": 74, "C1-SCA-02.a.c": 60,
+    "C1-SCA-02.b.a": 81, "C1-SCA-02.b.b": 63, "C1-SCA-02.b.c": 95,
+    "C1-SCA-02.c.a": 47, "C1-SCA-02.c.b": 33, "C1-SCA-02.c.c": 15
   },
   "scoreMap": [
     { "minOutcome": 74, "proficiency": 3 },
@@ -935,7 +935,7 @@ Building slot **02** (ADR-005 §10.5). Ledger: [Café PRD §10.2](PRD_Building_C
 
 `c.a` = 47 → P2 is the cell that matters here: you spent two salaries on the wrong fix, then asked Grace why she stopped forwarding complaints and went and stood in the line six months late. Late correction beats no correction, and the arithmetic says so without anybody saying so.
 
-`C8-PRO-02`
+`C8-SCB-02`
 
 | Node | a | b | c |
 |---|---|---|---|
@@ -946,9 +946,9 @@ Building slot **02** (ADR-005 §10.5). Ledger: [Café PRD §10.2](PRD_Building_C
 
 ```jsonc
 "terminals": {
-  "C8-PRO-02.a.a": 63, "C8-PRO-02.a.b": 95, "C8-PRO-02.a.c": 81,
-  "C8-PRO-02.b.a": 33, "C8-PRO-02.b.b": 47, "C8-PRO-02.b.c": 15,
-  "C8-PRO-02.c.a": 74, "C8-PRO-02.c.b": 60, "C8-PRO-02.c.c": 42
+  "C8-SCB-02.a.a": 63, "C8-SCB-02.a.b": 95, "C8-SCB-02.a.c": 81,
+  "C8-SCB-02.b.a": 33, "C8-SCB-02.b.b": 47, "C8-SCB-02.b.c": 15,
+  "C8-SCB-02.c.a": 74, "C8-SCB-02.c.b": 60, "C8-SCB-02.c.c": 42
 }
 ```
 
@@ -1035,7 +1035,7 @@ Persisted continuously to `PUT /api/v1/city/buildings/bank/state` and flushed on
 
 ## 14. Level A vs Level B in this room
 
-| | Level A (`HARD`, 16–21) | Level B (`PRO`, 35–50) |
+| | Level A (`SCA`, 16–21) | Level B (`SCB`, 35–50) |
 |---|---|---|
 | **Framing** | You have just been given the floor. Grace has been here longer than you and everyone knows it. | You are in the corner office and have been for a while. The decisions you are living with are partly your own. |
 | **Threshold question** | *"Are you stepping onto the floor, or into the corner office?"* — asked by Grace on first entry, once for the whole city | same |
@@ -1119,7 +1119,7 @@ Every line requires an `ASSETS_LICENSES.md` entry before work builds on it.
 | **MER-2** | **The queue system** — all four lengths × three mixes, one instanced draw, the DOM readout; the six screens as DOM-on-inspect; the letter tray; the leaflet stand's three `fees` states | Change `queue` and `queue_mix` by hand and watch the building's meaning change — assessed by someone who did not build it. **And read the whole queue with the screen reader** |
 | **MER-3** | `cast.ts` — Grace + the two tellers + Alan; Grace's half-second gaze delay; Hugh's keyboard as an ambient bed **that stops**; audio | Someone approaches and you hear them before you see them |
 | **MER-4** | Missions 1 and 8 as objective chains on the framework runner; the tracker | Walk mission 1's chain — including standing *in* your own queue — keyboard-only |
-| **MER-5** | `C1-HARD-02` and `C8-PRO-02` end to end across all three beats, including the Sam phone and the no-advice gate | A real registry activity, server-scored, **no tier visible anywhere**, no way to tell which beat was generated, and the crowd holding frame budget |
+| **MER-5** | `C1-SCA-02` and `C8-SCB-02` end to end across all three beats, including the Sam phone and the no-advice gate | A real registry activity, server-scored, **no tier visible anywhere**, no way to tell which beat was generated, and the crowd holding frame budget |
 | **MER-6** | All nine missions × both tracks; full cast; quarter progression; the tray filling; all 18 fallback beats; session sync | A complete year in one sitting, and the same year with the generator disabled |
 | **MER-7** | The board pack; a11y pass (**the queue's DOM legibility is the big one**); perf pass; licences | A keyboard-only, screen-reader player completes a year and reads the pack |
 
@@ -1146,7 +1146,7 @@ Every line requires an `ASSETS_LICENSES.md` entry before work builds on it.
 - **Content** — every constructible path terminates in a rubric terminal; every terminal is reachable; every leaf writes at least one world-state key; the mentor path is available at both C2 beats in both tracks.
 - **Choice parity (machine pass, ADR-005 §11.5)** — for every trio of choices, longest minus shortest ≤ **8 words**; no capitalised tier label, proficiency number, `n/3` or pass/fail phrasing in any shipped string; no verdict language ("unfortunately", "you should have", "the better move", "correct", "well done") in any consequence; each tier used exactly once per node and no letter permutation repeated in the building. This runs in CI over `script.ts` and is the check that caught the length/tier correlation in this document's first draft.
 - **Component** — the dialogue layer builds the correct `trace`; scenario mode renders no result view; the queue's DOM inspection list matches the rendered crowd exactly (snapshot test — these will drift).
-- **E2E** — enter from Downtown → play `C1-HARD-02` → verify the queue changed → exit → re-enter → verify persistence → complete the year → open the board pack.
+- **E2E** — enter from Downtown → play `C1-SCA-02` → verify the queue changed → exit → re-enter → verify persistence → complete the year → open the board pack.
 - **Playtest** — a 25-minute scripted session with a fresh player, ending with two questions: *"which choice do you think the game wanted?"* and *"did the game tell you the fee restructure was wrong?"*. The second must be answered *no* — the consequence should have told them, not the game.
 
 ### 18.4 Risks
@@ -1188,7 +1188,7 @@ Identical in shape to [the Café's §19.1](PRD_Building_Cafe.md), with `building
 ```jsonc
 {
   "rev": 31,
-  "track": "PRO",
+  "track": "SCB",
   "blob": {
     "missionOrder": 8,                    // "Page Nine"
     "objectiveIndex": 5,                  // decide · follow
@@ -1219,8 +1219,8 @@ Identical to [the Café's §19.3–19.4](PRD_Building_Cafe.md): mission open and
 ```jsonc
 POST /api/v1/ai/followup
 {
-  "activityId": "C8-PRO-02",
-  "track": "PRO",
+  "activityId": "C8-SCB-02",
+  "track": "SCB",
   "buildingId": "bank",
   "path": ["b", "b"],                       // took the restructure, then reversed it with refunds
   "speakerId": "hugh",
@@ -1250,14 +1250,14 @@ Server-side, `buildingId: "bank"` activates **gate 9, the no-advice gate** (§9.
 ### 19.6 Submitting
 
 ```jsonc
-POST /api/v1/progress/C8-PRO-02/submit
+POST /api/v1/progress/C8-SCB-02/submit
 {
   "clientVersion": "city@0.3.0",
   "durationSec": 468,
   "hintsUsed": 0,
   "result": { "trace": {
-    "path": ["C8-PRO-02.seed", "C8-PRO-02.b",
-             "C8-PRO-02.b.follow", "C8-PRO-02.b.b"],
+    "path": ["C8-SCB-02.seed", "C8-SCB-02.b",
+             "C8-SCB-02.b.follow", "C8-SCB-02.b.b"],
     "followupId": "fu_01JA…",
     "followupChoice": "o_2e91"
   } }
