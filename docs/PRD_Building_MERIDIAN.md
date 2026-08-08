@@ -840,6 +840,7 @@ Mirrored into `internal/registry/content/followups/bank.json`.
 | **Alan** | Unhurried, courteous, occasionally funny. **Never complains.** | *"I know it's all on the telephone now. I like the walk."* | Complaining · delivering a moral · being a lesson |
 | **the tray** | Procedural, dated, factual. Regulator correspondence. | *"Further to our letter of 14 March, we note the complaints volume in the accounts identified therein."* | Accusation · warmth · telling you off |
 | **the screens** | Six numbers and a direction of travel. No prose at all. | — | Any sentence whatsoever |
+| **the floor** *(mission 4)* | Second person, present tense, flat. Reports facts about objects and about an empty building. | *"The capital position is on the desk where you left it. The floor below is dark."* | Opinion · address · a voice of any kind |
 
 **Two of these are the building's most fragile characters and the persona card is where they break.** Hugh must not become the game's conscience; Alan must not become a lesson. Their cards say so explicitly, and a reviewer should read those two rows before anything else in this section.
 
@@ -866,6 +867,10 @@ Mirrored into `internal/registry/content/followups/bank.json`.
 | C7 | the audit lands and the finding is procedural | Grace takes leave she did not ask for | `staff_mood` |
 | C8 | the complaints pattern turns, five months on | a journalist asks you about page nine | `letter_tray` |
 | C9 | the relaunch does adequately | the partner asks to come back | `screens` |
+
+**Status: authored.** All eighteen live at `internal/registry/content/followups/bank.json` in `backend-academy`, with the persona cards alongside them. They pass the §11.5 machine pass **and gate 9, the no-advice rule**, which is implemented as a phrase blocklist and run per beat. **Alan is deliberately not a speaker anywhere in the bank** — he carries the consequence of C1 and C5, and a beat delivered by him would make him the lesson §11 forbids him from being. **Not yet loaded**: `internal/registry/loader.go` reads only `content/c*.json`; wiring the pack up is part of BE-17.
+
+**Still owed:** the fresh-reader pass (§18.2.1), paying particular attention to C5 and C8 per §9.2.
 
 #### 9.8.5 The MERIDIAN-specific rule
 

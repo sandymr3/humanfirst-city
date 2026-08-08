@@ -841,6 +841,10 @@ Fiction, mission staging, the persona card, both chosen option texts, the track,
 | C8 | someone else's shortcut is discovered publicly | a magazine asks you, directly, how you did it | `press` |
 | C9 | the polite review turns into an order | the unkind reviewer asks for an interview | `press` |
 
+**Status: authored.** All eighteen live at `internal/registry/content/followups/fashion_brand.json` in `backend-academy`. They pass the §11.5 machine pass. C2's three beats each carry a call to Véra flagged `mentor: true`, so the 0–1 / 2 / 3 count of §9.6 is read from data rather than inferred from prose. No beat names a garment that is not on the rail (§9.7.5). **Not yet loaded** — that is BE-17.
+
+**Still owed:** the fresh-reader pass (§18.2.1).
+
 #### 9.7.5 The MAISON-specific rule
 
 **The transfer beat may not describe a garment that is not on the rail.** The rail is a state machine with a closed set of contents, and a generated question that invents a piece breaks the building's one unbreakable readout. The generator is given `railContents()` and instructed to reference only what is in it; a reference to anything else fails [ADR-006 §8.4](ADR-006_Missions_AI_Followups_and_Session_State.md) gate 8 as an illegal world reference.
