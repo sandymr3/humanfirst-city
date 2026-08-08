@@ -637,7 +637,7 @@ Awards remain server-computed, credited once per first pass, idempotent on re-su
 >
 > §10.6's original claim that *"`HARD` and `PRO` become entirely scenario content — twelve buildings × one activity each fills both grids exactly"* was therefore **false as written**, and is withdrawn. It would have held for a level that did not exist yet. It was never true of `HARD`.
 >
-> **Resolution options, and the recommendation, are in §10.6.1. Nothing may be seeded until KK signs one off.** The eighteen ids in each building PRD §10.1 are provisional until then. A product-owner summary of the decision, with no engineering detail, is [DECISION_scenario_level_namespace.md](DECISION_scenario_level_namespace.md).
+> **Resolved in §10.6.1: Option C, adopted 2026-08-07.** Scenario activities live at `SCA` and `SCB`; `HARD` is untouched. The ids in each building PRD §10.1 are final. A product-owner summary of the decision, with no engineering detail, is [DECISION_scenario_level_namespace.md](DECISION_scenario_level_namespace.md).
 
 `validate_registry` enforces, per competency-level: **exactly 12 activities, `orderIndex` 1..12, six subtopics × exactly 2 each**. There are exactly twelve buildings. These are the same twelve.
 
@@ -700,7 +700,7 @@ Both are empty by construction, so the twelve-slot scheme of §10.5 fits exactly
 | **B** | **Raise the per-level cap** to 24 and partition `orderIndex` — 1–12 scenarios, 13–24 drills | Renumbering the drills changes their ids (`C9-HARD-01` → `C9-HARD-13`) | **High.** Ids are the progress key; every existing row for those activities dangles |
 | **C** ✅ | **Give scenarios their own two levels.** Level A → **`SCA`**, Level B → **`SCB`** (`SCENARIO_A` / `SCENARIO_B`), both empty by construction. `HARD` keeps its drills untouched | Two new levels instead of one; 18 level badges instead of 9; the 54 ids in the three building PRDs are renamed `C1-SCA-01` → `C1-SCA-01`, `C1-SCB-01` → `C1-SCB-01` | **Near zero.** Those ids exist only in documents — **not one row is seeded against them** — so renaming is free, and no shipped content or progress row is touched |
 
-**Decision: Option C.** _(Pending KK's sign-off — [DECISION_scenario_level_namespace.md](DECISION_scenario_level_namespace.md). This document is written as though adopted; if it is not, revert this section and §10.6.)_
+**Decision: Option C — adopted 2026-08-07.** Scenario buildings get their own two levels, `SCA` (16–21) and `SCB` (35–50). `HARD` keeps its drills and its progress rows and is untouched. The rationale memo is [DECISION_scenario_level_namespace.md](DECISION_scenario_level_namespace.md), kept for the record.
 
 The original argument for reusing `HARD` was that *"inventing a level for a one-year overlap would be waste"* — a judgment about age bands. That argument is now beside the point: the blocker is **capacity**, not age fit. And the cost comparison has inverted. Renaming ids that exist only in prose is free; renaming ids that exist in a progress table is a migration with a data-loss failure mode.
 
@@ -1064,7 +1064,7 @@ Offline authoring remains encouraged and is a different activity: Claude draftin
 
 ### 20.3 Open decisions
 
-- **⚠ The scenario level namespace (§10.6.1)** — decided as Option C (`SCA` / `SCB`) and written up throughout, **pending KK's sign-off**. Until it lands, nothing may be seeded. KK.
+- ~~The scenario level namespace (§10.6.1)~~ — **closed 2026-08-07.** Option C adopted; `SCA` / `SCB` are in the validator allow-list and the first row is seeded.
 - **The two meta badge names** for `SCA` and `SCB` (`BADGE-META-OPERATOR` was proposed when there was one) — KK. Not blocking.
 - **Track override by batch code** — should a cohort be pinned to Level B by its WarRoom batch, overriding player choice? Deferred; player choice ships first.
 - **Shared city palette LUT** — still unauthored, and MAISON's whole identity is colour.

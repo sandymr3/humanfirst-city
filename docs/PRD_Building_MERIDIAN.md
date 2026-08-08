@@ -882,7 +882,6 @@ Mirrored into `internal/registry/content/followups/bank.json`.
 
 ### 10.1 Activity IDs and subtopics
 
-> **⚠ The eighteen ids below are provisional.** `C9-HARD-0{slot}` is already taken by seeded content with user progress against it, so the level segment of every id here is pending the decision in [ADR-005 §10.6.1](ADR-005_Interior_Framework.md) (recommendation: `HARD` → `SCA`, `PRO` → `SCB`). **The slot number, the subtopics, the titles and every terminals value in §10 are unaffected** — only the level segment moves.
 
 
 Building slot **02** (ADR-005 §10.5). Ledger: [Café PRD §10.2](PRD_Building_Cafe.md).

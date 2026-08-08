@@ -24,7 +24,7 @@ Six additive changes to `backend-academy`, none of which breaks an existing clie
 
 Plus **BE-19** (mission telemetry, P3), **BE-20** (un-stale `api/openapi.yaml`, P1) and **BE-21** (let the registry validator accept a partially-populated level, **P0** — §6.5).
 
-> **⚠ Two blockers stand in front of all of this, and one is not an engineering call.** The registry validator rejects a partially-populated level (§6.5), and the scenario id scheme collides with already-seeded content that has user progress against it ([ADR-005 §10.6.1](ADR-005_Interior_Framework.md)). Read §6.4 before planning any of the work below.
+> **Both of the blockers that stood in front of this are cleared.** The validator now splits its rules by mode (§6.5, shipped), and the level namespace is resolved — scenarios live at `SCA`/`SCB` and `HARD` is untouched ([ADR-005 §10.6.1](ADR-005_Interior_Framework.md), Option C adopted 2026-08-07). The first scenario row is seeded and green.
 
 Two new tables, two new migrations, one new service, one new content pack. `internal/scoring` gains roughly thirty lines and loses none.
 
@@ -573,7 +573,7 @@ Three launch buildings × 9 competencies × 2 levels = **54 `DECISION_TREE` rows
 
 ### 6.5 BE-21 · Let the validator accept a partially-populated level
 
-**New ticket, P0, blocks BE-12.**
+**Status: shipped** (`6129f8b`). Was P0 and blocking BE-12.
 
 The "exactly 12" invariant is a *launch* gate that has been enforced as a *build* gate. It is correct at full seed and wrong during rollout — it makes seeding the first building of twelve impossible.
 
