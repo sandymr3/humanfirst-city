@@ -35,7 +35,12 @@ interface Puff {
 export interface Steam {
   /** Add to the scene wherever the wisp should sort. */
   view: Container;
-  update(dtS: number): void;
+  /**
+   * `emitting` false keeps the existing puffs rising and fading but starts no
+   * new ones — §6 gives the machine steam only while somebody is working it, and
+   * steam off an unattended group head is a room that runs itself.
+   */
+  update(dtS: number, emitting?: boolean): void;
   destroy(): void;
 }
 
@@ -69,9 +74,12 @@ export function createSteam(at: { x: number; y: number }, reduced: boolean): Ste
 
   return {
     view,
-    update(dtS) {
-      clock += dtS;
-      while (clock >= EVERY_S) {
+    update(dtS, emitting = true) {
+      // Clamped rather than left to accumulate: a wisp that was switched off for
+      // half a minute would otherwise discharge thirty puffs on the frame it
+      // came back.
+      clock = emitting ? clock + dtS : Math.min(clock, EVERY_S);
+      while (emitting && clock >= EVERY_S) {
         clock -= EVERY_S;
         const p = free.pop();
         if (!p) break; // pool exhausted: drop the puff, never allocate

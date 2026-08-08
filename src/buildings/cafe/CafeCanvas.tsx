@@ -43,16 +43,38 @@ import {
   makeRoomGrid,
   type GateId,
 } from "./room";
-import { toggleFlap, useCafeStore } from "./cafeStore";
+import { noteEvent, presentCast, toggleFlap, useCafeStore } from "./cafeStore";
+import { createTeardown } from "./teardown";
+import { CAST, castNear } from "./cast";
+import { createCast } from "./castView";
+import { FADE_S, lightForMission, mixLight, type Light } from "./light";
+import { createCustomers } from "./customersView";
+import { createSchedule } from "./ambient";
+import { createPigeon } from "./pigeon";
+import { marcusIsIn } from "./world";
 
 const WALK_SPEED = 175; // px/sec — the city's pace, so indoors feels like outdoors
 const STEP_S = 0.18; // seconds per walk-cycle frame
 const FLAP_SWING_S = 0.25;
+/** How long a single ambient steam beat keeps the group head puffing. */
+const STEAM_BURST_S = 2.6;
+/** How long the grinder shakes the machine. Matches ambient.ts's duck window. */
+const GRIND_S = 1.5;
 const VIEWPORT_PAD = 48; // breathing room around the room at the fitted scale
 const WALL_LIFT = 42; // half the back wall's height, for visual centring
 const MOVE_KEYS = new Set(["w", "a", "s", "d", "arrowup", "arrowleft", "arrowdown", "arrowright"]);
 
-export function CafeCanvas({ onReady }: { onReady?: () => void }) {
+export function CafeCanvas({
+  onReady,
+  onError,
+}: {
+  onReady?: () => void;
+  /**
+   * The build failed and everything borrowed from the city has been given back.
+   * The shell should leave the building — there is no room to stand in.
+   */
+  onError?: (err: unknown) => void;
+}) {
   useEffect(() => {
     let destroyed = false;
     let baked: Texture[] = [];
@@ -94,7 +116,24 @@ export function CafeCanvas({ onReady }: { onReady?: () => void }) {
       if (destroyed) return;
 
       const { app } = host;
+
+      // Armed empty, before the city has been touched, and grown as each thing
+      // is borrowed. Assembling it at the end instead is the frozen-city defect:
+      // the bake below can throw, and a throw with no teardown yet leaves the
+      // street hidden for the rest of the session with the player inside a
+      // building they cannot leave (teardown.ts).
+      const borrowed = createTeardown();
+      detach = () => borrowed.run();
+
       host.hideWorld();
+      borrowed.onUndo(() => host.showWorld());
+
+      // Recorded before the first bake so a bake that throws half-way through
+      // still frees the textures it managed to make.
+      borrowed.onUndo(() => {
+        destroyTextures(baked);
+        baked = [];
+      });
 
       // Our own root on the city's stage. `backdrop` is screen-space — the room
       // is a diamond, and without it the city's green sky shows through the
@@ -103,14 +142,27 @@ export function CafeCanvas({ onReady }: { onReady?: () => void }) {
       const backdrop = new Sprite(Texture.WHITE);
       backdrop.tint = CAFE_PALETTE.void;
       const world = new Container();
-      root.addChild(backdrop, world);
+      // The season's light (light.ts): two screen-space quads over the finished
+      // frame — one multiplied for the grade, one added for the warmth. Doing it
+      // here rather than as a second light source in the bake means the week can
+      // change in 1.2 seconds without re-baking a single prop.
+      const grade = new Sprite(Texture.WHITE);
+      grade.blendMode = "multiply";
+      const glow = new Sprite(Texture.WHITE);
+      glow.blendMode = "add";
+      glow.tint = CAFE_PALETTE.lamp;
+      root.addChild(backdrop, world, grade, glow);
       app.stage.addChild(root);
+      borrowed.onUndo(() => {
+        app.stage.removeChild(root);
+        root.destroy({ children: true });
+      });
 
       const tex = bakeCafeTextures(app.renderer);
       baked.push(...tex.all);
       world.addChild(buildFloor());
 
-      const { root: actors, flap } = buildFurniture(tex);
+      const { root: actors, flap, machine: machineSprite } = buildFurniture(tex);
       world.addChild(actors);
 
       // Steam off the espresso machine. Sits on the machine's own cell, lifted
@@ -134,6 +186,46 @@ export function CafeCanvas({ onReady }: { onReady?: () => void }) {
       charBody.anchor.set(0.5, 1);
       char.addChild(charShadow, charBody);
       actors.addChild(char);
+
+      // ── The cast ────────────────────────────────────────────────────────────
+      // Added to the same sorted container as the furniture and the player, so
+      // Priya passes behind the counter and Marcus sits in front of his table
+      // without any of it being special-cased.
+      // Everyone who can appear this season is baked once — six palettes over
+      // one rig, which is cheap — and who is actually in the room is a per-frame
+      // question the world state and the live mission answer between them.
+      const cast = createCast(app.renderer, CAST, reduced, actors);
+      baked.push(...cast.textures);
+      const presentNow = () => new Set(presentCast());
+
+      // ── The room's population ───────────────────────────────────────────────
+      // Unnamed, never an objective, and the reason the café reads as a café
+      // when nothing is being asked of you (PRD §5.7).
+      const customers = createCustomers(app.renderer, reduced, actors);
+      baked.push(...customers.textures);
+      // The bell, and the street coming in with it for a moment. `ui_open` is a
+      // stand-in: the Café's own sound names are a closed union in the framework
+      // and are filed to the maintainer (PRD §20.7), so the beat ships on a
+      // borrowed sound rather than not at all.
+      const ringBell = () => audio.play("ui_open", { volume: 0.22, rate: 1.35 });
+
+      // ── The ambient layer ───────────────────────────────────────────────────
+      // §6's beat table, scheduled in ambient.ts and played here. The sounds are
+      // borrowed from the framework's eleven names — the Café's own are a closed
+      // union and are filed to the maintainer — so what ships is the cadence and
+      // the visuals, with the audio a one-table swap when the names land.
+      const beats = createSchedule(reduced);
+      const pigeonAt = mapToWorld(9, 0);
+      const pigeon = createPigeon({ x: pigeonAt.x, y: pigeonAt.y - 24 }, reduced);
+      pigeon.view.zIndex = 9 + 0 + 0.4;
+      actors.addChild(pigeon.view);
+      // Seconds of grinder shudder still to play on the hero prop, and where it
+      // sits when nothing is shaking it.
+      let grind = 0;
+      const machineBaseX = machineSprite?.position.x ?? 0;
+      // Seconds of steam still to come off the group head. §6 gives the machine
+      // "a short particle puff", not a permanent plume.
+      let steamFor = 0;
 
       const pathLine = new Graphics();
       world.addChild(pathLine);
@@ -160,6 +252,7 @@ export function CafeCanvas({ onReady }: { onReady?: () => void }) {
         drawPathPreview(pathLine, pathTargets);
       };
       app.stage.on("pointerdown", onStageDown);
+      borrowed.onUndo(() => app.stage.off("pointerdown", onStageDown));
 
       // ── The flap, reacting to the store ─────────────────────────────────────
       let flapTarget = 0;
@@ -183,11 +276,42 @@ export function CafeCanvas({ onReady }: { onReady?: () => void }) {
       let lastW = 0;
       let lastH = 0;
 
+      // ── The season's light ──────────────────────────────────────────────────
+      // `shown` is what is on the screen this frame, `into` is the week we are
+      // heading for, and `fade` runs 0→1 over FADE_S. The week is read off the
+      // runner rather than off `world.season`, because the light is a property
+      // of when you are, not of anything you decided (PRD §3.4).
+      let shown: Light = lightForMission(useCafeStore.getState().progress.missionOrder);
+      let from: Light = shown;
+      let into: Light = shown;
+      let fade = 1;
+      let litOrder = useCafeStore.getState().progress.missionOrder;
+
       const tick = (ticker: { deltaMS: number }) => {
         if (destroyed) return;
         const dt = ticker.deltaMS / 1000;
         elapsed += dt;
         const locked = useCafeStore.getState().inputLocked;
+
+        // Between weeks the screen does not cut away — the light shifts under
+        // the player while they are still standing in the room. Announced on
+        // arrival rather than on departure, so what is said matches what is lit.
+        const order = useCafeStore.getState().progress.missionOrder;
+        if (order !== litOrder) {
+          litOrder = order;
+          from = shown;
+          into = lightForMission(order);
+          fade = reduced ? 1 : 0;
+          if (reduced) store.announce(into.says);
+        }
+        if (fade < 1) {
+          fade = Math.min(1, fade + dt / FADE_S);
+          if (fade >= 1) store.announce(into.says);
+        }
+        shown = fade >= 1 ? into : mixLight(from, into, fade);
+        grade.tint = shown.tint;
+        grade.alpha = shown.grade;
+        glow.alpha = shown.glow;
 
         // A station button asking the room to walk somewhere. Polled rather than
         // subscribed: the ticker is already reading this store every frame, and a
@@ -199,6 +323,17 @@ export function CafeCanvas({ onReady }: { onReady?: () => void }) {
           if (path.length > 1) {
             pathTargets = path.slice(1);
             drawPathPreview(pathLine, pathTargets);
+          } else if (path.length === 0) {
+            // No route at all. In this room that is always the staff zone with
+            // the flap down — the pass-through is a guide entry and it is behind
+            // the counter. Say so in the room's own words: a button that quietly
+            // does nothing reads as broken, and it is the only signal a player
+            // navigating by keyboard gets.
+            store.announce(
+              useCafeStore.getState().flapOpen
+                ? "There's no way through to there."
+                : GATES[0].closedSays,
+            );
           }
         }
 
@@ -282,9 +417,75 @@ export function CafeCanvas({ onReady }: { onReady?: () => void }) {
           store.setNearExit(exitNear(curCell));
           store.setNearGate(gateNear(curCell)?.id ?? null);
           store.setNearHotspot(hotspotNear(curCell)?.id ?? null);
+          // The runner decides whether arriving here was an objective. Most of
+          // the time it is not, and it says so by not moving.
+          noteEvent({ kind: "moved", cell: curCell });
         }
 
-        steam.update(dt);
+        // Every frame, not just when the player moves: the cast move too, and
+        // somebody can walk up to a player who is standing still. Nadia comes in
+        // at 8:05 while you are already at the counter, and if this only ran on
+        // your own movement she would arrive un-speakable-to.
+        store.setNearCast(castNear(curCell, cast.positions())?.id ?? null);
+
+        // ── Ambient ───────────────────────────────────────────────────────────
+        // Somebody is at the machine when Priya is standing on the two cells in
+        // front of it. The steam is hers, not the room's.
+        const roomWorld = useCafeStore.getState().world;
+        const atMachine = cast
+          .positions()
+          .some((p) => p.cell.y <= 1 && p.cell.x >= 3 && p.cell.x <= 5);
+
+        for (const beat of beats.tick(dt, {
+          world: roomWorld,
+          missionOrder: order,
+          seated: customers.countInside(),
+          atMachine,
+        })) {
+          switch (beat) {
+            case "steam":
+              steamFor = STEAM_BURST_S;
+              break;
+            case "grinder":
+              // The one beat loud enough to be used deliberately before a hard
+              // line. It shakes the hero prop and holds the room for 1.5 s.
+              grind = GRIND_S;
+              audio.play("step_hard_1", { volume: 0.3, rate: 0.55 });
+              break;
+            case "cup":
+              audio.play("step_hard_2", { volume: 0.14, rate: 1.9 });
+              break;
+            case "wipe":
+              cast.nudge("priya");
+              break;
+            case "page":
+              if (marcusIsIn(roomWorld)) cast.nudge("marcus");
+              break;
+            case "pigeon":
+              pigeon.land();
+              break;
+          }
+        }
+
+        if (steamFor > 0) steamFor -= dt;
+        pigeon.update(dt);
+        if (machineSprite) {
+          // A hand-width of jitter for a beat and a half, then dead still. Any
+          // longer and it stops being a grinder and becomes a fault.
+          if (grind > 0) {
+            grind -= dt;
+            machineSprite.position.x = machineBaseX + Math.sin(elapsed * 70) * 0.9;
+          } else if (machineSprite.position.x !== machineBaseX) {
+            machineSprite.position.x = machineBaseX;
+          }
+        }
+
+        steam.update(dt, steamFor > 0);
+        // Fed the player's cell rather than their pixels: everything the cast
+        // does with it is a cell-distance question, and a cell changes ~30× less
+        // often than a position does.
+        cast.update(dt, curCell, presentNow());
+        customers.update(dt, useCafeStore.getState().world, order, ringBell);
 
         // The flap swing. Linear over FLAP_SWING_S so it reads as a hinge rather
         // than a spring; reduced motion snapped it already, above.
@@ -304,6 +505,10 @@ export function CafeCanvas({ onReady }: { onReady?: () => void }) {
           lastH = sh;
           backdrop.width = sw;
           backdrop.height = sh;
+          grade.width = sw;
+          grade.height = sh;
+          glow.width = sw;
+          glow.height = sh;
           const scale = Math.min(
             1,
             (sw - VIEWPORT_PAD) / ROOM_PX_W,
@@ -318,23 +523,21 @@ export function CafeCanvas({ onReady }: { onReady?: () => void }) {
         }
       };
       app.ticker.add(tick);
+      borrowed.onUndo(() => app.ticker.remove(tick));
 
-      // Everything we borrowed, given back. The city's Application is left
-      // running exactly as we found it — we never destroy what we did not make.
-      detach = () => {
-        app.ticker.remove(tick);
-        app.stage.off("pointerdown", onStageDown);
-        app.stage.removeChild(root);
-        root.destroy({ children: true });
-        destroyTextures(baked);
-        baked = [];
-        host.showWorld();
-      };
+      // Unwound in reverse, that is: stop the ticker, drop the stage listener,
+      // take our container off the city's stage and destroy it, free the baked
+      // textures, show the city. Its Application is left running exactly as we
+      // found it — we never destroy what we did not make.
 
       store.setNearExit(exitNear(curCell));
       store.setNearGate(gateNear(curCell)?.id ?? null);
       store.setNearHotspot(hotspotNear(curCell)?.id ?? null);
+      store.setNearCast(castNear(curCell, cast.positions())?.id ?? null);
       audio.preload(["step_hard_1", "step_hard_2"]);
+      // What time of year you have walked back into. A returning player mid-season
+      // sees it; this is how everyone else gets it.
+      store.announce(shown.says);
 
       // Unmounted while we were building? Hand it all straight back — the React
       // cleanup already ran and found nothing to clean.
@@ -344,7 +547,16 @@ export function CafeCanvas({ onReady }: { onReady?: () => void }) {
         return;
       }
       onReady?.();
-    })();
+    })().catch((err: unknown) => {
+      // The one failure a player cannot walk away from. Unhandled, this
+      // rejection is silent: the city stays hidden, the shell holds "Pushing the
+      // door open…" forever, and leaving runs a cleanup that has nothing to
+      // restore. Give the street back first, then tell the shell to go.
+      console.error("[cafe] the room failed to build", err);
+      detach?.();
+      detach = null;
+      onError?.(err);
+    });
 
     return () => {
       destroyed = true;

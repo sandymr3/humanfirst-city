@@ -20,6 +20,12 @@ const Z_OVERLAY = 0.2; // the pastry case in front of its wall
  */
 const Z_NEAR_EDGE = -0.5;
 export const Z_PLAYER = 0.6; // matches the city's own player offset
+/**
+ * The cast sort just behind the player, so when you walk onto the cell somebody
+ * is standing on it is you in front — the room should never hide you from
+ * yourself.
+ */
+export const Z_CAST = 0.55;
 
 function place(sprite: Sprite, cx: number, cy: number): Sprite {
   const w = mapToWorld(cx, cy);
@@ -103,6 +109,12 @@ export interface FurnitureLayer {
   root: Container;
   /** The flap, wrapped so it can swing about its hinge. */
   flap: Container;
+  /**
+   * The espresso machine, so the ambient layer can shake it when the grinder
+   * runs. It is the hero prop and the one thing in the room loud enough to be
+   * worth animating for a beat and a half (PRD §6).
+   */
+  machine: Sprite | null;
 }
 
 /**
@@ -113,9 +125,11 @@ export interface FurnitureLayer {
 export function buildFurniture(tex: CafeTextures): FurnitureLayer {
   const root = new Container();
   root.sortableChildren = true;
+  let machine: Sprite | null = null;
 
   for (const p of FURNITURE) {
     const sprite = place(new Sprite(tex.prop[p.kind]), p.cell.x, p.cell.y);
+    if (p.kind === "espresso_machine") machine = sprite;
     fitSprite(sprite, p.kind);
     const base = p.cell.x + p.cell.y;
     sprite.zIndex = NEAR_EDGE.has(p.kind)
@@ -131,7 +145,7 @@ export function buildFurniture(tex: CafeTextures): FurnitureLayer {
   const flap = buildFlap(tex, GATES[0]);
   root.addChild(flap);
 
-  return { root, flap };
+  return { root, flap, machine };
 }
 
 /**

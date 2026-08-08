@@ -4,6 +4,7 @@ import {
   EXIT,
   FURNITURE,
   GATES,
+  GUIDE,
   HOTSPOTS,
   NO_GATES_OPEN,
   ROOM_H,
@@ -168,5 +169,60 @@ describe("the Café room", () => {
     expect(zoneAt({ x: 9, y: 4 }).id).toBe("z_window");
     expect(zoneAt(SPAWN).id).toBe("z_floor");
     expect(ZONES[ZONES.length - 1].contains(SPAWN), "the last zone must be a catch-all").toBe(true);
+  });
+});
+
+describe("the guided-navigation list", () => {
+  it("can send you to every station and every standing hotspot", () => {
+    const ids = new Set(GUIDE.map((p) => p.id));
+    for (const s of STATIONS) expect(ids.has(s.id), `${s.id} is not in the guide`).toBe(true);
+    for (const h of HOTSPOTS.filter((x) => !x.seasonal)) {
+      expect(ids.has(h.id), `${h.id} is not in the guide`).toBe(true);
+    }
+  });
+
+  it("keeps the seasonal ones out until the week that needs them", () => {
+    // A button reading "the sample bag" in week one is a promise about week
+    // sixteen. The runner fronts the live objective's target instead.
+    const ids = new Set(GUIDE.map((p) => p.id));
+    for (const h of HOTSPOTS.filter((x) => x.seasonal)) {
+      expect(ids.has(h.id), `${h.id} is in the standing guide`).toBe(false);
+    }
+    expect(
+      HOTSPOTS.some((h) => h.seasonal),
+      "nothing is seasonal any more",
+    ).toBe(true);
+  });
+
+  it("carries the two places the season sends you that are not stations", () => {
+    // The noticeboard and the pass-through are hotspots, and the season sends
+    // you to both by name. Left out of this list they are mouse-only, and a
+    // player navigating by keyboard cannot finish either of those weeks.
+    const ids = GUIDE.map((p) => p.id);
+    expect(ids).toContain("ht_board");
+    expect(ids).toContain("ht_pass");
+  });
+
+  it("lists each place exactly once", () => {
+    const ids = GUIDE.map((p) => p.id);
+    expect(new Set(ids).size, `duplicate entries in ${ids.join(", ")}`).toBe(ids.length);
+  });
+
+  it("puts every entry somewhere you can stand and walk to", () => {
+    for (const p of GUIDE) {
+      expect(inBounds(p.cell), `${p.id} at ${at(p.cell)} is outside the room`).toBe(true);
+      expect(open.isWalkable(p.cell.x, p.cell.y), `${p.id} at ${at(p.cell)} is blocked`).toBe(true);
+      expect(findPath(open, SPAWN, p.cell).length, `${p.id} unreachable`).toBeGreaterThan(0);
+    }
+  });
+
+  it("names every place in the room's own words", () => {
+    for (const p of GUIDE) {
+      expect(p.label, `${p.id} has no label`).toBeTruthy();
+      // The list reads as a run of places, so labels stay lowercase and carry
+      // nothing that sounds like an instruction or an object id.
+      expect(p.label, `${p.id} is labelled "${p.label}"`).not.toMatch(/[A-Z]/);
+      expect(p.label, `${p.id} is labelled "${p.label}"`).not.toMatch(/press|click|object|_/i);
+    }
   });
 });
