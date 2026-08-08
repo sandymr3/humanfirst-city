@@ -637,7 +637,7 @@ Awards remain server-computed, credited once per first pass, idempotent on re-su
 >
 > §10.6's claim that *"`HARD` and `PRO` become entirely scenario content — twelve buildings × one activity each fills both grids exactly"* is therefore **false as written**. It is true of `PRO`, which does not exist yet and is empty by construction. It is not true of `HARD`.
 >
-> **Resolution options, and the recommendation, are in §10.6.1. Nothing may be seeded until KK signs one off.** The eighteen ids in each building PRD §10.1 are provisional until then.
+> **Resolution options, and the recommendation, are in §10.6.1. Nothing may be seeded until KK signs one off.** The eighteen ids in each building PRD §10.1 are provisional until then. A product-owner summary of the decision, with no engineering detail, is [DECISION_scenario_level_namespace.md](DECISION_scenario_level_namespace.md).
 
 `validate_registry` enforces, per competency-level: **exactly 12 activities, `orderIndex` 1..12, six subtopics × exactly 2 each**. There are exactly twelve buildings. These are the same twelve.
 
