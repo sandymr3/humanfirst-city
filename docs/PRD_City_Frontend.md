@@ -630,7 +630,10 @@ Proposed shapes are a starting point; the backend team owns the final contract.
 | **BE-17** | `POST /api/v1/ai/followup` (+ `/{id}/commit`) — the transfer beat | **P0** | ADR-006 §7                    | endpoint + table   |
 | **BE-18** | Extended `trace` submit + the `aiBeat` rubric block            | **P0**   | three-beat scoring             | scoring            |
 | **BE-19** | `POST /api/v1/telemetry/mission`                               | P3       | nothing                        | endpoint           |
-| **BE-20** | Un-stale `api/openapi.yaml` — `DECISION_TREE`, `trace`, `PRO`, all of the above | P1 | type-safe drift detection | contract |
+| **BE-20** | Un-stale `api/openapi.yaml` — `DECISION_TREE`, `trace`, the scenario levels, all of the above | P1 | type-safe drift detection | contract |
+| **BE-21** | Registry validator: accept a partially-populated level (default) vs `-strict` at launch | **P0** | **BE-12 — seeding anything at all** | tooling |
+
+> **⚠ Two blockers sit in front of the P0 work.** The registry validator rejects a partially-populated level, and the scenario activity ids collide with already-seeded content that has user progress against it. See [PRD_Backend_Missions §6.4–6.5](PRD_Backend_Missions.md) and [ADR-005 §10.6.1](ADR-005_Interior_Framework.md). The second one needs KK, not an engineer.
 
 ### 21.2 Epic A — Economy surface (the critical path; blocks F2)
 

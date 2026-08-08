@@ -626,6 +626,19 @@ Awards remain server-computed, credited once per first pass, idempotent on re-su
 
 ### 10.5 Registry binding — twelve buildings, twelve slots
 
+> ### ⚠ BLOCKING — this section's id scheme collides with content that is already seeded
+>
+> **Verified against the live registry on 2026-08-07.** Two facts invalidate what §10.5 and §10.6 assert:
+>
+> 1. **`C9-HARD-01`, `-02` and `-03` are already taken.** C9 is fully seeded at all three levels, and `C9/HARD` holds twelve school-style activities occupying `orderIndex` 1–12:
+>    `C9-HARD-01` *Chaos Simulator* (`MINI_SIM`) · `C9-HARD-02` *Grit vs Sunk Cost* (`CASE_STUDY`) · `C9-HARD-03` *The Setback Reflection* (`OPEN_TEXT_AI`) … through `C9-HARD-12`.
+>    **All three launch buildings collide**, at their C9 slot, on day one.
+> 2. **There is user progress against those ids.** 108 rows in the dev database, including `C9-HARD-05` and `C9-HARD-07`. Renumbering or evicting them dangles real data.
+>
+> §10.6's claim that *"`HARD` and `PRO` become entirely scenario content — twelve buildings × one activity each fills both grids exactly"* is therefore **false as written**. It is true of `PRO`, which does not exist yet and is empty by construction. It is not true of `HARD`.
+>
+> **Resolution options, and the recommendation, are in §10.6.1. Nothing may be seeded until KK signs one off.** The eighteen ids in each building PRD §10.1 are provisional until then.
+
 `validate_registry` enforces, per competency-level: **exactly 12 activities, `orderIndex` 1..12, six subtopics × exactly 2 each**. There are exactly twelve buildings. These are the same twelve.
 
 | Slot | Building | Slot | Building |
@@ -645,6 +658,8 @@ MERIDIAN  → C1-HARD-02 … C9-HARD-02   and   C1-PRO-02 … C9-PRO-02
 MAISON    → C1-HARD-03 … C9-HARD-03   and   C1-PRO-03 … C9-PRO-03
 ```
 
+> **Provisional.** Under §10.6.1's recommended Option C these become `C1-SCA-01 … C9-SCA-01` and `C1-SCB-01 … C9-SCB-01`. The *slot numbers* (01 = Café, 02 = MERIDIAN, 03 = MAISON) are unaffected either way; only the level segment moves.
+
 Two building teams can never touch the same activity, even inside the same competency file. Twelve buildings × 9 competencies × 2 levels = **216 scenario activities** at full seed.
 
 **Subtopic allocation.** Each of the six subtopics must land exactly twice per competency-level. Two ways to get there:
@@ -663,7 +678,36 @@ The backend has three levels: `BEGINNER` (8–13), `MEDIUM` (14–16), `HARD` (1
 - **Level A → `HARD`.** The 17–21 band is already there and the age fit is close enough that inventing a level for a one-year overlap would be waste.
 - **Level B → a new fourth level `PRO`, `ageBand: "35-50"`.** This is the additive backend change **BE-13** (§18).
 
-**Consequence, stated plainly:** `HARD` and `PRO` become **entirely scenario content** — twelve buildings × one activity each fills both grids exactly, with no room left over. `BEGINNER` and `MEDIUM` keep the existing school-style activity mix (drag-match, MCQ, sort, budget, mini-sim). Anyone wanting to add a non-scenario activity at `HARD` needs a slot, and there are none; that is a feature, not an oversight.
+~~**Consequence, stated plainly:** `HARD` and `PRO` become **entirely scenario content** — twelve buildings × one activity each fills both grids exactly, with no room left over.~~
+
+> **Withdrawn 2026-08-07.** That paragraph assumed `HARD` was empty. It is not: `C9/HARD` is fully seeded with twelve authored drills, with user progress against them (§10.5). The claim holds for `PRO` and fails for `HARD`.
+
+`BEGINNER` and `MEDIUM` keep the existing school-style activity mix (drag-match, MCQ, sort, budget, mini-sim), and so — as things stand — does `HARD`.
+
+### 10.6.1 Resolving the collision — options and recommendation
+
+**The underlying problem is two content models sharing one namespace.** A level was designed to hold twelve *varied drills across six subtopics × 2*. The scenario model wants a level to hold twelve *buildings, one activity each*. Both cannot own `orderIndex` 1–12 of the same competency-level.
+
+| | Option | Cost | Risk |
+|---|---|---|---|
+| **A** | **Evict `C9/HARD`** — move its twelve drills elsewhere to free the slots | There is nowhere to move them: `C9/BEGINNER` and `C9/MEDIUM` are both full at 12. They would have to be deleted | **High.** Destroys authored content and dangles progress rows |
+| **B** | **Raise the per-level cap** to 24 and partition `orderIndex` — 1–12 scenarios, 13–24 drills | Renumbering the drills changes their ids (`C9-HARD-01` → `C9-HARD-13`) | **High.** Ids are the progress key; every existing row for those activities dangles |
+| **C** ✅ | **Give scenarios their own two levels.** Level A → **`SCA`**, Level B → **`SCB`** (`SCENARIO_A` / `SCENARIO_B`), both empty by construction. `HARD` keeps its drills untouched | Two new levels instead of one; 18 level badges instead of 9; the 54 ids in the three building PRDs are renamed `C1-HARD-01` → `C1-SCA-01`, `C1-PRO-01` → `C1-SCB-01` | **Near zero.** Those ids exist only in documents — **not one row is seeded against them** — so renaming is free, and no shipped content or progress row is touched |
+
+**Recommendation: Option C.**
+
+The original argument for reusing `HARD` was that *"inventing a level for a one-year overlap would be waste"* — a judgment about age bands. That argument is now beside the point: the blocker is **capacity**, not age fit. And the cost comparison has inverted. Renaming ids that exist only in prose is free; renaming ids that exist in a progress table is a migration with a data-loss failure mode.
+
+Option C also fixes something §10.6 got wrong on its own terms. Keeping `PRO` for Level B while inventing a level for Level A would leave the two tracks asymmetrically named for no reason a reader could reconstruct. `SCA` / `SCB` is symmetric, is obviously distinct from the drill levels at a glance, and makes "which grid is this?" answerable from an activity id alone.
+
+**What Option C changes, concretely:**
+
+- **BE-13 grows.** Two levels in the allow-list, not one; `ageBand` `16-21` and `35-50`; **eighteen** `BADGE-C{n}-SCA` / `BADGE-C{n}-SCB` badges; two meta badges.
+- **Id convention** follows the existing abbreviations (`BEG`, `MED`, `HARD`): `C1-SCA-01` … `C9-SCA-12` and `C1-SCB-01` … `C9-SCB-12`.
+- **Every terminals table** in the three building PRDs is re-keyed. The *values* do not change — only the id prefix — so nothing in §10.1's arithmetic is re-derived.
+- **`HARD` is left exactly as it is.** Anyone wanting to add a drill at `HARD` still can, which is now correct rather than "a feature".
+
+**Open until KK signs off** (§20.3). The level *names* are a detail; the *structure* — a separate namespace for scenarios — is the decision.
 
 ### 10.7 Which track a player is on
 
@@ -1013,7 +1057,8 @@ Offline authoring remains encouraged and is a different activity: Claude draftin
 
 ### 20.3 Open decisions
 
-- **The fourth meta badge name** for `PRO` (`BADGE-META-OPERATOR` proposed) — KK.
+- **⚠ The scenario level namespace (§10.6.1)** — `HARD` is already full and has progress rows against it. Recommendation is Option C: two new levels `SCA` / `SCB`. **This blocks all seeding and therefore every building being playable against the live backend.** KK.
+- **The meta badge names** for the scenario levels (`BADGE-META-OPERATOR` was proposed for `PRO`; Option C needs two) — KK.
 - **Track override by batch code** — should a cohort be pinned to Level B by its WarRoom batch, overriding player choice? Deferred; player choice ships first.
 - **Shared city palette LUT** — still unauthored, and MAISON's whole identity is colour.
 - **Whether `HARD` being fully consumed by scenarios is acceptable long-term** (§10.6), or whether a fifth level is eventually needed for non-scenario advanced drills.

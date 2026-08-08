@@ -22,7 +22,9 @@ Six additive changes to `backend-academy`, none of which breaks an existing clie
 | **BE-17** | `POST /api/v1/ai/followup` | The generated transfer beat |
 | **BE-18** | Extended `trace` submit + `aiBeat` rubric block | The transfer beat has to count |
 
-Plus **BE-19** (mission telemetry, P3) and **BE-20** (un-stale `api/openapi.yaml`, P1).
+Plus **BE-19** (mission telemetry, P3), **BE-20** (un-stale `api/openapi.yaml`, P1) and **BE-21** (let the registry validator accept a partially-populated level, **P0** — §6.5).
+
+> **⚠ Two blockers stand in front of all of this, and one is not an engineering call.** The registry validator rejects a partially-populated level (§6.5), and the scenario id scheme collides with already-seeded content that has user progress against it ([ADR-005 §10.6.1](ADR-005_Interior_Framework.md)). Read §6.4 before planning any of the work below.
 
 Two new tables, two new migrations, one new service, one new content pack. `internal/scoring` gains roughly thirty lines and loses none.
 
@@ -500,7 +502,9 @@ Small, because the surface is small: **the player never types anything.** The on
 
 ## 6. Registry changes
 
-### 6.1 BE-13 · The `PRO` level
+### 6.1 BE-13 · The scenario level(s)
+
+> **Scope depends on [ADR-005 §10.6.1](ADR-005_Interior_Framework.md).** As written below, BE-13 adds one level (`PRO`) on the assumption that Level A can reuse `HARD`. **It cannot** — `HARD` is occupied (§6.4). Under the recommended Option C this ticket adds **two** levels, `SCA` (16–21) and `SCB` (35–50), **eighteen** level badges and **two** meta badges. The shape of the work is identical; the count doubles. Do not start BE-13 until the decision lands.
 
 `BEGINNER` (8–13) · `MEDIUM` (14–16) · `HARD` (17–21) gain **`PRO` (`ageBand: "35-50"`)**. Level A → `HARD`, Level B → `PRO` (ADR-005 §10.6).
 
@@ -539,9 +543,50 @@ type traceRubric struct {
 
 `ValidateRubric` gains: if `AIBeat != nil`, `Weight` ∈ (0, 0.5] and `TierValues` has all three keys.
 
-### 6.4 BE-12 · Seeding the 54 scenario rows
+### 6.4 BE-12 · Seeding the 54 scenario rows — **blocked, twice**
 
-Three launch buildings × 9 competencies × 2 levels = **54 `DECISION_TREE` rows**, slots 01 (Café) / 02 (MERIDIAN) / 03 (MAISON), with the terminals tables from each building PRD §10 and the new `aiBeat` block. `validate_registry` still requires exactly 12 activities per competency-level with six subtopics × 2, so `HARD` and `PRO` are only fully valid once all twelve buildings exist; until then the seed runs with `-strict=false` and the ledger in [Café §10.2](PRD_Building_Cafe.md) tracks the gap.
+Three launch buildings × 9 competencies × 2 levels = **54 `DECISION_TREE` rows**, slots 01 (Café) / 02 (MERIDIAN) / 03 (MAISON), with the terminals tables from each building PRD §10 and the new `aiBeat` block.
+
+> ### ⚠ Correction (2026-08-07) — v1.0 of this section was wrong
+>
+> It said: *"until then the seed runs with `-strict=false` and the ledger tracks the gap."* **`-strict=false` does not relax anything relevant.** Verified in [`cmd/validate_registry/main.go`](../../backend-academy/cmd/validate_registry/main.go):
+>
+> ```go
+> if *strict && len(comp.Levels) != 3 { … }        // line 64 — strict-only
+>
+> for level, lv := range comp.Levels {
+>     if len(lv.Activities) != 12 {                 // line 72 — UNCONDITIONAL
+>         fail("%s/%s: expected 12 activities, found %d", …)
+>     }
+> ```
+>
+> `-strict` adds only the *"three levels per competency"* rule. The **twelve-activities-per-level** rule sits inside the level loop and always runs. Seven competencies have **zero** levels today (only C4 has `BEGINNER`, only C9 has all three), so adding `C1-SCA-01` creates a level holding one activity and **fails the build, with no flag that relaxes it**.
+>
+> _Credit: found by the backend owner while checking whether the Café's rows could be seeded._
+
+**Two blockers, both of which must clear before a single row is seeded:**
+
+| # | Blocker | Owner | Fix |
+|---|---|---|---|
+| **1** | The validator rejects a partially-populated level | backend | **BE-21** below |
+| **2** | The scenario id scheme collides with seeded content — `C9-HARD-01/02/03` are taken and have progress rows against them | product | [ADR-005 §10.6.1](ADR-005_Interior_Framework.md), recommendation **Option C** (`SCA` / `SCB`). **Needs KK.** |
+
+### 6.5 BE-21 · Let the validator accept a partially-populated level
+
+**New ticket, P0, blocks BE-12.**
+
+The "exactly 12" invariant is a *launch* gate that has been enforced as a *build* gate. It is correct at full seed and wrong during rollout — it makes seeding the first building of twelve impossible.
+
+**Change:** split the rule by mode.
+
+| Mode | Rule |
+|---|---|
+| default | `len(lv.Activities) <= 12` · `orderIndex` unique and within 1..12 · no duplicate ids · every subtopic in the competency's list |
+| `-strict` | additionally `== 12`, six subtopics × exactly 2, and three levels per competency |
+
+`-strict` is what CI runs at launch and what the phase gate in §9 P4 means. The default is what a developer and the seed job run while twelve buildings are being written one at a time.
+
+**Acceptance:** with one scenario row seeded into an otherwise-empty level, the default run passes and `-strict` fails with a message naming the shortfall.
 
 ---
 
@@ -598,7 +643,8 @@ Structured logs never include the prompt body, the option tiers, or the API key.
 
 | Phase | Deliverable | Gate |
 |---|---|---|
-| **P0 — Foundations** | BE-13 (`PRO`), BE-14 (coins), BE-20 (openapi), migrations 00004/00005, models, drift check | `validate_registry -strict=false` green with a `PRO` block; drift check green |
+| **P-1 — Unblock** | **BE-21** (validator modes) + the [ADR-005 §10.6.1](ADR-005_Interior_Framework.md) level decision | One scenario row seeds into an empty level and the default validator run passes |
+| **P0 — Foundations** | BE-13 (the scenario level(s)), BE-14 (coins), BE-20 (openapi), migrations 00004/00005, models, drift check | Default `validate_registry` green with a scenario level present; drift check green |
 | **P1 — Session** | BE-15, BE-16 including the beacon path and token | A season written from one tab, read from another; a killed tab loses nothing after the beacon fires |
 | **P2 — Generation** | BE-17 + `FollowupGenerator` + Claude Haiku 4.5 client + all nine gates + the fallback loader + `/commit` | With the API key removed, a full mission plays on fallbacks and nothing in the response distinguishes it |
 | **P3 — Scoring** | BE-18, the `aiBeat` rubric block, the 27-cell table test | Every cell of ADR-006 §10.2 reproduced exactly |
