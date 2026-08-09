@@ -914,6 +914,18 @@ Note `c.c` = 47 → P2: you defended the colour for three weeks, then rang Véra
 
 `C5-SCB-03`
 
+> ### ⚠ This table's branch-c row no longer matches the shipped prose
+>
+> Found on 2026-08-08 while deriving the tier maps from `src/buildings/fashion_brand/trees/c5-pro-03.ts`. The table below says branch c is **Strong · Advanced · Developing**. The prose that ships reads the other way round:
+>
+> | | shipped text | reads as |
+> |---|---|---|
+> | **c.a** | *"Take the second one too. You are in this now; the damage is done…"* | textbook sunk cost — **Developing** |
+> | **c.b** | *"Stop at one. Take the money you have, spend the two seasons rebuilding…"* | **Strong** |
+> | **c.c** | *"Stop, and be public about stopping — let the market see a house that priced its own mistake"* | **Advanced** |
+>
+> The prose was authored after this table. The seeded rubric follows the **prose**, because the prose is what a learner reads — see `internal/registry/content/tiermaps/fashion_brand.json`. Either this table is corrected or the reading is wrong; **somebody who did not do either should decide which**, because three of the nine terminals score differently depending on the answer.
+
 | Node | a | b | c |
 |---|---|---|---|
 | **seed** | Strong (cost it, then decide) | Advanced (map the chain, design the deal) | Developing (sign) |
