@@ -6,7 +6,7 @@ import { c2Hard03 } from "@/buildings/fashion_brand/content";
 
 // The component half of the contract: the dialogue layer builds the right trace,
 // and the venue shows no tier anywhere (docs/maison.md §11, §18.3).
-const ID = "C2-HARD-03";
+const ID = "C2-SCA-03";
 
 describe("DecisionTreeRenderer", () => {
   it("reports nothing until the tree ends, then the whole path", async () => {

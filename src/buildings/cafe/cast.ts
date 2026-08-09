@@ -204,7 +204,7 @@ export const OPENING_CAST: readonly CastId[] = ["priya", "marcus"];
  */
 export function castFor(world: World, track: Track = trackOrDefault()): CastId[] {
   const here: CastId[] = ["priya"];
-  if (track === "PRO") here.push("tomas");
+  if (track === "SCB") here.push("tomas");
   if (marcusIsIn(world)) here.push("marcus");
   return here;
 }

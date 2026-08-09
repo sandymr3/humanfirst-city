@@ -158,8 +158,8 @@ describe("the season", () => {
   });
 
   it("finds a mission by its order and nothing by a bad one", () => {
-    expect(missionByOrder(1)?.activityId).toBe("C1-HARD-01");
-    expect(missionByOrder(9)?.activityId).toBe("C9-HARD-01");
+    expect(missionByOrder(1)?.activityId).toBe("C1-SCA-01");
+    expect(missionByOrder(9)?.activityId).toBe("C9-SCA-01");
     expect(missionByOrder(10)).toBeNull();
   });
 });

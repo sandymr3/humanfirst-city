@@ -50,7 +50,7 @@ describe("animated characters", () => {
     // §16 caps the cast at four and §8.1's mission table is what enforces it:
     // the six exist, and four of them are never all present. Ambient customers
     // are counted separately in §16's own sprite breakdown.
-    for (const track of ["HARD", "PRO"] as const) {
+    for (const track of ["SCA", "SCB"] as const) {
       for (const world of everyWorld()) {
         // The most the room can hold: whoever lives here, plus the one visitor
         // the live mission brings in. No mission brings two.

@@ -21,19 +21,19 @@ beforeEach(() => {
 describe("Priya's question at the door", () => {
   it("is asked once, and is unanswered until it is answered", () => {
     expect(activeTrack()).toBeNull();
-    setTrack("PRO");
-    expect(activeTrack()).toBe("PRO");
+    setTrack("SCB");
+    expect(activeTrack()).toBe("SCB");
   });
 
   it("answers Level A for anybody who has never been asked", () => {
     // Every pure lookup in the building calls this. A null track must never
     // reach a season table.
-    expect(trackOrDefault()).toBe("HARD");
+    expect(trackOrDefault()).toBe("SCA");
   });
 
   it("offers exactly two answers, one per track", () => {
     expect(THRESHOLD.options).toHaveLength(2);
-    expect(THRESHOLD.options.map((o) => o.track).sort()).toEqual(["HARD", "PRO"]);
+    expect(THRESHOLD.options.map((o) => o.track).sort()).toEqual(["SCA", "SCB"]);
   });
 
   it("marks neither answer as the ambitious one", () => {
@@ -56,15 +56,15 @@ describe("Priya's question at the door", () => {
   it("is stored city-wide, so the next building finds it already answered", () => {
     // ADR-005 §10.7. The Café asks it because the Café is where a new player
     // arrives, not because the answer belongs to the Café.
-    setTrack("PRO");
-    expect(localStorage.getItem("city.track")).toContain("PRO");
+    setTrack("SCB");
+    expect(localStorage.getItem("city.track")).toContain("SCB");
   });
 });
 
 describe("the eighteen registry rows", () => {
   it("names them in exactly one place", () => {
-    expect(activityIdFor("C1", "HARD")).toBe("C1-HARD-01");
-    expect(activityIdFor("C4", "PRO")).toBe("C4-PRO-01");
+    expect(activityIdFor("C1", "SCA")).toBe("C1-SCA-01");
+    expect(activityIdFor("C4", "SCB")).toBe("C4-SCB-01");
   });
 
   it("gives every competency a row on both tracks, all eighteen distinct", () => {
@@ -72,7 +72,7 @@ describe("the eighteen registry rows", () => {
     expect(ids).toHaveLength(18);
     expect(new Set(ids).size).toBe(18);
     for (const m of PRO_MISSIONS) {
-      expect(m.activityId).toBe(activityIdFor(m.competency, "PRO"));
+      expect(m.activityId).toBe(activityIdFor(m.competency, "SCB"));
     }
   });
 });
@@ -115,11 +115,11 @@ describe("the Level B season", () => {
   });
 
   it("is what missionByOrder returns once the player has answered", () => {
-    setTrack("PRO");
-    expect(missionByOrder(1)?.activityId).toBe("C1-PRO-01");
-    setTrack("HARD");
-    expect(missionByOrder(1)?.activityId).toBe("C1-HARD-01");
-    expect(seasonFor("PRO")).toBe(PRO_MISSIONS);
+    setTrack("SCB");
+    expect(missionByOrder(1)?.activityId).toBe("C1-SCB-01");
+    setTrack("SCA");
+    expect(missionByOrder(1)?.activityId).toBe("C1-SCA-01");
+    expect(seasonFor("SCB")).toBe(PRO_MISSIONS);
   });
 });
 
@@ -127,12 +127,12 @@ describe("the Level B room", () => {
   it("puts Tomas on the floor from week one", () => {
     // The staffing problem is in the room from the start rather than arriving in
     // week 14, and that is most of what makes the same nine weeks read heavier.
-    expect(castFor(OPENING_WORLD, "PRO")).toContain("tomas");
-    expect(castFor(OPENING_WORLD, "HARD")).not.toContain("tomas");
+    expect(castFor(OPENING_WORLD, "SCB")).toContain("tomas");
+    expect(castFor(OPENING_WORLD, "SCA")).not.toContain("tomas");
   });
 
   it("keeps Priya unremovable on both tracks", () => {
-    for (const track of ["HARD", "PRO"] as const) {
+    for (const track of ["SCA", "SCB"] as const) {
       for (const regulars of ["full", "steady", "thin", "returning"] as const) {
         expect(castFor({ ...OPENING_WORLD, regulars }, track), track).toContain("priya");
       }
@@ -140,13 +140,13 @@ describe("the Level B room", () => {
   });
 
   it("has the rival's awning already up across the road", () => {
-    expect(openingWorldFor("PRO").rival).toBe("open");
-    expect(openingWorldFor("HARD").rival).toBe("none");
+    expect(openingWorldFor("SCB").rival).toBe("open");
+    expect(openingWorldFor("SCA").rival).toBe("none");
   });
 
   it("pins the supplier's letter and the corrected rota by the hatch", () => {
-    const pro = passThroughBody(OPENING_WORLD, "PRO");
-    const hard = passThroughBody(OPENING_WORLD, "HARD");
+    const pro = passThroughBody(OPENING_WORLD, "SCB");
+    const hard = passThroughBody(OPENING_WORLD, "SCA");
     expect(pro).toContain("supplier");
     expect(pro).toContain("rota");
     expect(hard).not.toContain("supplier");

@@ -17,8 +17,8 @@ const played: Season = {
   taken: { seed: "c" },
   visitors: ["nadia"],
   playerCell: { x: 9, y: 4 },
-  unsent: [{ activityId: "C1-HARD-01", taken: { seed: "c", follow: "b" }, durationSec: 412 }],
-  decided: [{ activityId: "C1-HARD-01", seed: "c", follow: "b", transfer: "o_c1a" }],
+  unsent: [{ activityId: "C1-SCA-01", taken: { seed: "c", follow: "b" }, durationSec: 412 }],
+  decided: [{ activityId: "C1-SCA-01", seed: "c", follow: "b", transfer: "o_c1a" }],
 };
 
 beforeEach(() => {

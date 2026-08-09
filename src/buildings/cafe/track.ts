@@ -1,4 +1,4 @@
-// Which track you are on — Level A (`HARD`) or Level B (`PRO`), PRD §14.
+// Which track you are on — Level A (`SCA`) or Level B (`SCB`), PRD §14.
 //
 // Asked once for the whole city (ADR-005 §10.7), by Priya, the first time you
 // walk into the Café. The Café asks it because the Café is building 01 and is
@@ -18,7 +18,7 @@
 // and half the pure modules in this building need it without wanting a store.
 import { loadJson, saveJson } from "@/lib/persist";
 
-export type Track = "HARD" | "PRO";
+export type Track = "SCA" | "SCB";
 
 /** City-wide, not Café-owned. The next building reads the same answer. */
 const KEY = "city.track";
@@ -35,12 +35,12 @@ export const THRESHOLD = {
   prompt: "Is this your first place, or have you done this before?",
   options: [
     {
-      track: "HARD" as Track,
+      track: "SCA" as Track,
       text: "First one. The bank manager took a chance on me and I have been awake since four thinking about it.",
       says: "Right. Then we work it out as we go, and you ask me things, and I will not be precious about it.",
     },
     {
-      track: "PRO" as Track,
+      track: "SCB" as Track,
       text: "I have done this before. Which is exactly why the last six flat weeks are bothering me more than they should.",
       says: "Thought so. Then I will stop explaining and start telling you what I think, and you can tell me when I am wrong.",
     },
@@ -57,7 +57,7 @@ interface Stored {
 const isStored = (v: unknown): v is Stored =>
   typeof v === "object" &&
   v !== null &&
-  ((v as Stored).track === "HARD" || (v as Stored).track === "PRO");
+  ((v as Stored).track === "SCA" || (v as Stored).track === "SCB");
 
 /**
  * The track this player is on, or null when they have never been asked. Reads
@@ -73,7 +73,7 @@ export function activeTrack(): Track | null {
 
 /** The track, defaulting to Level A. Anything that must answer today uses this. */
 export function trackOrDefault(): Track {
-  return activeTrack() ?? "HARD";
+  return activeTrack() ?? "SCA";
 }
 
 /** Whether the player still has to answer. Read once, when the room opens. */

@@ -64,8 +64,8 @@ describe("MAISON season spine", () => {
   });
 
   it("maps an activity id back to its beat, and rejects a stranger", () => {
-    expect(beatForActivity("C5-PRO-03")?.competency).toBe("C5");
-    expect(beatForActivity("C2-HARD-03")?.host).toBe("Élise");
+    expect(beatForActivity("C5-SCB-03")?.competency).toBe("C5");
+    expect(beatForActivity("C2-SCA-03")?.host).toBe("Élise");
     expect(beatForActivity("C4-BEG-01")).toBeUndefined();
   });
 

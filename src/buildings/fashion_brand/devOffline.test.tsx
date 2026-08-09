@@ -18,9 +18,9 @@ import { INITIAL_WORLD } from "./world";
 import type { LevelActivity } from "@/framework/api/schemas";
 
 const activity = {
-  id: "C2-HARD-03",
+  id: "C2-SCA-03",
   competencyCode: "C2",
-  level: "HARD",
+  level: "SCA",
   activityType: "DECISION_TREE",
   title: "Three Times Faster",
   status: "NOT_STARTED",
@@ -52,7 +52,7 @@ describe("MAISON in the dev world, with no backend", () => {
     // The house still moved, because the house moves on the decision — but
     // nothing invented a proficiency out of a failed request.
     const s = useMaisonStore.getState();
-    expect(s.decided).toEqual([{ id: "C2-HARD-03", path: ["c", "b"] }]);
+    expect(s.decided).toEqual([{ id: "C2-SCA-03", path: ["c", "b"] }]);
     expect(s.world.rail).toBe("thin");
 
     const text = screen.getByRole("dialog").textContent ?? "";

@@ -80,7 +80,7 @@ export const OPENING_WORLD: World = {
  * one from the start.
  */
 export function openingWorldFor(track: Track): World {
-  return track === "PRO" ? { ...OPENING_WORLD, rival: "open" } : { ...OPENING_WORLD };
+  return track === "SCB" ? { ...OPENING_WORLD, rival: "open" } : { ...OPENING_WORLD };
 }
 
 const KEYS = Object.keys(WORLD_KEYS) as WorldKey[];
@@ -255,7 +255,7 @@ export function passThroughBody(world: World, track: Track = trackOrDefault()): 
   // Level B pins two more things here: the supplier's price-increase letter, and
   // a second rota that somebody has already been through in pencil (PRD §14).
   const paper =
-    track === "PRO"
+    track === "SCB"
       ? " Pinned beside it: a letter from the supplier about next quarter's prices, and a second rota with two shifts crossed out and rewritten."
       : "";
   const rota: Record<WorldValue<"staff">, string> = {

@@ -73,7 +73,7 @@ export const MISSIONS: readonly Mission[] = [
     order: 1,
     week: 1,
     competency: "C1",
-    activityId: "C1-HARD-01",
+    activityId: "C1-SCA-01",
     title: "The Dairy-Free Question",
     staging:
       "8:05. The bell goes. Nadia's already reaching for her card before she's at the counter, the way she is every morning.",
@@ -102,7 +102,7 @@ export const MISSIONS: readonly Mission[] = [
     order: 2,
     week: 3,
     competency: "C2",
-    activityId: "C2-HARD-01",
+    activityId: "C2-SCA-01",
     title: "The Iced Drink",
     staging:
       "Two weeks in. Priya has the numbers on the back of a docket and has clearly been waiting for you to ask.",
@@ -125,7 +125,7 @@ export const MISSIONS: readonly Mission[] = [
     order: 3,
     week: 5,
     competency: "C3",
-    activityId: "C3-HARD-01",
+    activityId: "C3-SCA-01",
     title: "The Truck",
     staging: "The hottest day of the year. Ray's truck is at the kerb before he is at the door.",
     host: "ray",
@@ -150,7 +150,7 @@ export const MISSIONS: readonly Mission[] = [
     order: 4,
     week: 8,
     competency: "C4",
-    activityId: "C4-HARD-01",
+    activityId: "C4-SCA-01",
     title: "The Good Month",
     staging:
       "22:30. Chairs up, machine cooling and ticking as it goes. One pendant on over the counter. The month's takings are stacked in front of you.",
@@ -172,7 +172,7 @@ export const MISSIONS: readonly Mission[] = [
     order: 5,
     week: 10,
     competency: "C5",
-    activityId: "C5-HARD-01",
+    activityId: "C5-SCA-01",
     title: "The App",
     staging:
       "A promo card on the community board you didn't pin. Nadia mentions she's been ordering through it. She means it kindly.",
@@ -191,7 +191,7 @@ export const MISSIONS: readonly Mission[] = [
     order: 6,
     week: 12,
     competency: "C6",
-    activityId: "C6-HARD-01",
+    activityId: "C6-SCA-01",
     title: "Forty Off",
     staging:
       "She's taken Marcus's table. Laptop open, coffee she bought herself, a number already decided.",
@@ -218,7 +218,7 @@ export const MISSIONS: readonly Mission[] = [
     order: 7,
     week: 14,
     competency: "C7",
-    activityId: "C7-HARD-01",
+    activityId: "C7-SCA-01",
     title: "Late",
     staging:
       "First grey day. She's been late four times in two weeks and it's landing on everyone else.",
@@ -242,7 +242,7 @@ export const MISSIONS: readonly Mission[] = [
     order: 8,
     week: 16,
     competency: "C8",
-    activityId: "C8-HARD-01",
+    activityId: "C8-SCA-01",
     title: "The Sample Bag",
     staging:
       "A bag of the cheaper beans on the counter end and a number on the invoice that would fix this month. Marcus is in his chair behind you, reading.",
@@ -262,7 +262,7 @@ export const MISSIONS: readonly Mission[] = [
     order: 9,
     week: 18,
     competency: "C9",
-    activityId: "C9-HARD-01",
+    activityId: "C9-SCA-01",
     title: "The New Awning",
     staging:
       "A new café across the road, open a fortnight. Through two panes of glass you can see two of your regulars sitting in it.",
@@ -378,12 +378,12 @@ const PRO_OVERRIDES: Readonly<Record<string, ProOverride>> = {
 /** The Level B season. Same shape, different weight. */
 export const PRO_MISSIONS: readonly Mission[] = MISSIONS.map((mission) => ({
   ...mission,
-  activityId: activityIdFor(mission.competency, "PRO"),
+  activityId: activityIdFor(mission.competency, "SCB"),
   ...PRO_OVERRIDES[mission.competency],
 }));
 
 export function seasonFor(track: Track): readonly Mission[] {
-  return track === "PRO" ? PRO_MISSIONS : MISSIONS;
+  return track === "SCB" ? PRO_MISSIONS : MISSIONS;
 }
 
 /**

@@ -129,7 +129,7 @@ export function lightForMission(missionOrder: number): Light {
   const light = mission ? lightForWeek(mission.week) : AFTER_LIGHT;
   // Both seasons run the same nine weeks, so the week comes off the Level A
   // table on either track. Only the grade differs.
-  return trackOrDefault() === "PRO" ? cooled(light) : light;
+  return trackOrDefault() === "SCB" ? cooled(light) : light;
 }
 
 /**
