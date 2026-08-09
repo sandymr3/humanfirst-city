@@ -86,10 +86,10 @@ Over one season — nine weeks, nine decisions — you will decide what to sell,
 - One 2.5D isometric interior: a single room plus a visible back-of-house pass-through and a street view. **Shipped** (§0.1).
 - Six named NPCs plus an ambient customer loop.
 - **Nine missions**, strictly ordered, each with an objective chain (§8).
-- Nine competency decision trees × two tracks (Level A → `HARD`, Level B → `PRO`) = **18 trees, 162 authored leaves**, plus **18 scripted fallback transfer beats** (§9.6).
+- Nine competency decision trees × two tracks (Level A → `SCA`, Level B → `SCB`) = **18 trees, 162 authored leaves**, plus **18 scripted fallback transfer beats** (§9.6).
 - A visible world-state model with ten keys driving props, light, cast presence and ambience.
 - The end-of-journey report as a diegetic object.
-- Registry content for `C1-HARD-01 … C9-HARD-01` and `C1-PRO-01 … C9-PRO-01`.
+- Registry content for `C1-SCA-01 … C9-SCA-01` and `C1-SCB-01 … C9-SCB-01`.
 - Session state synced to the backend during play and flushed on exit (§19).
 
 ### Out of scope
@@ -104,7 +104,7 @@ Over one season — nine weeks, nine decisions — you will decide what to sell,
 
 | Assumption | Source | If false |
 |---|---|---|
-| `PRO` level exists in the registry | BE-13 | Level B cannot seed; ship Level A only and hold Level B content |
+| `SCA` and `SCB` levels exist in the registry | BE-13 | Nothing can seed. The room is walkable but no mission opens |
 | `coinsByProficiency` is `{1:5, 2:15, 3:25}` | BE-14 | Rewards are off-scale but nothing breaks |
 | `city/state` and building-session endpoints exist | BE-15 / BE-16 | Falls back to `localStorage`; the season persists locally and is lost on another device |
 | `POST /ai/followup` exists | BE-17 | **Nothing breaks** — the 18-entry fallback bank serves every transfer beat and the player cannot tell |
@@ -537,7 +537,7 @@ The first draft of this document failed that. Measured across all 69 choices, th
 
 ---
 
-### 9.3 Exemplar A — `C1-HARD-01` · "The Dairy-Free Question" (Level A, fully worked)
+### 9.3 Exemplar A — `C1-SCA-01` · "The Dairy-Free Question" (Level A, fully worked)
 
 **Station** `st_till` · **Host** Nadia · **Week 1**
 
@@ -597,7 +597,7 @@ Each leaf resolves in the room within 4–6 seconds: a line from Priya, one worl
 
 ---
 
-### 9.4 Exemplar B — `C4-PRO-01` · "The Good Month" (Level B, fully worked)
+### 9.4 Exemplar B — `C4-SCB-01` · "The Good Month" (Level B, fully worked)
 
 **Station** `st_till_night` · **Host** none · **Week 8**
 
@@ -657,7 +657,7 @@ The seed layer below is the shipping text (post-rewrite). The follow-up branches
 
 #### C2 · Learning Agility
 
-**Level A — `C2-HARD-01` "The Iced Drink"** · `st_bar` · Priya · Week 3
+**Level A — `C2-SCA-01` "The Iced Drink"** · `st_bar` · Priya · Week 3
 > Two weeks in. Priya has the numbers on the back of a docket and has clearly been waiting for you to ask.
 
 - Ask the people who walked past it why they didn't order, then change the recipe on what they tell you.
@@ -666,7 +666,7 @@ The seed layer below is the shipping text (post-rewrite). The follow-up branches
 
 *Follow-ups:* **branch "asked customers"** → they say it's too sweet; do you fix the recipe and stop there, keep asking, or turn the finding into a habit? · **branch "kept pushing"** → a month gone, still flat; hold, quietly drop, or admit it to the team and rebuild? · **branch "one change"** → it lifted, but you changed price and name in the same week by accident; re-run clean, keep the win, or generalise the method?
 
-**Level B — `C2-PRO-01` "The Drink You Championed"** · `st_bar` · Priya + Tomas · Week 3
+**Level B — `C2-SCB-01` "The Drink You Championed"** · `st_bar` · Priya + Tomas · Week 3
 > You told the team to get behind it. They did. It isn't working, and they are watching to see what you do about having been wrong.
 
 - Run one clean test: change a single variable, measure it, and decide the keep-or-cut threshold before you look at the result.
@@ -677,7 +677,7 @@ The seed layer below is the shipping text (post-rewrite). The follow-up branches
 
 #### C3 · Courage to Commit
 
-**Level A — `C3-HARD-01` "The Truck"** · `st_window` · Ray · Week 5
+**Level A — `C3-SCA-01` "The Truck"** · `st_window` · Ray · Week 5
 > The hottest day of the year. Ray's truck is at the kerb before he is at the door. He needs an answer tomorrow.
 
 - Yes, but structured: you sell the drinks, he sells the food, and you split a combo so both sides have a reason to send people across.
@@ -686,7 +686,7 @@ The seed layer below is the shipping text (post-rewrite). The follow-up branches
 
 *Follow-ups:* **"structured"** → his crowd is big but buys almost no coffee; renegotiate, ride it out, or redesign the combo? · **"declined"** → he parks outside the rival and takes the crowd with him; approach him, hold, or counter-programme? · **"one-month trial"** → the check-in date arrives with ambiguous numbers; extend, exit, or make the criteria explicit before extending?
 
-**Level B — `C3-PRO-01` "Thirty Per Cent"** · `st_counter_end` · Ray (as supplier rep) · Week 5
+**Level B — `C3-SCB-01` "Thirty Per Cent"** · `st_counter_end` · Ray (as supplier rep) · Week 5
 > A bulk offer at 30% off, placed today or not at all. The saving is real. It would take most of your spare cash, and you have no idea what the quarter after next looks like.
 
 - Pass. Tying that much cash to a forecast you don't have is the kind of risk that only looks smart in hindsight.
@@ -695,25 +695,25 @@ The seed layer below is the shipping text (post-rewrite). The follow-up branches
 
 #### C4 · Financial Discipline
 
-**Level A — `C4-HARD-01` "The Good Month"** · `st_till_night` · none · Week 8
+**Level A — `C4-SCA-01` "The Good Month"** · `st_till_night` · none · Week 8
 > Same staging as §9.4, smaller stakes and shorter horizon.
 
 - Replace the machine. It's the oldest thing in the room, it's what everything runs through, and a good month is exactly when you fix it.
 - Put most of it aside as a cushion and spend a little on the one thing customers have actually asked for.
 - Back the single spend most likely to bring the same people through the door again next week, and leave the rest where it is.
 
-**Level B — `C4-PRO-01`** — fully worked in §9.4.
+**Level B — `C4-SCB-01`** — fully worked in §9.4.
 
 #### C5 · Strategic Thinking
 
-**Level A — `C5-HARD-01` "The App"** · `st_board` · Nadia (offhand) · Week 10
+**Level A — `C5-SCA-01` "The App"** · `st_board` · Nadia (offhand) · Week 10
 > A promo card on the community board you didn't pin. Nadia mentions she's been ordering through it. She means it kindly.
 
 - Do the arithmetic on their cut first, then lift delivery prices enough to come out where you started.
 - List with them. Reach you can't buy is worth a cut you don't like, and every order is an order you weren't getting.
 - Use it to get found, then give every delivery bag a reason to order direct next time.
 
-**Level B — `C5-PRO-01` "Forty Per Cent of You"** · `st_board` · Week 10
+**Level B — `C5-SCB-01` "Forty Per Cent of You"** · `st_board` · Week 10
 > The app now drives 40% of your orders. They've just raised the commission. Leaving costs you that volume overnight; staying costs you the margin. Whatever you decide today, you'll be living inside for two years.
 
 - Absorb it. You cannot walk away from 40% of your orders on principle.
@@ -722,14 +722,14 @@ The seed layer below is the shipping text (post-rewrite). The follow-up branches
 
 #### C6 · Power & Influence
 
-**Level A — `C6-HARD-01` "Forty Off"** · `st_table_4` · Ellery Fitch · Week 12
+**Level A — `C6-SCA-01` "Forty Off"** · `st_table_4` · Ellery Fitch · Week 12
 > She's taken Marcus's table. Laptop open, coffee she bought herself, a number already decided.
 
 - Ask what they actually need before you talk price, then build a package that serves it at a number that still works for you.
 - Take the 40%. A standing weekly order is the only predictable revenue in this building, and predictable is worth paying for.
 - Offer a smaller discount, tied to a minimum weekly order and a commitment up front, so the price you give matches the certainty you get.
 
-**Level B — `C6-PRO-01` "The Account"** · `st_table_4` · Ellery Fitch · Week 12
+**Level B — `C6-SCB-01` "The Account"** · `st_table_4` · Ellery Fitch · Week 12
 > Steady revenue, a year's commitment, and terms that would leave you working at roughly nothing. She mentions, pleasantly, that she has other options.
 
 - Meet the terms. Predictable revenue at thin margin still beats an empty diary.
@@ -738,14 +738,14 @@ The seed layer below is the shipping text (post-rewrite). The follow-up branches
 
 #### C7 · People Management
 
-**Level A — `C7-HARD-01` "Late"** · `st_passthrough` · Priya · Week 14
+**Level A — `C7-SCA-01` "Late"** · `st_passthrough` · Priya · Week 14
 > First grey day. She's been late four times in two weeks and it's landing on everyone else. The pass-through is the only place in this room where a conversation stays between two people.
 
 - Talk to her privately first, find out what's actually going on, and agree a fix together.
 - Give a clear warning. Lateness that goes unaddressed in a team this size becomes everyone's lateness inside a month.
 - Ask, listen, and deal with both the behaviour and its cause — adjust what you can support without moving the standard.
 
-**Level B — `C7-PRO-01` "The Best One"** · `st_passthrough` · Tomas + Priya · Week 14
+**Level B — `C7-SCB-01` "The Best One"** · `st_passthrough` · Tomas + Priya · Week 14
 > Tomas is the fastest pair of hands you have and the reason two other people are miserable. Cracking down risks losing him. Not cracking down risks losing them.
 
 - Back the performer. Results carry a small business, and the rest of the team adjusts to reality faster than they admit.
@@ -754,14 +754,14 @@ The seed layer below is the shipping text (post-rewrite). The follow-up branches
 
 #### C8 · Value Creation & Credibility
 
-**Level A — `C8-HARD-01` "The Sample Bag"** · `st_counter_end` · the supplier's sample · Week 16
+**Level A — `C8-SCA-01` "The Sample Bag"** · `st_counter_end` · the supplier's sample · Week 16
 > A bag of the cheaper beans on the counter end and a number on the invoice that would fix this month. Marcus is in his chair behind you, reading.
 
 - Keep the beans you use and start telling people why — put the roaster's name on the board and make the sourcing part of what this place is.
 - Take the cheaper beans. The difference is real in a cupping room and nearly invisible under milk, and the margin is what keeps the lights on.
 - Stay with the beans you use, absorb the thinner margin this month, and say nothing about it to customers or to the supplier.
 
-**Level B — `C8-PRO-01` "The Quiet Cut"** · `st_counter_end` · Week 16
+**Level B — `C8-SCB-01` "The Quiet Cut"** · `st_counter_end` · Week 16
 > There is a reduction you could make that this quarter needs and almost nobody would notice for a while.
 
 - Make it. The numbers need it, the difference is marginal, and a quarter you survive is worth more than a principle you can't afford.
@@ -770,14 +770,14 @@ The seed layer below is the shipping text (post-rewrite). The follow-up branches
 
 #### C9 · Perseverance & Adaptability
 
-**Level A — `C9-HARD-01` "The New Awning"** · `st_window` · the street · Week 18
+**Level A — `C9-SCA-01` "The New Awning"** · `st_window` · the street · Week 18
 > A new café across the road, open a fortnight. Through two panes of glass you can see two of your regulars sitting in it. Marcus's chair is empty for the first time since you took this place on.
 
 - Cut prices while they're still deciding. Habit is the whole business at this size, and habit is cheapest to defend before it breaks.
 - Stay steady. Ask your regulars what they actually come here for, and then put everything you have into that one thing.
 - Treat it as information. Work out what the new place does genuinely well, work out what you do that they can't, and compete on that.
 
-**Level B — `C9-PRO-01` "Three Weeks Down"** · `st_window` · Week 18
+**Level B — `C9-SCB-01` "Three Weeks Down"** · `st_window` · Week 18
 > Well-funded competition, three straight weeks of decline, staff who have started reading the room, and cash that is tightening. This is the third hard stretch this year.
 
 - Move first and move big. Three weeks of decline is a trend, and the worst thing you can do against funded competition is nothing.
@@ -819,7 +819,7 @@ These go to the generator verbatim and are mirrored into `internal/registry/cont
 | Mission staging | §8.2's staging line for that mission |
 | Persona card | §9.6.2, for the resolved speaker |
 | Prior choices | The **exact text** of the seed option and the follow-up option chosen |
-| Track | `HARD` (16–21: fewer moving parts, shorter horizon) or `PRO` (35–50: competing legitimate interests, a real price) |
+| Track | `SCA` (16–21: fewer moving parts, shorter horizon) or `SCB` (35–50: competing legitimate interests, a real price) |
 | World state | The ten keys of §12, current values only, from a closed enum |
 | `aiWorldCandidates` | The 2–3 legal writes listed per mission in §8.2 |
 
@@ -839,6 +839,10 @@ These go to the generator verbatim and are mirrored into `internal/registry/cont
 | C8 | a customer asks, directly, what changed | the supplier offers the good beans at the cheap price, once | `beans` |
 | C9 | the new place runs an opening promotion | the new place quietly closes at three on weekdays | `rival` |
 
+**Status: authored.** All eighteen live at `internal/registry/content/followups/cafe.json` in `backend-academy`, with the persona cards of §9.6.2 alongside them so the fallback and the generated beat are written from one description of each character. They pass the §11.5 machine pass — one of each tier per trio, 13–33 words per option, ≤ 8 words of spread, every option self-justifying, no verdict language, prompts under 60 words. **Not yet loaded**: `internal/registry/loader.go` reads only `content/c*.json`, so wiring the pack up is part of BE-17.
+
+**Still owed:** the fresh-reader pass (§18.2.1). The machine pass is green; the human one has not run.
+
 **A missing entry is a blocking defect** — `validate_registry` fails the build ([PRD_Backend_Missions §5.4](PRD_Backend_Missions.md)). This is what makes "no breaking at edge case" a property of the Café rather than an intention.
 
 #### 9.6.5 The one thing a Café author must not do
@@ -851,19 +855,21 @@ Do not write a transfer fallback that **comments on the earlier decision**. *"Th
 
 ### 10.1 Activity IDs and subtopics
 
+
+
 Building slot **01** (ADR-005 §10.5). Subtopics are **authored to fit the decision**, not mechanically rotated; the allocation is coordinated across buildings by the registry maintainer so every subtopic lands exactly twice per competency-level.
 
 | Competency | Level A id | Level B id | Subtopic | Title | Why this subtopic |
 |---|---|---|---|---|---|
-| C1 Problem Sensing | `C1-HARD-01` | `C1-PRO-01` | `empathy_pain` | The Dairy-Free Question | The Advanced path is finding out what the request actually costs the person asking |
-| C2 Learning Agility | `C2-HARD-01` | `C2-PRO-01` | `experimentation` | The Iced Drink | Both tracks turn on whether a test was designed or improvised |
-| C3 Courage to Commit | `C3-HARD-01` | `C3-PRO-01` | `smart_vs_reckless_risk` | The Truck / Thirty Per Cent | Level B is literally "stress-test the worst case, then commit" |
-| C4 Financial Discipline | `C4-HARD-01` | `C4-PRO-01` | `cash_flow` | The Good Month | A seasonal spike misread as growth is the canonical cash-flow error |
-| C5 Strategic Thinking | `C5-HARD-01` | `C5-PRO-01` | `scenario_thinking` | The App | "Today's call shapes the next two years" is the definition |
-| C6 Power & Influence | `C6-HARD-01` | `C6-PRO-01` | `negotiation` | Forty Off / The Account | Direct |
-| C7 People Management | `C7-HARD-01` | `C7-PRO-01` | `feedback` | Late / The Best One | The mechanism in both tracks is the honest conversation, held or avoided |
-| C8 Value Creation | `C8-HARD-01` | `C8-PRO-01` | `quality_craftsmanship` | The Sample Bag / The Quiet Cut | The decision is literally about the product |
-| C9 Perseverance | `C9-HARD-01` | `C9-PRO-01` | `adaptability_pivoting` | The New Awning / Three Weeks Down | The Advanced path is adapting without abandoning |
+| C1 Problem Sensing | `C1-SCA-01` | `C1-SCB-01` | `empathy_pain` | The Dairy-Free Question | The Advanced path is finding out what the request actually costs the person asking |
+| C2 Learning Agility | `C2-SCA-01` | `C2-SCB-01` | `experimentation` | The Iced Drink | Both tracks turn on whether a test was designed or improvised |
+| C3 Courage to Commit | `C3-SCA-01` | `C3-SCB-01` | `smart_vs_reckless_risk` | The Truck / Thirty Per Cent | Level B is literally "stress-test the worst case, then commit" |
+| C4 Financial Discipline | `C4-SCA-01` | `C4-SCB-01` | `cash_flow` | The Good Month | A seasonal spike misread as growth is the canonical cash-flow error |
+| C5 Strategic Thinking | `C5-SCA-01` | `C5-SCB-01` | `scenario_thinking` | The App | "Today's call shapes the next two years" is the definition |
+| C6 Power & Influence | `C6-SCA-01` | `C6-SCB-01` | `negotiation` | Forty Off / The Account | Direct |
+| C7 People Management | `C7-SCA-01` | `C7-SCB-01` | `feedback` | Late / The Best One | The mechanism in both tracks is the honest conversation, held or avoided |
+| C8 Value Creation | `C8-SCA-01` | `C8-SCB-01` | `quality_craftsmanship` | The Sample Bag / The Quiet Cut | The decision is literally about the product |
+| C9 Perseverance | `C9-SCA-01` | `C9-SCB-01` | `adaptability_pivoting` | The New Awning / Three Weeks Down | The Advanced path is adapting without abandoning |
 
 `type: "DECISION_TREE"` · `orderIndex: 1` · `estMinutes: 6` · `passCriteria: { "minProficiency": 2 }` for all eighteen.
 
@@ -899,7 +905,7 @@ After the three launch buildings, per competency, three subtopics are used once 
 >
 > `required: false` is what keeps a mission scoring correctly when the model is down *and* the fallback bank is unreachable: the authored terminal alone decides it.
 
-`C1-HARD-01`
+`C1-SCA-01`
 
 | Node | a | b | c |
 |---|---|---|---|
@@ -914,9 +920,9 @@ Terminals, computed as `0.6 × seed + 0.4 × follow` over `Developing 15 · Stro
 "rubric": {
   "kind": "trace",
   "terminals": {
-    "C1-HARD-01.a.a": 74, "C1-HARD-01.a.b": 42, "C1-HARD-01.a.c": 60,
-    "C1-HARD-01.b.a": 15, "C1-HARD-01.b.b": 47, "C1-HARD-01.b.c": 33,
-    "C1-HARD-01.c.a": 81, "C1-HARD-01.c.b": 95, "C1-HARD-01.c.c": 63
+    "C1-SCA-01.a.a": 74, "C1-SCA-01.a.b": 42, "C1-SCA-01.a.c": 60,
+    "C1-SCA-01.b.a": 15, "C1-SCA-01.b.b": 47, "C1-SCA-01.b.c": 33,
+    "C1-SCA-01.c.a": 81, "C1-SCA-01.c.b": 95, "C1-SCA-01.c.c": 63
   },
   "scoreMap": [
     { "minOutcome": 74, "proficiency": 3 },
@@ -926,7 +932,7 @@ Terminals, computed as `0.6 × seed + 0.4 × follow` over `Developing 15 · Stro
 }
 ```
 
-`C4-PRO-01`
+`C4-SCB-01`
 
 | Node | a | b | c |
 |---|---|---|---|
@@ -937,9 +943,9 @@ Terminals, computed as `0.6 × seed + 0.4 × follow` over `Developing 15 · Stro
 
 ```jsonc
 "terminals": {
-  "C4-PRO-01.a.a": 81, "C4-PRO-01.a.b": 63, "C4-PRO-01.a.c": 95,
-  "C4-PRO-01.b.a": 42, "C4-PRO-01.b.b": 74, "C4-PRO-01.b.c": 60,
-  "C4-PRO-01.c.a": 47, "C4-PRO-01.c.b": 33, "C4-PRO-01.c.c": 15
+  "C4-SCB-01.a.a": 81, "C4-SCB-01.a.b": 63, "C4-SCB-01.a.c": 95,
+  "C4-SCB-01.b.a": 42, "C4-SCB-01.b.b": 74, "C4-SCB-01.b.c": 60,
+  "C4-SCB-01.c.a": 47, "C4-SCB-01.c.b": 33, "C4-SCB-01.c.c": 15
 }
 ```
 
@@ -951,7 +957,7 @@ The remaining sixteen tier maps are authored alongside their leaf prose and must
 // Player picked "ask Nadia" (c), then "fix the 7:50 window" (b) → authored 95,
 // then the transfer beat landed Strong → round(0.7×95 + 0.3×60) = 85 → P3 → 25 coins
 { "result": { "trace": {
-    "path": ["C1-HARD-01.seed", "C1-HARD-01.c", "C1-HARD-01.c.follow", "C1-HARD-01.c.b"],
+    "path": ["C1-SCA-01.seed", "C1-SCA-01.c", "C1-SCA-01.c.follow", "C1-SCA-01.c.b"],
     "followupId": "fu_01J8ZQ0S8N4T1V6M",
     "followupChoice": "o_c104de"
 } } }
@@ -1035,7 +1041,7 @@ Ten keys. Every one maps to something the player can see.
 
 Same geometry. Same chalkboard. Different weight.
 
-| | Level A (`HARD`, 16–21) | Level B (`PRO`, 35–50) |
+| | Level A (`SCA`, 16–21) | Level B (`SCB`, 35–50) |
 |---|---|---|
 | **Framing** | Your first place. The bank manager took a chance. | You've done this before, and that is why the flat six weeks worries you. |
 | **Threshold question** | *"Is this your first place, or have you done this before?"* — asked by Priya on first entry, once for the whole city (ADR-005 §10.7) | same |
@@ -1110,7 +1116,7 @@ Every line requires an `ASSETS_LICENSES.md` entry with source URL, author, licen
 | **CAF-0** | The room: 12×10 grid, wall ring, collision, spawn, four zones, six stations, four hotspots, the counter flap, guided nav | Walk the room with a mouse and without one, at 30 fps on the reference laptop | **Done** (§0.1) |
 | **CAF-1** | `cast.ts` — Priya + Marcus + the ambient customer loop; the chalkboard and the four-top wired to world state; the two framework debts closed (early `detach`, `.catch` on the build) | The room feels inhabited when nothing is being asked of you — assessed by someone who did not build it | **Next** |
 | **CAF-2** | **The framework mission runner + tracker** (ADR-005 §17 G9) built here and shared; missions 1 and 4 playable as objective chains with no decision content behind them | Walk mission 1's chain end to end with the tracker top-left, keyboard-only, and mission 2 does not exist until it closes | |
-| **CAF-3** | `C1-HARD-01` and `C4-PRO-01` end to end: staging → seed → consequence → follow-up → **transfer** → submit → world reaction. Includes the framework transfer client (G11) and the first two fallback entries | A real registry activity, server-scored across three beats, with **no tier visible anywhere on screen** and no way to tell which beat was generated | |
+| **CAF-3** | `C1-SCA-01` and `C4-SCB-01` end to end: staging → seed → consequence → follow-up → **transfer** → submit → world reaction. Includes the framework transfer client (G11) and the first two fallback entries | A real registry activity, server-scored across three beats, with **no tier visible anywhere on screen** and no way to tell which beat was generated | |
 | **CAF-4** | Session sync (G10): debounced writes, the `sendBeacon` exit flush, the `localStorage` mirror | Kill the tab mid-mission; reopen on another device; resume at the same objective with the same transfer question waiting | |
 | **CAF-5** | All nine missions × both tracks; full cast; the season light progression; all 18 fallback transfer beats | A complete nine-mission season in one sitting, and the same season played with the API key removed | |
 | **CAF-6** | The report; a11y pass; perf pass; audio; asset licences complete | A keyboard-only, screen-reader player completes a full season and reads their letter | |
@@ -1180,7 +1186,7 @@ Full endpoint specification: **[PRD_Backend_Missions.md](PRD_Backend_Missions.md
 | Entering | `GET /api/v1/city/state` | Track choice + FTUE. If `track` is unset, Priya asks the threshold question (§14) |
 | Entering | `GET /api/v1/city/buildings/cafe/state` | The season. `{ rev: 0, blob: null }` on a first visit |
 | Entering | `GET /api/v1/city/beacon-token?buildingId=cafe` | For the exit flush (§19.4) |
-| Entering | `GET /api/v1/registry/{C1..C9}/{HARD\|PRO}` ×9 | Which missions are open. **One missing row must not blank the board** |
+| Entering | `GET /api/v1/registry/{C1..C9}/{SCA\|SCB}` ×9 | Which missions are open. **One missing row must not blank the board** |
 | Mission opens | `POST /api/v1/progress/{activityId}/start` | |
 | Mission opens · objective completes · beat commits · world write · zone change | `PUT /api/v1/city/buildings/cafe/state` | Triggers and timing in §19.3 |
 | Beat 2 commits | `POST /api/v1/ai/followup` | Fired **immediately**, in parallel with beat 2's consequence playing |
@@ -1197,7 +1203,7 @@ The Café itself makes **none** of these calls. They are made by the framework's
 ```jsonc
 {
   "rev": 22,
-  "track": "HARD",
+  "track": "SCA",
   "blob": {
     "missionOrder": 3,                 // 1..9 — "The Truck"
     "objectiveIndex": 4,               // decide · seed
@@ -1256,8 +1262,8 @@ Also wired to `pagehide` and `visibilitychange → hidden`, because "leaving the
 ```jsonc
 POST /api/v1/ai/followup
 {
-  "activityId": "C3-HARD-01",
-  "track": "HARD",
+  "activityId": "C3-SCA-01",
+  "track": "SCA",
   "buildingId": "cafe",
   "path": ["a", "c"],                     // "yes, but structured" → "redesign the combo"
   "speakerId": "ray",
@@ -1289,14 +1295,14 @@ POST /api/v1/ai/followup
 ### 19.6 Submitting
 
 ```jsonc
-POST /api/v1/progress/C3-HARD-01/submit
+POST /api/v1/progress/C3-SCA-01/submit
 {
   "clientVersion": "city@0.3.0",
   "durationSec": 385,
   "hintsUsed": 0,
   "result": { "trace": {
-    "path": ["C3-HARD-01.seed", "C3-HARD-01.a",
-             "C3-HARD-01.a.follow", "C3-HARD-01.a.c"],
+    "path": ["C3-SCA-01.seed", "C3-SCA-01.a",
+             "C3-SCA-01.a.follow", "C3-SCA-01.a.c"],
     "followupId": "fu_01J9…",
     "followupChoice": "o_9f04"
   } }

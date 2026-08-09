@@ -26,7 +26,7 @@ const venue = {
 const activity = (id: string) => ({
   id,
   competencyCode: id.slice(0, 2),
-  level: id.includes("HARD") ? "HARD" : "PRO",
+  level: id.includes("SCA") ? "SCA" : "SCB",
   activityType: "DECISION_TREE",
   title: id,
   status: "NOT_STARTED",
@@ -50,7 +50,7 @@ describe("MaisonPanel", () => {
     // Every level list resolves empty unless a test says otherwise.
     vi.spyOn(api, "getLevel").mockResolvedValue({
       competency: "C1",
-      level: "HARD",
+      level: "SCA",
       activities: [],
     });
   });
@@ -93,14 +93,14 @@ describe("MaisonPanel", () => {
     vi.spyOn(api, "getLevel").mockImplementation(async (comp: string, level: string) => ({
       competency: comp,
       level,
-      activities: comp === "C2" && level === "HARD" ? [activity("C2-HARD-03")] : [],
+      activities: comp === "C2" && level === "SCA" ? [activity("C2-SCA-03")] : [],
     }));
     useMaisonStore.setState({ track: "A" });
     const { onPlay } = renderPanel();
 
     const open = await screen.findByRole("button", { name: "Open" });
     await userEvent.click(open);
-    expect(onPlay).toHaveBeenCalledWith(expect.objectContaining({ id: "C2-HARD-03" }));
+    expect(onPlay).toHaveBeenCalledWith(expect.objectContaining({ id: "C2-SCA-03" }));
   });
 
   it("moves the rail when a beat is submitted, and marks it decided", async () => {
@@ -112,19 +112,19 @@ describe("MaisonPanel", () => {
     // This is the real path — PlayerShell emits exactly this after a submit.
     act(() =>
       events.emit("activity_submitted", {
-        activityId: "C2-HARD-03",
+        activityId: "C2-SCA-03",
         result: { trace: { path: ["c", "b"] } },
         response: {} as SubmitResponse,
       }),
     );
 
     expect(await screen.findByText(/the rail is four pieces/)).toBeVisible();
-    expect(useMaisonStore.getState().decided).toEqual([{ id: "C2-HARD-03", path: ["c", "b"] }]);
+    expect(useMaisonStore.getState().decided).toEqual([{ id: "C2-SCA-03", path: ["c", "b"] }]);
     expect(screen.getByText("1 of 9 decided", { exact: false })).toBeVisible();
   });
 
   it("shows no tier, star, proficiency or pass-fail on the board (§11)", async () => {
-    useMaisonStore.setState({ track: "A", decided: [{ id: "C2-HARD-03", path: ["c", "b"] }] });
+    useMaisonStore.setState({ track: "A", decided: [{ id: "C2-SCA-03", path: ["c", "b"] }] });
     const { container } = renderPanel();
     await screen.findByText(/The season/);
 
@@ -136,7 +136,7 @@ describe("MaisonPanel", () => {
   });
 
   it("starts the collection over without forgetting the track", async () => {
-    useMaisonStore.setState({ track: "B", decided: [{ id: "C5-PRO-03", path: ["b", "a"] }] });
+    useMaisonStore.setState({ track: "B", decided: [{ id: "C5-SCB-03", path: ["b", "a"] }] });
     renderPanel();
 
     await userEvent.click(

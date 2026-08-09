@@ -131,17 +131,17 @@ describe("presentation order", () => {
       .join("");
 
   it("shows every choice exactly once", () => {
-    expect(keys("C1-HARD-03", []).split("").sort().join("")).toBe("abc");
+    expect(keys("C1-SCA-03", []).split("").sort().join("")).toBe("abc");
   });
 
   it("is stable — replaying a beat is not a shell game", () => {
-    expect(keys("C1-HARD-03", [])).toBe(keys("C1-HARD-03", []));
-    expect(keys("C4-PRO-03", ["b"])).toBe(keys("C4-PRO-03", ["b"]));
+    expect(keys("C1-SCA-03", [])).toBe(keys("C1-SCA-03", []));
+    expect(keys("C4-SCB-03", ["b"])).toBe(keys("C4-SCB-03", ["b"]));
   });
 
   it("varies by beat, so a pattern learned at the seed does not survive", () => {
     const perNode = new Set(
-      [[], ["a"], ["b"], ["c"]].map((p) => keys("C7-HARD-03", p as string[])),
+      [[], ["a"], ["b"], ["c"]].map((p) => keys("C7-SCA-03", p as string[])),
     );
     expect(perNode.size).toBeGreaterThan(1);
   });

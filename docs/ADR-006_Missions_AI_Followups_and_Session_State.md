@@ -226,7 +226,7 @@ export interface Mission {
   /** The house's name for it, not the rubric's. Shown in the tracker. */
   title: string;
   /** Per-track registry activity id — this is what gets submitted. */
-  activity: { HARD: string; PRO: string };
+  activity: { SCA: string; SCB: string };
   /** Where it happens and who carries it (ADR-005 §8 staging table). */
   station: string;
   hostNpc: string | null;        // null = the room/an object carries it
@@ -336,8 +336,8 @@ Two calls per mission, both framework-owned.
 ```jsonc
 POST /api/v1/ai/followup
 {
-  "activityId": "C1-HARD-01",
-  "track": "HARD",
+  "activityId": "C1-SCA-01",
+  "track": "SCA",
   "buildingId": "cafe",
   "path": ["c", "b"],                 // seed choice, follow-up choice
   "speakerId": "nadia",               // resolved client-side by §9, validated server-side
@@ -360,15 +360,15 @@ POST /api/v1/ai/followup
 **Submit** (unchanged endpoint, additive fields):
 
 ```jsonc
-POST /api/v1/progress/C1-HARD-01/submit
+POST /api/v1/progress/C1-SCA-01/submit
 {
   "clientVersion": "city@0.3.0",
   "durationSec": 412,
   "hintsUsed": 0,
   "result": {
     "trace": {
-      "path": ["C1-HARD-01.seed", "C1-HARD-01.c",
-               "C1-HARD-01.c.follow", "C1-HARD-01.c.b"],
+      "path": ["C1-SCA-01.seed", "C1-SCA-01.c",
+               "C1-SCA-01.c.follow", "C1-SCA-01.c.b"],
       "followupId": "fu_01J8...",
       "followupChoice": "o_c104"
     }
@@ -417,7 +417,7 @@ Everything in this section is normative. Where a rule says *blocking*, failing i
 | The **NPC persona card** — who they are, how they speak, three sample lines, what they would never say | the building PRD §5, mirrored in the content pack |
 | The seed prompt and **the exact option text the player chose** | authored tree |
 | The follow-up prompt and **the exact option text the player chose** | authored tree |
-| Track (`HARD` = 16–21 / `PRO` = 35–50) and what changes between them | ADR-005 §11.4 rule 8 |
+| Track (`SCA` = 16–21 / `SCB` = 35–50) and what changes between them | ADR-005 §11.4 rule 8 |
 | Current world state, as a **whitelisted key→value map** | building world-state schema |
 | `aiWorldCandidates` — the 2–3 legal world writes this beat may pick from | mission definition |
 | The plausible-peers rules, verbatim | ADR-005 §11.4 |
@@ -585,7 +585,7 @@ One blob per user per building, plus one city-wide blob.
 // building session — PUT /api/v1/city/buildings/{buildingId}/state
 {
   rev: number,                       // monotonic, client-echoed
-  track: "HARD" | "PRO",
+  track: "SCA" | "SCB",
   missionOrder: number,              // 1..9, the mission in progress
   objectiveIndex: number,            // index into that mission's objectives
   partialPath: string[],             // choices committed in the current tree

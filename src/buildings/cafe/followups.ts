@@ -48,8 +48,8 @@ export interface FollowupBeat {
 const HARD_FOLLOWUPS: Readonly<Record<string, FollowupBeat>> = {
   // Track A opens on the station café changing its hours, and varies on
   // `regulars` (PRD §9.6.4).
-  "C1-HARD-01": {
-    activityId: "C1-HARD-01",
+  "C1-SCA-01": {
+    activityId: "C1-SCA-01",
     speakerId: "nadia",
     variesOn: "regulars",
     prompt: (world) => {
@@ -84,8 +84,8 @@ const HARD_FOLLOWUPS: Readonly<Record<string, FollowupBeat>> = {
     ],
   },
 
-  "C2-HARD-01": {
-    activityId: "C2-HARD-01",
+  "C2-SCA-01": {
+    activityId: "C2-SCA-01",
     speakerId: "priya",
     variesOn: "chalkboard",
     prompt: (world) => {
@@ -121,8 +121,8 @@ const HARD_FOLLOWUPS: Readonly<Record<string, FollowupBeat>> = {
     ],
   },
 
-  "C3-HARD-01": {
-    activityId: "C3-HARD-01",
+  "C3-SCA-01": {
+    activityId: "C3-SCA-01",
     speakerId: "ray",
     variesOn: "truck",
     prompt: (world) => {
@@ -158,8 +158,8 @@ const HARD_FOLLOWUPS: Readonly<Record<string, FollowupBeat>> = {
     ],
   },
 
-  "C4-HARD-01": {
-    activityId: "C4-HARD-01",
+  "C4-SCA-01": {
+    activityId: "C4-SCA-01",
     speakerId: "room",
     variesOn: "till",
     prompt: (world) => {
@@ -196,8 +196,8 @@ const HARD_FOLLOWUPS: Readonly<Record<string, FollowupBeat>> = {
     ],
   },
 
-  "C5-HARD-01": {
-    activityId: "C5-HARD-01",
+  "C5-SCA-01": {
+    activityId: "C5-SCA-01",
     speakerId: "nadia",
     variesOn: "board",
     prompt: (world) => {
@@ -233,8 +233,8 @@ const HARD_FOLLOWUPS: Readonly<Record<string, FollowupBeat>> = {
     ],
   },
 
-  "C6-HARD-01": {
-    activityId: "C6-HARD-01",
+  "C6-SCA-01": {
+    activityId: "C6-SCA-01",
     speakerId: "ellery",
     variesOn: "till",
     prompt: (world) => {
@@ -271,8 +271,8 @@ const HARD_FOLLOWUPS: Readonly<Record<string, FollowupBeat>> = {
     ],
   },
 
-  "C7-HARD-01": {
-    activityId: "C7-HARD-01",
+  "C7-SCA-01": {
+    activityId: "C7-SCA-01",
     speakerId: "priya",
     variesOn: "staff",
     prompt: (world) => {
@@ -309,8 +309,8 @@ const HARD_FOLLOWUPS: Readonly<Record<string, FollowupBeat>> = {
     ],
   },
 
-  "C8-HARD-01": {
-    activityId: "C8-HARD-01",
+  "C8-SCA-01": {
+    activityId: "C8-SCA-01",
     speakerId: "marcus",
     variesOn: "beans",
     prompt: (world) =>
@@ -341,8 +341,8 @@ const HARD_FOLLOWUPS: Readonly<Record<string, FollowupBeat>> = {
     ],
   },
 
-  "C9-HARD-01": {
-    activityId: "C9-HARD-01",
+  "C9-SCA-01": {
+    activityId: "C9-SCA-01",
     speakerId: "priya",
     variesOn: "rival",
     prompt: (world) => {

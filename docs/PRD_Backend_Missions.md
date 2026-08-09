@@ -15,14 +15,16 @@ Six additive changes to `backend-academy`, none of which breaks an existing clie
 
 | | What | Why |
 |---|---|---|
-| **BE-13** | A fourth level, `PRO` (`ageBand 35-50`) | The blueprints define two tracks; only one has a level today |
+| **BE-13** | Two scenario levels, `SCA` (16–21) + `SCB` (35–50) | The blueprints define two tracks; neither has a level, and `HARD` is full (§6.4) |
 | **BE-14** | `coinsByProficiency → {1:5, 2:15, 3:25}` | `Playroom Scenarios.xlsx → Rules` |
 | **BE-15** | `PUT/GET /api/v1/city/state` | Track choice and FTUE flags need a home |
 | **BE-16** | `PUT/GET/POST /api/v1/city/buildings/{buildingId}/state` | The season survives leaving the building |
 | **BE-17** | `POST /api/v1/ai/followup` | The generated transfer beat |
 | **BE-18** | Extended `trace` submit + `aiBeat` rubric block | The transfer beat has to count |
 
-Plus **BE-19** (mission telemetry, P3) and **BE-20** (un-stale `api/openapi.yaml`, P1).
+Plus **BE-19** (mission telemetry, P3), **BE-20** (un-stale `api/openapi.yaml`, P1) and **BE-21** (let the registry validator accept a partially-populated level, **P0** — §6.5).
+
+> **Both of the blockers that stood in front of this are cleared.** The validator now splits its rules by mode (§6.5, shipped), and the level namespace is resolved — scenarios live at `SCA`/`SCB` and `HARD` is untouched ([ADR-005 §10.6.1](ADR-005_Interior_Framework.md), Option C adopted 2026-08-07). The first scenario row is seeded and green.
 
 Two new tables, two new migrations, one new service, one new content pack. `internal/scoring` gains roughly thirty lines and loses none.
 
@@ -83,7 +85,7 @@ type CityState struct {
 type BuildingSession struct {
     UserID     string          `gorm:"primaryKey;type:varchar(191)" json:"-"`
     BuildingID string          `gorm:"primaryKey;type:varchar(64)" json:"buildingId"`
-    Track      string          `gorm:"type:varchar(16)" json:"track"`      // HARD | PRO — denormalised for analytics
+    Track      string          `gorm:"type:varchar(16)" json:"track"`      // SCA | SCB — denormalised for analytics
     Blob       json.RawMessage `gorm:"type:json" json:"blob"`
     Rev        int64           `gorm:"default:0" json:"rev"`
     UpdatedAt  time.Time       `json:"updatedAt"`
@@ -222,7 +224,7 @@ PUT  /api/v1/city/state
 Recommended blob shape (client-owned, documented for reviewers, not enforced):
 
 ```jsonc
-{ "track": "HARD", "ftue": { "firstEntry": true, "trackAsked": true },
+{ "track": "SCA", "ftue": { "firstEntry": true, "trackAsked": true },
   "lastDistrict": "market", "lastTile": [24, 9] }
 ```
 
@@ -236,9 +238,9 @@ POST /api/v1/city/buildings/{buildingId}/state      ← sendBeacon path only
 
 `buildingId` is validated against a server-side allow-list (`cafe`, `fashion_brand`, `bank`, …) so the table cannot be used as arbitrary key-value storage. Unknown id → `400 UNKNOWN_BUILDING`.
 
-**GET** → `200 { "buildingId": "cafe", "track": "HARD", "rev": 22, "blob": { … }, "updatedAt": "…" }`, or `{ "rev": 0, "blob": null }` when unset.
+**GET** → `200 { "buildingId": "cafe", "track": "SCA", "rev": 22, "blob": { … }, "updatedAt": "…" }`, or `{ "rev": 0, "blob": null }` when unset.
 
-**PUT** body `{ "rev": 22, "track": "HARD", "blob": { … } }` → `200 { "rev": 23, "updatedAt": "…" }`. Same `rev` / `409` semantics as BE-15. Size bound **16 KB**.
+**PUT** body `{ "rev": 22, "track": "SCA", "blob": { … } }` → `200 { "rev": 23, "updatedAt": "…" }`. Same `rev` / `409` semantics as BE-15. Size bound **16 KB**.
 
 Recommended blob shape — this is the season, per [ADR-006 §11.1](ADR-006_Missions_AI_Followups_and_Session_State.md):
 
@@ -275,8 +277,8 @@ Request:
 
 ```jsonc
 {
-  "activityId": "C1-HARD-01",
-  "track": "HARD",
+  "activityId": "C1-SCA-01",
+  "track": "SCA",
   "buildingId": "cafe",
   "path": ["c", "b"],
   "speakerId": "nadia",
@@ -287,7 +289,7 @@ Request:
 | Field | Validation |
 |---|---|
 | `activityId` | must exist, must be `activityType: "DECISION_TREE"`, must carry an `aiBeat` rubric block |
-| `track` | `HARD` \| `PRO`, must match the activity's level |
+| `track` | `SCA` \| `SCB`, must match the activity's level |
 | `buildingId` | allow-listed; must own this activity's slot (ADR-005 §10.5) |
 | `path` | exactly 2 elements, each a single letter that exists at its node in the authored tree |
 | `speakerId` | must be a cast member of that building, or the literal `"room"` |
@@ -334,7 +336,7 @@ Rate limit: **40 generations per user per hour** (a nine-mission season plus rep
   "hintsUsed": 0,
   "result": {
     "trace": {
-      "path": ["C1-HARD-01.seed", "C1-HARD-01.c", "C1-HARD-01.c.follow", "C1-HARD-01.c.b"],
+      "path": ["C1-SCA-01.seed", "C1-SCA-01.c", "C1-SCA-01.c.follow", "C1-SCA-01.c.b"],
       "followupId": "fu_01J8ZQ0S8N4T1V6M",
       "followupChoice": "o_c104de"
     }
@@ -387,7 +389,7 @@ Body `{ "buildingId", "missionOrder", "objectiveId", "event": "started"|"complet
 The file is at v0.2.0 and behind the handler; the frontend generates types from it, so staleness is silent drift. It must document, before any of the above ships:
 
 - `DECISION_TREE` as an `activityType` and `trace` as a result kind, including `followupId` / `followupChoice`
-- the `PRO` level in every level enum
+- the `SCA` and `SCB` levels in every level enum
 - `/badges`, `/profile`, `/hub/summary` (already live, already missing)
 - the structured error envelope
 - every endpoint in §4
@@ -474,7 +476,7 @@ Content, not code: `internal/registry/content/followups/{buildingId}.json`, load
   },
   "fallbacks": [
     {
-      "activityId": "C1-HARD-01",
+      "activityId": "C1-SCA-01",
       "speakerId": "nadia",
       "prompt": "…",
       "options": [
@@ -500,18 +502,20 @@ Small, because the surface is small: **the player never types anything.** The on
 
 ## 6. Registry changes
 
-### 6.1 BE-13 · The `PRO` level
+### 6.1 BE-13 · The scenario level(s)
 
-`BEGINNER` (8–13) · `MEDIUM` (14–16) · `HARD` (17–21) gain **`PRO` (`ageBand: "35-50"`)**. Level A → `HARD`, Level B → `PRO` (ADR-005 §10.6).
+> **Resolved by [ADR-005 §10.6.1](ADR-005_Interior_Framework.md), Option C.** v1.0 of this ticket added one level (`PRO`) on the assumption that Level A could reuse `HARD`. **It cannot** — `HARD` is occupied and has progress rows against it (§6.4). BE-13 therefore adds **two** levels.
+
+`BEGINNER` (8–13) · `MEDIUM` (14–16) · `HARD` (17–21) gain **`SCA` (`ageBand: "16-21"`)** and **`SCB` (`ageBand: "35-50"`)**. Level A → `SCA`, Level B → `SCB` (ADR-005 §10.6). The existing three are untouched.
 
 Touches:
 
 | File | Change |
 |---|---|
 | `cmd/validate_registry/main.go` | level allow-list; `-strict` check 3 → 4 levels |
-| `internal/registry/content/c1.json` … `c9.json` | a `PRO` level block per competency; `BADGE-C{n}-PRO` |
-| `internal/registry/content/badges.json` | nine level badges + one meta badge (**`BADGE-META-OPERATOR`** proposed — ADR-005 §20.3, KK to confirm) |
-| `internal/services/badge_service.go` | fourth entry in the level map |
+| `internal/registry/content/c1.json` … `c9.json` | an `SCA` **and** an `SCB` level block per competency; `BADGE-C{n}-SCA` and `BADGE-C{n}-SCB` |
+| `internal/registry/content/badges.json` | **eighteen** level badges + **two** meta badges (names ADR-005 §20.3, KK to confirm) |
+| `internal/services/badge_service.go` | fourth and fifth entries in the level map |
 | `internal/models/academy.go` | the `Level` comment. `varchar(16)` already fits |
 
 ### 6.2 BE-14 · Coin rescale
@@ -539,9 +543,50 @@ type traceRubric struct {
 
 `ValidateRubric` gains: if `AIBeat != nil`, `Weight` ∈ (0, 0.5] and `TierValues` has all three keys.
 
-### 6.4 BE-12 · Seeding the 54 scenario rows
+### 6.4 BE-12 · Seeding the 54 scenario rows — **blocked, twice**
 
-Three launch buildings × 9 competencies × 2 levels = **54 `DECISION_TREE` rows**, slots 01 (Café) / 02 (MERIDIAN) / 03 (MAISON), with the terminals tables from each building PRD §10 and the new `aiBeat` block. `validate_registry` still requires exactly 12 activities per competency-level with six subtopics × 2, so `HARD` and `PRO` are only fully valid once all twelve buildings exist; until then the seed runs with `-strict=false` and the ledger in [Café §10.2](PRD_Building_Cafe.md) tracks the gap.
+Three launch buildings × 9 competencies × 2 levels = **54 `DECISION_TREE` rows**, slots 01 (Café) / 02 (MERIDIAN) / 03 (MAISON), with the terminals tables from each building PRD §10 and the new `aiBeat` block.
+
+> ### ⚠ Correction (2026-08-07) — v1.0 of this section was wrong
+>
+> It said: *"until then the seed runs with `-strict=false` and the ledger tracks the gap."* **`-strict=false` does not relax anything relevant.** Verified in [`cmd/validate_registry/main.go`](../../backend-academy/cmd/validate_registry/main.go):
+>
+> ```go
+> if *strict && len(comp.Levels) != 3 { … }        // line 64 — strict-only
+>
+> for level, lv := range comp.Levels {
+>     if len(lv.Activities) != 12 {                 // line 72 — UNCONDITIONAL
+>         fail("%s/%s: expected 12 activities, found %d", …)
+>     }
+> ```
+>
+> `-strict` adds only the *"three levels per competency"* rule. The **twelve-activities-per-level** rule sits inside the level loop and always runs. Seven competencies have **zero** levels today (only C4 has `BEGINNER`, only C9 has all three), so adding `C1-SCA-01` creates a level holding one activity and **fails the build, with no flag that relaxes it**.
+>
+> _Credit: found by the backend owner while checking whether the Café's rows could be seeded._
+
+**Two blockers, both of which must clear before a single row is seeded:**
+
+| # | Blocker | Owner | Fix |
+|---|---|---|---|
+| **1** | The validator rejects a partially-populated level | backend | **BE-21** below |
+| **2** | The scenario id scheme collides with seeded content — `C9-HARD-01/02/03` are taken and have progress rows against them | product | [ADR-005 §10.6.1](ADR-005_Interior_Framework.md), recommendation **Option C** (`SCA` / `SCB`). **Needs KK.** |
+
+### 6.5 BE-21 · Let the validator accept a partially-populated level
+
+**Status: shipped** (`6129f8b`). Was P0 and blocking BE-12.
+
+The "exactly 12" invariant is a *launch* gate that has been enforced as a *build* gate. It is correct at full seed and wrong during rollout — it makes seeding the first building of twelve impossible.
+
+**Change:** split the rule by mode.
+
+| Mode | Rule |
+|---|---|
+| default | `len(lv.Activities) <= 12` · `orderIndex` unique and within 1..12 · no duplicate ids · every subtopic in the competency's list |
+| `-strict` | additionally `== 12`, six subtopics × exactly 2, and three levels per competency |
+
+`-strict` is what CI runs at launch and what the phase gate in §9 P4 means. The default is what a developer and the seed job run while twelve buildings are being written one at a time.
+
+**Acceptance:** with one scenario row seeded into an otherwise-empty level, the default run passes and `-strict` fails with a message naming the shortfall.
 
 ---
 
@@ -598,7 +643,8 @@ Structured logs never include the prompt body, the option tiers, or the API key.
 
 | Phase | Deliverable | Gate |
 |---|---|---|
-| **P0 — Foundations** | BE-13 (`PRO`), BE-14 (coins), BE-20 (openapi), migrations 00004/00005, models, drift check | `validate_registry -strict=false` green with a `PRO` block; drift check green |
+| **P-1 — Unblock** | **BE-21** (validator modes) + the [ADR-005 §10.6.1](ADR-005_Interior_Framework.md) level decision | One scenario row seeds into an empty level and the default validator run passes |
+| **P0 — Foundations** | BE-13 (the scenario level(s)), BE-14 (coins), BE-20 (openapi), migrations 00004/00005, models, drift check | Default `validate_registry` green with a scenario level present; drift check green |
 | **P1 — Session** | BE-15, BE-16 including the beacon path and token | A season written from one tab, read from another; a killed tab loses nothing after the beacon fires |
 | **P2 — Generation** | BE-17 + `FollowupGenerator` + Claude Haiku 4.5 client + all nine gates + the fallback loader + `/commit` | With the API key removed, a full mission plays on fallbacks and nothing in the response distinguishes it |
 | **P3 — Scoring** | BE-18, the `aiBeat` rubric block, the 27-cell table test | Every cell of ADR-006 §10.2 reproduced exactly |
@@ -611,7 +657,7 @@ P0–P3 are the critical path for the Café's mission work. P4 blocks every buil
 
 ## 10. Open decisions
 
-- **The fourth meta badge name** for `PRO` (`BADGE-META-OPERATOR` proposed) — KK.
+- **The two meta badge names** for `SCA` and `SCB` (`BADGE-META-OPERATOR` was proposed when there was one) — KK. Not blocking.
 - **Beacon-token lifetime.** 5 minutes covers a normal visit; a long session would need a refresh on mission close. Alternative: mint it per mission rather than per entry. Recommendation: per entry with a silent refresh at mission close.
 - **Whether `/ai/followup` should be pre-warmed** by firing speculatively for all three follow-up branches during beat 1's consequence (ADR-006 §16). 3× cost, latency becomes a non-issue. Decide after P2's p95 is measured.
 - **Provider for the fallback-bank authoring job** and whether it lives in this service as an admin command or outside it entirely. Recommendation: outside — it is an authoring tool, not a runtime concern.

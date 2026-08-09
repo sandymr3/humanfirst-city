@@ -51,7 +51,7 @@ describe("The Lookbook (§13)", () => {
   });
 
   it("says a beat was not decided rather than inventing one", () => {
-    useMaisonStore.setState({ decided: [{ id: "C1-HARD-03", path: ["a", "a"] }] });
+    useMaisonStore.setState({ decided: [{ id: "C1-SCA-03", path: ["a", "a"] }] });
     render(<Lookbook track="A" activities={undefined} onClose={vi.fn()} />);
     expect(screen.getAllByText(/Not decided this season/)).toHaveLength(BEATS.length - 1);
   });
@@ -60,8 +60,8 @@ describe("The Lookbook (§13)", () => {
     // §13.3: the ONLY place tier vocabulary appears in this building — and only
     // for the beats the backend actually scored. The client holds no rubric.
     const activities = new Map([
-      ["C1-HARD-03", row("C1-HARD-03", 3)],
-      ["C2-HARD-03", row("C2-HARD-03", null)],
+      ["C1-SCA-03", row("C1-SCA-03", 3)],
+      ["C2-SCA-03", row("C2-SCA-03", null)],
     ]);
     render(<Lookbook track="A" activities={activities} onClose={vi.fn()} />);
 

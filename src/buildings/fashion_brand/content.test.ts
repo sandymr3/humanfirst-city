@@ -162,7 +162,7 @@ describe("MAISON content — choice parity (§18.3 machine pass)", () => {
     // one consultation option at each of the two beats, so the signal lands in
     // the tier map instead of a counter. If a C2 node loses its mentor option,
     // the competency quietly stops being about asking.
-    for (const id of ["C2-HARD-03", "C2-PRO-03"]) {
+    for (const id of ["C2-SCA-03", "C2-SCB-03"]) {
       const tree = maisonContent[id] as DecisionTreeContent | undefined;
       expect(tree, `${id} authored`).toBeDefined();
       for (const { where, node } of nodeEntries(tree!)) {

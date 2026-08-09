@@ -51,7 +51,7 @@ v1.0 was authored against an **R3F first-person engine that never existed**. The
 
 MAISON's eighteen ids are still not seeded in the live registry, so the season shows every beat as *not yet open* against a real backend. This is [PRD_Backend_Missions §6.4](PRD_Backend_Missions.md) (BE-12) and it blocks MAISON being *real*, not MAISON being *reviewable* — the dev fixture covers the latter.
 
-Two questions v1.0 flagged as unverified are now settled: the Level B code **is** `PRO` (BE-13), and the client submits **fully-qualified** trace segments (`"C2-HARD-03.a.b"`), not bare choice keys.
+Two questions v1.0 flagged as unverified are now settled: the Level B code is **`SCB`** (BE-13, and *not* `PRO` — see [ADR-005 §10.6.1](ADR-005_Interior_Framework.md)), and the client submits **fully-qualified** trace segments (`"C2-SCA-03.a.b"`), not bare choice keys.
 
 ### 0.5 Where the tier maps live
 
@@ -85,7 +85,7 @@ Over one season you will decide what to make, what to charge, who to sell throug
 - The **mentor consultation** mechanic for C2 (§9.6) — now three opportunities, matching the blueprint literally.
 - **18 scripted fallback transfer beats** (§9.7.4).
 - Session state synced to the backend during play and flushed on exit (§19.4).
-- Registry content for `C1-HARD-03 … C9-HARD-03` and `C1-PRO-03 … C9-PRO-03`.
+- Registry content for `C1-SCA-03 … C9-SCA-03` and `C1-SCB-03 … C9-SCB-03`.
 - The end-of-journey report as the season lookbook.
 
 ### Out of scope
@@ -525,7 +525,7 @@ The MAISON blueprint marks its weak options more heavily than the others, and se
 
 ---
 
-### 9.3 Exemplar A — `C2-HARD-03` · "Three Times Faster" (Level A, fully worked)
+### 9.3 Exemplar A — `C2-SCA-03` · "Three Times Faster" (Level A, fully worked)
 
 **Station** `st_bench` · **Host** Élise · **9 weeks out**
 
@@ -581,7 +581,7 @@ The MAISON blueprint marks its weak options more heavily than the others, and se
 
 ---
 
-### 9.4 Exemplar B — `C5-PRO-03` · "Two Seasons" (Level B, fully worked)
+### 9.4 Exemplar B — `C5-SCB-03` · "Two Seasons" (Level B, fully worked)
 
 **Station** `st_boutique_floor` · **Host** Rio · **5 weeks out**
 
@@ -645,7 +645,7 @@ Shipping text for the seed layer; follow-ups specified by prompt and tier intent
 
 #### C1 · Problem Sensing — `good_questions`
 
-**Level A — `C1-HARD-03` "Three of Mine Asked"** · `st_rail` · Ines · 11w
+**Level A — `C1-SCA-03` "Three of Mine Asked"** · `st_rail` · Ines · 11w
 > She finishes her call to tell you three of her clients want a cheaper way in. She's repeating rather than reporting, and you have cash for exactly one move this season.
 
 - Launch the entry line now. Three stylists saying the same thing in one week is as close to a market signal as this business gets.
@@ -654,7 +654,7 @@ Shipping text for the seed layer; follow-ups specified by prompt and tier intent
 
 *Follow-ups:* **"launched"** → it sells to new buyers and two long-standing clients ask if you've gone mass · **"asked"** → it turns out to be access, not price; do you fix access, fix price anyway, or fix both? · **"capsule"** → the capsule sells but at a margin that doesn't scale; extend, kill, or reprice?
 
-**Level B — `C1-PRO-03` "The Resale Number"** · `st_rail` · Ines · 11w
+**Level B — `C1-SCB-03` "The Resale Number"** · `st_rail` · Ines · 11w
 > A rival launched an entry line. Your pieces are reselling at nearly double retail. Cash for one move. No proof of how many would actually buy.
 
 - Match them, this season. That buyer is deciding where they start, and whoever they start with is where they stay.
@@ -663,9 +663,9 @@ Shipping text for the seed layer; follow-ups specified by prompt and tier intent
 
 #### C2 · Learning Agility — `learning_from_feedback`
 
-**Level A — `C2-HARD-03`** — fully worked in §9.3.
+**Level A — `C2-SCA-03`** — fully worked in §9.3.
 
-**Level B — `C2-PRO-03` "The Colour House"** · `st_bench` · Élise + Véra · 9w
+**Level B — `C2-SCB-03` "The Colour House"** · `st_bench` · Élise + Véra · 9w
 > The bold pieces are slow. A buyer you trust says the customer wants neutrals. The press has spent two years calling you *the colour house*, and that phrase is most of your recognition.
 
 - Defend the colour publicly. Your entire recognition is one word, and changing it mid-season tells the press you don't know what you are.
@@ -674,14 +674,14 @@ Shipping text for the seed layer; follow-ups specified by prompt and tier intent
 
 #### C3 · Courage to Commit — `saying_no_opportunity_cost`
 
-**Level A — `C3-HARD-03` "Forty-Eight Hours"** · `st_rail` · Hélène · 8w
+**Level A — `C3-SCA-03` "Forty-Eight Hours"** · `st_rail` · Hélène · 8w
 > A department store wants to stock you. Terms are decent. You have 48 hours and you do not have all the facts.
 
 - Ask for two weeks. Neither of these deals is reversible, and the cost of choosing the wrong one is a year, not a season.
 - Weigh what you actually know against what you don't, decide inside the 48 hours, and own whichever way it goes.
 - Commit to the one that fits what this house is meant to be in three years, and accept that you are buying it partly blind.
 
-**Level B — `C3-PRO-03` "Friday"** · `st_rail` · Hélène + Rio · 8w
+**Level B — `C3-SCB-03` "Friday"** · `st_rail` · Hélène + Rio · 8w
 > An exclusive with a high-end store, a pop-up offer on the table, and a production slot that closes Friday. Neither deal is safe.
 
 - Hold both and keep gathering until one of them stops being a guess, even if that means losing the production slot.
@@ -690,14 +690,14 @@ Shipping text for the seed layer; follow-ups specified by prompt and tier intent
 
 #### C4 · Financial Discipline — `roi`
 
-**Level A — `C4-HARD-03` "Pre-Orders"** · `st_desk` · Dov · 7w
+**Level A — `C4-SCA-03` "Pre-Orders"** · `st_desk` · Dov · 7w
 > Pre-orders are strong. You're tempted to double the run and hire two people. Cash is tight.
 
 - Double the production run and hire the two people now. Momentum in this business is a window, not a trend, and windows close.
 - Produce only what has already been ordered, keep the cash where it is, and take on freelancers instead of permanent hires.
 - Match the spend to demand you can prove, time it to when the money actually lands, and hold a reserve for the next drop.
 
-**Level B — `C4-PRO-03` "Patient Money"** · `st_desk` · Dov · 7w
+**Level B — `C4-SCB-03` "Patient Money"** · `st_desk` · Dov · 7w
 > Pre-orders are strong but unpaid. Fabric costs have jumped. Dov will fund you for a percentage. You have about one season of cash.
 
 - Take Dov's money. He's offering on a good month at a fair number, and money raised from strength is the cheapest money you will ever get.
@@ -706,25 +706,25 @@ Shipping text for the seed layer; follow-ups specified by prompt and tier intent
 
 #### C5 · Strategic Thinking — `tradeoffs`
 
-**Level A — `C5-HARD-03` "Your Name On It"** · `st_boutique_floor` · Rio · 5w
+**Level A — `C5-SCA-03` "Your Name On It"** · `st_boutique_floor` · Rio · 5w
 > A fast-fashion brand will pay well for your name on a cheap collaboration.
 
 - Sign it. The cheque solves this season, and brand is something you can rebuild once you're solvent enough to have one.
 - Work out what it does to you over one to three years, put that against the money, and pick accordingly.
 - Trace where it lands — resale, the buyers, who takes your call next year — and design the deal around what you won't give up.
 
-**Level B — `C5-PRO-03`** — fully worked in §9.4.
+**Level B — `C5-SCB-03`** — fully worked in §9.4.
 
 #### C6 · Power & Influence — `persuasion_storytelling`
 
-**Level A — `C6-HARD-03` "For the Exposure"** · `st_rail` · Hélène · 4w
+**Level A — `C6-SCA-03` "For the Exposure"** · `st_rail` · Hélène · 4w
 > A known boutique wants your pieces and wants your margin halved "for the exposure".
 
 - Take the terms. That floor puts you in front of forty thousand people a week, and there is no marketing budget on earth that buys that.
 - Ask what the exposure is actually worth to them, make the case for what you're worth, and hold the terms that matter while flexing the ones that don't.
 - Negotiate from what you actually have — a resale market they'd like access to — show them the deal that works for both, and be genuinely willing to leave without it.
 
-**Level B — `C6-PRO-03` "Pleasantly"** · `st_rail` · Hélène · 4w
+**Level B — `C6-SCB-03` "Pleasantly"** · `st_rail` · Hélène · 4w
 > Tight deadline, names you'd like on your list, an opening offer well under your floor, and a hint that she'll go elsewhere. Your position is stable but not strong.
 
 - Concede the terms. Losing this account with four weeks to a show is not a position you can afford to be principled from.
@@ -733,14 +733,14 @@ Shipping text for the seed layer; follow-ups specified by prompt and tier intent
 
 #### C7 · People Management — `motivating_team`
 
-**Level A — `C7-HARD-03` "Past Ten"** · `st_atelier` · Élise · 2w
+**Level A — `C7-SCA-03` "Past Ten"** · `st_atelier` · Élise · 2w
 > The atelier lights have been on past ten for a week. Élise has been in since six and has unpicked the same seam twice. A large order ships Friday.
 
 - Hold the date. Everyone in this building knew what the two weeks before a show look like when they took the job, and moving it costs you the slot.
 - Rebalance the workload, check whether you've been loading her because she never complains, and put something in place for the team to tell you before it gets here again.
 - Fix what's actually causing it — the sample revisions, not the hours — make it safe for her to say so, and accept the ship date moves.
 
-**Level B — `C7-PRO-03` "One Voice"** · `st_atelier` · Élise + Kobby · 2w
+**Level B — `C7-SCB-03` "One Voice"** · `st_atelier` · Élise + Kobby · 2w
 > A costly cutting error from a new hire. Morale flat with two weeks to go. And you have noticed, this week, that you have taken Kobby's suggestion nine times running and nobody else has offered one in a month.
 
 - Deal with the error, keep the pace, and address the rest after the show. There is a version of this conversation that can wait and this is it.
@@ -749,14 +749,14 @@ Shipping text for the seed layer; follow-ups specified by prompt and tier intent
 
 #### C8 · Value Creation & Credibility — `real_value`
 
-**Level A — `C8-HARD-03` "Sold Out"** · `st_desk` · Rio · 1w
+**Level A — `C8-SCA-03` "Sold Out"** · `st_desk` · Rio · 1w
 > The drop is Thursday. You could post that it's sold out, or you could spend the week showing people how the pieces are actually made.
 
 - Post that it sold out. Scarcity is the oldest lever in this industry, everyone pulls it, and the pieces genuinely are nearly gone.
 - Show the work — the cloth, the construction, Élise's hands — and take slower growth in exchange for people knowing what they're buying.
 - Teach rather than sell. Make this house the place people learn what good construction looks like, and let the demand arrive as a consequence.
 
-**Level B — `C8-PRO-03` "The Placement"** · `st_desk` · Rio · 1w
+**Level B — `C8-SCB-03` "The Placement"** · `st_desk` · Rio · 1w
 > Undisclosed paid coverage, or the slow version: publishing your patterns, your mills, your costs. Cash is tight.
 
 - Take the placement. Every house you admire has bought coverage at some point, and being written about is how a small label stops being small.
@@ -765,14 +765,14 @@ Shipping text for the seed layer; follow-ups specified by prompt and tier intent
 
 #### C9 · Perseverance & Adaptability — `resilience`
 
-**Level A — `C9-HARD-03` "Two Clippings"** · `st_press_wall` · the wall · after
+**Level A — `C9-SCA-03` "Two Clippings"** · `st_press_wall` · the wall · after
 > The show happened. Sales were weak, one review was polite and one was not, and the wall has two frames on it where you expected six. Élise hasn't said anything about either.
 
 - Change direction. The collection was the statement and it did not land — go back to the table and come back next season as something else.
 - Take the hit, work out specifically what missed, adjust the next collection, and keep the house pointed exactly where it was pointed.
 - Treat the resistance as part of the job: take what's true from the bad review, protect the atelier's morale, and come back sharper.
 
-**Level B — `C9-PRO-03` "And Then"** · `st_press_wall` · after
+**Level B — `C9-SCB-03` "And Then"** · `st_press_wall` · after
 > After the flop: returns spike, and the wholesale order you were counting on is cancelled in the same week.
 
 - Cut the line. Three problems in one season is not a rough patch, it is an answer, and the discipline is knowing when to stop paying for one.
@@ -841,6 +841,10 @@ Fiction, mission staging, the persona card, both chosen option texts, the track,
 | C8 | someone else's shortcut is discovered publicly | a magazine asks you, directly, how you did it | `press` |
 | C9 | the polite review turns into an order | the unkind reviewer asks for an interview | `press` |
 
+**Status: authored.** All eighteen live at `internal/registry/content/followups/fashion_brand.json` in `backend-academy`. They pass the §11.5 machine pass. C2's three beats each carry a call to Véra flagged `mentor: true`, so the 0–1 / 2 / 3 count of §9.6 is read from data rather than inferred from prose. No beat names a garment that is not on the rail (§9.7.5). **Not yet loaded** — that is BE-17.
+
+**Still owed:** the fresh-reader pass (§18.2.1).
+
 #### 9.7.5 The MAISON-specific rule
 
 **The transfer beat may not describe a garment that is not on the rail.** The rail is a state machine with a closed set of contents, and a generated question that invents a piece breaks the building's one unbreakable readout. The generator is given `railContents()` and instructed to reference only what is in it; a reference to anything else fails [ADR-006 §8.4](ADR-006_Missions_AI_Followups_and_Session_State.md) gate 8 as an illegal world reference.
@@ -851,19 +855,21 @@ Fiction, mission staging, the persona card, both chosen option texts, the track,
 
 ### 10.1 Activity IDs and subtopics
 
+
+
 Building slot **03** (ADR-005 §10.5). Ledger: [Café PRD §10.2](PRD_Building_Cafe.md).
 
 | Competency | Level A | Level B | Subtopic | Title | Why this subtopic |
 |---|---|---|---|---|---|
-| C1 | `C1-HARD-03` | `C1-PRO-03` | `good_questions` | Three of Mine Asked / The Resale Number | The Advanced path is asking who, how often, and at what price — the question *is* the skill |
-| C2 | `C2-HARD-03` | `C2-PRO-03` | `learning_from_feedback` | Three Times Faster / The Colour House | The whole tree is what you do with a signal that contradicts your identity |
-| C3 | `C3-HARD-03` | `C3-PRO-03` | `saying_no_opportunity_cost` | Forty-Eight Hours / Friday | Two offers, one slot — choosing is declining |
-| C4 | `C4-HARD-03` | `C4-PRO-03` | `roi` | Pre-Orders / Patient Money | "What does this equity actually cost over ten years" is return on investment |
-| C5 | `C5-HARD-03` | `C5-PRO-03` | `tradeoffs` | Your Name On It / Two Seasons | Cash now against brand value later, made physical on the rail |
-| C6 | `C6-HARD-03` | `C6-PRO-03` | `persuasion_storytelling` | For the Exposure / Pleasantly | The Advanced path is reframing the deal around what they actually value |
-| C7 | `C7-HARD-03` | `C7-PRO-03` | `motivating_team` | Past Ten / One Voice | Burnout, morale and unequal attention — the maintenance of willingness |
-| C8 | `C8-HARD-03` | `C8-PRO-03` | `real_value` | Sold Out / The Placement | Manufactured scarcity against demonstrated craft |
-| C9 | `C9-HARD-03` | `C9-PRO-03` | `resilience` | Two Clippings / And Then | Compound setbacks; the competency is absorbing them without deforming |
+| C1 | `C1-SCA-03` | `C1-SCB-03` | `good_questions` | Three of Mine Asked / The Resale Number | The Advanced path is asking who, how often, and at what price — the question *is* the skill |
+| C2 | `C2-SCA-03` | `C2-SCB-03` | `learning_from_feedback` | Three Times Faster / The Colour House | The whole tree is what you do with a signal that contradicts your identity |
+| C3 | `C3-SCA-03` | `C3-SCB-03` | `saying_no_opportunity_cost` | Forty-Eight Hours / Friday | Two offers, one slot — choosing is declining |
+| C4 | `C4-SCA-03` | `C4-SCB-03` | `roi` | Pre-Orders / Patient Money | "What does this equity actually cost over ten years" is return on investment |
+| C5 | `C5-SCA-03` | `C5-SCB-03` | `tradeoffs` | Your Name On It / Two Seasons | Cash now against brand value later, made physical on the rail |
+| C6 | `C6-SCA-03` | `C6-SCB-03` | `persuasion_storytelling` | For the Exposure / Pleasantly | The Advanced path is reframing the deal around what they actually value |
+| C7 | `C7-SCA-03` | `C7-SCB-03` | `motivating_team` | Past Ten / One Voice | Burnout, morale and unequal attention — the maintenance of willingness |
+| C8 | `C8-SCA-03` | `C8-SCB-03` | `real_value` | Sold Out / The Placement | Manufactured scarcity against demonstrated craft |
+| C9 | `C9-SCA-03` | `C9-SCB-03` | `resilience` | Two Clippings / And Then | Compound setbacks; the competency is absorbing them without deforming |
 
 `type: "DECISION_TREE"` · `orderIndex: 3` · `estMinutes: 6` (Level A) / `7` (Level B) · `passCriteria: { "minProficiency": 2 }`.
 
@@ -879,7 +885,7 @@ Building slot **03** (ADR-005 §10.5). Ledger: [Café PRD §10.2](PRD_Building_C
 >             "required": false }
 > ```
 
-`C2-HARD-03`
+`C2-SCA-03`
 
 | Node | a | b | c |
 |---|---|---|---|
@@ -892,9 +898,9 @@ Building slot **03** (ADR-005 §10.5). Ledger: [Café PRD §10.2](PRD_Building_C
 "rubric": {
   "kind": "trace",
   "terminals": {
-    "C2-HARD-03.a.a": 81, "C2-HARD-03.a.b": 95, "C2-HARD-03.a.c": 63,
-    "C2-HARD-03.b.a": 74, "C2-HARD-03.b.b": 42, "C2-HARD-03.b.c": 60,
-    "C2-HARD-03.c.a": 15, "C2-HARD-03.c.b": 33, "C2-HARD-03.c.c": 47
+    "C2-SCA-03.a.a": 81, "C2-SCA-03.a.b": 95, "C2-SCA-03.a.c": 63,
+    "C2-SCA-03.b.a": 74, "C2-SCA-03.b.b": 42, "C2-SCA-03.b.c": 60,
+    "C2-SCA-03.c.a": 15, "C2-SCA-03.c.b": 33, "C2-SCA-03.c.c": 47
   },
   "scoreMap": [
     { "minOutcome": 74, "proficiency": 3 },
@@ -906,7 +912,19 @@ Building slot **03** (ADR-005 §10.5). Ledger: [Café PRD §10.2](PRD_Building_C
 
 Note `c.c` = 47 → P2: you defended the colour for three weeks, then rang Véra and named your own defensiveness out loud. That is a Strong outcome from a Developing start, and it is the single most important cell in this building's design — **the game must reward changing your mind late over never changing it.**
 
-`C5-PRO-03`
+`C5-SCB-03`
+
+> ### ⚠ This table's branch-c row no longer matches the shipped prose
+>
+> Found on 2026-08-08 while deriving the tier maps from `src/buildings/fashion_brand/trees/c5-pro-03.ts`. The table below says branch c is **Strong · Advanced · Developing**. The prose that ships reads the other way round:
+>
+> | | shipped text | reads as |
+> |---|---|---|
+> | **c.a** | *"Take the second one too. You are in this now; the damage is done…"* | textbook sunk cost — **Developing** |
+> | **c.b** | *"Stop at one. Take the money you have, spend the two seasons rebuilding…"* | **Strong** |
+> | **c.c** | *"Stop, and be public about stopping — let the market see a house that priced its own mistake"* | **Advanced** |
+>
+> The prose was authored after this table. The seeded rubric follows the **prose**, because the prose is what a learner reads — see `internal/registry/content/tiermaps/fashion_brand.json`. Either this table is corrected or the reading is wrong; **somebody who did not do either should decide which**, because three of the nine terminals score differently depending on the answer.
 
 | Node | a | b | c |
 |---|---|---|---|
@@ -917,9 +935,9 @@ Note `c.c` = 47 → P2: you defended the colour for three weeks, then rang Véra
 
 ```jsonc
 "terminals": {
-  "C5-PRO-03.a.a": 42, "C5-PRO-03.a.b": 60, "C5-PRO-03.a.c": 74,
-  "C5-PRO-03.b.a": 95, "C5-PRO-03.b.b": 63, "C5-PRO-03.b.c": 81,
-  "C5-PRO-03.c.a": 33, "C5-PRO-03.c.b": 47, "C5-PRO-03.c.c": 15
+  "C5-SCB-03.a.a": 42, "C5-SCB-03.a.b": 60, "C5-SCB-03.a.c": 74,
+  "C5-SCB-03.b.a": 95, "C5-SCB-03.b.b": 63, "C5-SCB-03.b.c": 81,
+  "C5-SCB-03.c.a": 33, "C5-SCB-03.c.b": 47, "C5-SCB-03.c.c": 15
 }
 ```
 
@@ -998,7 +1016,7 @@ Persisted continuously to `PUT /api/v1/city/buildings/fashion_brand/state` and f
 
 ## 14. Level A vs Level B in this room
 
-| | Level A (`HARD`, 16–21) | Level B (`PRO`, 35–50) |
+| | Level A (`SCA`, 16–21) | Level B (`SCB`, 35–50) |
 |---|---|---|
 | **Framing** | MAISON is the label you started. Two years old, one boutique, a following that surprises you. | MAISON is the label you took over. It has a reputation you inherited and can spend. |
 | **Threshold question** | *"Is MAISON the label you're starting, or the one you're taking over?"* — asked by Élise on first entry, once for the whole city | same |
@@ -1101,7 +1119,7 @@ Every line requires an `ASSETS_LICENSES.md` entry before work builds on it.
 - **Content** — every constructible path terminates in a rubric terminal; every terminal is reachable; every leaf writes at least one world-state key; the mentor path is available at both C2 beats in both tracks.
 - **Choice parity (machine pass, ADR-005 §11.5)** — for every trio of choices, longest minus shortest ≤ **8 words**; no capitalised tier label, proficiency number, `n/3` or pass/fail phrasing in any shipped string; no verdict language ("unfortunately", "you should have", "the better move", "correct", "well done") in any consequence; each tier used exactly once per node and no letter permutation repeated in the building. This runs in CI over `script.ts` and is the check that caught the length/tier correlation in this document's first draft.
 - **Component** — the dialogue layer builds the correct `trace`; scenario mode renders no result view; the rail's DOM inspection list matches its 3D state exactly (a snapshot test, because these will drift).
-- **E2E** — enter → `C2-HARD-03` → verify the rail changed → exit → re-enter → verify persistence → complete the season → open the lookbook.
+- **E2E** — enter → `C2-SCA-03` → verify the rail changed → exit → re-enter → verify persistence → complete the season → open the lookbook.
 - **Playtest** — a 25-minute scripted session with a fresh player, ending with *"which choice do you think the game wanted?"*. More than two correct out of nine sends §9 back for rewrite.
 
 ### 18.4 Risks
@@ -1230,7 +1248,7 @@ Full specification: **[PRD_Backend_Missions.md](PRD_Backend_Missions.md)**. MAIS
 ```jsonc
 {
   "rev": 14,
-  "track": "PRO",
+  "track": "SCB",
   "blob": {
     "missionOrder": 2,                  // "Three Times Faster"
     "objectiveIndex": 5,                // decide · transfer
@@ -1255,8 +1273,8 @@ Full specification: **[PRD_Backend_Missions.md](PRD_Backend_Missions.md)**. MAIS
 ```jsonc
 POST /api/v1/ai/followup
 {
-  "activityId": "C2-PRO-03",
-  "track": "PRO",
+  "activityId": "C2-SCB-03",
+  "track": "SCB",
   "buildingId": "fashion_brand",
   "path": ["b", "a"],
   "speakerId": "elise",

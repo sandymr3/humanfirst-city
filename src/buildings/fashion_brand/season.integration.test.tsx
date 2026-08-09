@@ -68,7 +68,7 @@ describe("MAISON end to end, without a backend", () => {
     // assertions below is that none of it reaches the player in this venue,
     // and that the rail moves off the trace rather than off the proficiency.
     vi.spyOn(api, "submit").mockResolvedValue({
-      activityId: "C2-HARD-03",
+      activityId: "C2-SCA-03",
       proficiency: 3,
       bestProficiency: 3,
       passed: true,
@@ -111,7 +111,7 @@ describe("MAISON end to end, without a backend", () => {
     // The house moved off the trace: rail → thin, cash → tight (§9.3).
     expect(await screen.findByText(/the rail is four pieces/)).toBeVisible();
     expect(useMaisonStore.getState().world.rail).toBe("thin");
-    expect(useMaisonStore.getState().decided).toEqual([{ id: "C2-HARD-03", path: ["c", "b"] }]);
+    expect(useMaisonStore.getState().decided).toEqual([{ id: "C2-SCA-03", path: ["c", "b"] }]);
   });
 
   it("opens the lookbook only once the whole season is decided", async () => {
@@ -121,7 +121,7 @@ describe("MAISON end to end, without a backend", () => {
 
     act(() =>
       useMaisonStore.setState({
-        decided: MAISON_DEV_ACTIVITIES.filter((a) => a.level === "HARD").map((a) => ({
+        decided: MAISON_DEV_ACTIVITIES.filter((a) => a.level === "SCA").map((a) => ({
           id: a.id,
           path: ["a", "a"],
         })),

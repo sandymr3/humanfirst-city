@@ -103,9 +103,9 @@ describe("the consequence trail", () => {
   });
 
   it("falls back to the seed when the week was left half-finished", () => {
-    const half: Decided[] = [{ activityId: "C1-HARD-01", seed: "b", follow: null, transfer: null }];
+    const half: Decided[] = [{ activityId: "C1-SCA-01", seed: "b", follow: null, transfer: null }];
     const row = trail(half).find((r) => r.competency === "C1")!;
-    expect(row.chose).toBe(TREES["C1-HARD-01"].seed.find((c) => c.id === "b")!.text);
+    expect(row.chose).toBe(TREES["C1-SCA-01"].seed.find((c) => c.id === "b")!.text);
   });
 
   it("leaves a week blank rather than inventing one", () => {
@@ -117,7 +117,7 @@ describe("the consequence trail", () => {
 
   it("survives a record naming an option that no longer exists", () => {
     // A save sitting in a browser across a content change is the normal case.
-    const stale: Decided[] = [{ activityId: "C1-HARD-01", seed: "z", follow: "z", transfer: "z" }];
+    const stale: Decided[] = [{ activityId: "C1-SCA-01", seed: "z", follow: "z", transfer: "z" }];
     expect(() => trail(stale)).not.toThrow();
     expect(trail(stale).find((r) => r.competency === "C1")!.chose).toBeNull();
   });

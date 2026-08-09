@@ -574,7 +574,7 @@ Re-platforming to DOM UI is a large a11y win over a canvas-only game:
 
 | Phase                        | Deliverable                                                                                                                                                | Demo gate                                                                                                            |
 | ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| **F4a — Backend foundations** | [PRD_Backend_Missions](PRD_Backend_Missions.md) P0–P3: `PRO`, the coin rescale, city + building session state, `POST /ai/followup`, three-beat scoring     | A mission scores across three beats and its 27 outcome cells reproduce [ADR-006 §10.2](ADR-006_Missions_AI_Followups_and_Session_State.md) exactly |
+| **F4a — Backend foundations** | [PRD_Backend_Missions](PRD_Backend_Missions.md) P0–P3: the scenario levels, the coin rescale, city + building session state, `POST /ai/followup`, three-beat scoring     | A mission scores across three beats and its 27 outcome cells reproduce [ADR-006 §10.2](ADR-006_Missions_AI_Followups_and_Session_State.md) exactly |
 | **F4b — Mission framework**   | `src/framework/mission/` (runner, tracker, speaker resolution), `src/framework/session/` (sync, beacon flush, local mirror), the transfer-beat client       | Walk the Cafe's mission 1 as an objective chain, keyboard-only, with the tracker top-left; kill the tab and resume     |
 | **F4c — Three buildings**     | Cafe CAF-1…CAF-6 · MAISON MAI-5…MAI-9 · MERIDIAN MER-0…MER-7                                                                                              | A complete nine-mission season in each, and the same seasons played with the generator disabled                        |
 | **F4d — Launch**              | FTUE, audio, a11y pass, perf pass, CORS tightening, the 54 registry rows seeded, the fresh-reader plausible-peers audits                                    | Public URL, real cohort plays a full session                                                                          |
@@ -622,15 +622,18 @@ Proposed shapes are a starting point; the backend team owns the final contract.
 | ~~BE-9~~  | `POST /api/v1/ai/dialogue`                                     | —        | superseded by **BE-17**        | endpoint           |
 | **BE-10** | `GET /api/v1/leaderboard?batch=`                               | P3       | post-launch                    | endpoint           |
 | **BE-11** | `POST /api/v1/daily/claim` (reward + streak)                   | P3       | post-launch                    | endpoint           |
-| **BE-12** | Seed the 54 scenario rows (C1–C9 × HARD/PRO × slots 01–03)     | P1       | every building being *real*    | content            |
-| **BE-13** | Add level **`PRO`** (`ageBand 35-50`) + nine `BADGE-C{n}-PRO`  | **P0**   | Level B entirely               | registry           |
+| **BE-12** | Seed the 54 scenario rows (C1–C9 × `SCA`/`SCB` × slots 01–03)  | P1       | every building being *real*    | content            |
+| **BE-13** | Add levels **`SCA`** + **`SCB`** + eighteen level badges       | **P0**   | both tracks entirely           | registry           |
 | **BE-14** | `coinsByProficiency` → `{1:5, 2:15, 3:25}`                     | **P0**   | the reward design              | content pack       |
 | **BE-15** | `PUT/GET /api/v1/city/state` — track, FTUE, last tile          | **P0**   | track persistence              | endpoint + table   |
 | **BE-16** | `PUT/GET/POST /api/v1/city/buildings/{id}/state` + beacon path | **P0**   | the season surviving the door  | endpoint + table   |
 | **BE-17** | `POST /api/v1/ai/followup` (+ `/{id}/commit`) — the transfer beat | **P0** | ADR-006 §7                    | endpoint + table   |
 | **BE-18** | Extended `trace` submit + the `aiBeat` rubric block            | **P0**   | three-beat scoring             | scoring            |
 | **BE-19** | `POST /api/v1/telemetry/mission`                               | P3       | nothing                        | endpoint           |
-| **BE-20** | Un-stale `api/openapi.yaml` — `DECISION_TREE`, `trace`, `PRO`, all of the above | P1 | type-safe drift detection | contract |
+| **BE-20** | Un-stale `api/openapi.yaml` — `DECISION_TREE`, `trace`, `SCA`, `SCB`, all of the above | P1 | type-safe drift detection | contract |
+| **BE-21** | Registry validator: accept a partially-populated level (default) vs `-strict` at launch | **P0** | **BE-12 — seeding anything at all** | tooling |
+
+> **⚠ Two blockers sit in front of the P0 work.** The registry validator rejects a partially-populated level, and the scenario activity ids collide with already-seeded content that has user progress against it. See [PRD_Backend_Missions §6.4–6.5](PRD_Backend_Missions.md) and [ADR-005 §10.6.1](ADR-005_Interior_Framework.md). The second one needs KK, not an engineer.
 
 ### 21.2 Epic A — Economy surface (the critical path; blocks F2)
 

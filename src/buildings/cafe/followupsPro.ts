@@ -9,8 +9,8 @@
 import type { FollowupBeat } from "./followups";
 
 export const PRO_FOLLOWUPS: Readonly<Record<string, FollowupBeat>> = {
-  "C1-PRO-01": {
-    activityId: "C1-PRO-01",
+  "C1-SCB-01": {
+    activityId: "C1-SCB-01",
     speakerId: "nadia",
     variesOn: "regulars",
     prompt: (world) => {
@@ -45,8 +45,8 @@ export const PRO_FOLLOWUPS: Readonly<Record<string, FollowupBeat>> = {
     ],
   },
 
-  "C2-PRO-01": {
-    activityId: "C2-PRO-01",
+  "C2-SCB-01": {
+    activityId: "C2-SCB-01",
     speakerId: "priya",
     variesOn: "staff",
     prompt: (world) => {
@@ -80,8 +80,8 @@ export const PRO_FOLLOWUPS: Readonly<Record<string, FollowupBeat>> = {
     ],
   },
 
-  "C3-PRO-01": {
-    activityId: "C3-PRO-01",
+  "C3-SCB-01": {
+    activityId: "C3-SCB-01",
     speakerId: "ray",
     variesOn: "till",
     prompt: (world) => {
@@ -115,8 +115,8 @@ export const PRO_FOLLOWUPS: Readonly<Record<string, FollowupBeat>> = {
     ],
   },
 
-  "C4-PRO-01": {
-    activityId: "C4-PRO-01",
+  "C4-SCB-01": {
+    activityId: "C4-SCB-01",
     speakerId: "room",
     variesOn: "till",
     prompt: (world) => {
@@ -150,8 +150,8 @@ export const PRO_FOLLOWUPS: Readonly<Record<string, FollowupBeat>> = {
     ],
   },
 
-  "C5-PRO-01": {
-    activityId: "C5-PRO-01",
+  "C5-SCB-01": {
+    activityId: "C5-SCB-01",
     speakerId: "nadia",
     variesOn: "board",
     prompt: (world) => {
@@ -185,8 +185,8 @@ export const PRO_FOLLOWUPS: Readonly<Record<string, FollowupBeat>> = {
     ],
   },
 
-  "C6-PRO-01": {
-    activityId: "C6-PRO-01",
+  "C6-SCB-01": {
+    activityId: "C6-SCB-01",
     speakerId: "ellery",
     variesOn: "till",
     prompt: (world) => {
@@ -221,8 +221,8 @@ export const PRO_FOLLOWUPS: Readonly<Record<string, FollowupBeat>> = {
     ],
   },
 
-  "C7-PRO-01": {
-    activityId: "C7-PRO-01",
+  "C7-SCB-01": {
+    activityId: "C7-SCB-01",
     speakerId: "priya",
     variesOn: "staff",
     prompt: (world) => {
@@ -256,8 +256,8 @@ export const PRO_FOLLOWUPS: Readonly<Record<string, FollowupBeat>> = {
     ],
   },
 
-  "C8-PRO-01": {
-    activityId: "C8-PRO-01",
+  "C8-SCB-01": {
+    activityId: "C8-SCB-01",
     speakerId: "marcus",
     variesOn: "beans",
     prompt: (world) => {
@@ -291,8 +291,8 @@ export const PRO_FOLLOWUPS: Readonly<Record<string, FollowupBeat>> = {
     ],
   },
 
-  "C9-PRO-01": {
-    activityId: "C9-PRO-01",
+  "C9-SCB-01": {
+    activityId: "C9-SCB-01",
     speakerId: "priya",
     variesOn: "regulars",
     prompt: (world) => {

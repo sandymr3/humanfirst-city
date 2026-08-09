@@ -460,7 +460,7 @@ const FollowUp = z.object({
 });
 
 const DecisionTree = z.object({
-  activityId: z.string(),          // e.g. "C1-HARD-01"
+  activityId: z.string(),          // e.g. "C1-SCA-01"
   competency: z.string(),          // "C1"
   stationId: z.string(),           // where in the room it happens
   seed: z.object({
@@ -474,7 +474,7 @@ const DecisionTree = z.object({
 
 export const ScenarioScriptSchema = z.object({
   buildingId: z.string(),
-  track: z.enum(["HARD", "PRO"]),
+  track: z.enum(["SCA", "SCB"]),
   intro: z.string(),               // the shared setup, spoken on first entry
   trees: z.array(DecisionTree).length(9),
 });
@@ -513,14 +513,14 @@ This is structural rather than editorial on purpose: MAISON's CI parity check ca
 Activity type `DECISION_TREE`, result kind `trace`. The `path` is exactly as it always was; two optional fields carry the transfer beat ([ADR-006 §7.3](ADR-006_Missions_AI_Followups_and_Session_State.md), [PRD_Backend_Missions §4.5](PRD_Backend_Missions.md)):
 
 ```jsonc
-POST /api/v1/progress/C1-HARD-01/submit
+POST /api/v1/progress/C1-SCA-01/submit
 {
   "clientVersion": "city@0.3.0",
   "durationSec": 341,
   "hintsUsed": 0,
   "result": { "trace": {
-    "path": ["C1-HARD-01.seed", "C1-HARD-01.b",
-             "C1-HARD-01.b.follow", "C1-HARD-01.b.c"],
+    "path": ["C1-SCA-01.seed", "C1-SCA-01.b",
+             "C1-SCA-01.b.follow", "C1-SCA-01.b.c"],
     "followupId": "fu_01J8ZQ0S8N4T1V6M",     // optional
     "followupChoice": "o_c104de"             // optional
   } }
@@ -581,9 +581,9 @@ Read the two tables together and the consistency check does exactly what the blu
 ### 10.3 The rubric a building ships to the backend
 
 ```jsonc
-// internal/registry/content/c1.json → levels.HARD.activities[0]
+// internal/registry/content/c1.json → levels.SCA.activities[0]
 {
-  "id": "C1-HARD-01",
+  "id": "C1-SCA-01",
   "subtopic": "empathy_pain",
   "orderIndex": 1,
   "type": "DECISION_TREE",
@@ -592,9 +592,9 @@ Read the two tables together and the consistency check does exactly what the blu
   "rubric": {
     "kind": "trace",
     "terminals": {
-      "C1-HARD-01.a.a": 74, "C1-HARD-01.a.b": 42, "C1-HARD-01.a.c": 60,
-      "C1-HARD-01.b.a": 15, "C1-HARD-01.b.b": 47, "C1-HARD-01.b.c": 33,
-      "C1-HARD-01.c.a": 81, "C1-HARD-01.c.b": 95, "C1-HARD-01.c.c": 63
+      "C1-SCA-01.a.a": 74, "C1-SCA-01.a.b": 42, "C1-SCA-01.a.c": 60,
+      "C1-SCA-01.b.a": 15, "C1-SCA-01.b.b": 47, "C1-SCA-01.b.c": 33,
+      "C1-SCA-01.c.a": 81, "C1-SCA-01.c.b": 95, "C1-SCA-01.c.c": 63
     },
     "scoreMap": [
       { "minOutcome": 74, "proficiency": 3 },
@@ -608,7 +608,7 @@ Read the two tables together and the consistency check does exactly what the blu
 
 Two conventions that matter:
 
-1. **Terminal ids are `<activityId>.<seedChoice>.<followChoice>`.** The letters `a/b/c` are **shuffled per activity**, so "b is always the good one" never becomes learnable — which is why the values above are not in tidy rows. This example is the real `C1-HARD-01` from [the Café](PRD_Building_Cafe.md) §10.3, where the seed shuffle is `a→Strong · b→Developing · c→Advanced`. **The rubric is the only place that mapping is recorded**; a building's PRD carries a tier-map table for review, and nothing carries it into a client.
+1. **Terminal ids are `<activityId>.<seedChoice>.<followChoice>`.** The letters `a/b/c` are **shuffled per activity**, so "b is always the good one" never becomes learnable — which is why the values above are not in tidy rows. This example is the real `C1-SCA-01` from [the Café](PRD_Building_Cafe.md) §10.3, where the seed shuffle is `a→Strong · b→Developing · c→Advanced`. **The rubric is the only place that mapping is recorded**; a building's PRD carries a tier-map table for review, and nothing carries it into a client.
 2. **No `hintsCap`.** Scenarios have no hints — there is nothing to hint at without leaking the tier. The player shell hides the hint button in scenario mode.
 3. **The `aiBeat` block** (`{ weight: 0.3, tierValues: {…}, required: false }`) is added to every `DECISION_TREE` rubric. `required: false` is what keeps every legacy and degraded path scoring correctly. See [PRD_Backend_Missions §6.3](PRD_Backend_Missions.md).
 
@@ -626,6 +626,19 @@ Awards remain server-computed, credited once per first pass, idempotent on re-su
 
 ### 10.5 Registry binding — twelve buildings, twelve slots
 
+> ### ⚠ BLOCKING — this section's id scheme collides with content that is already seeded
+>
+> **Verified against the live registry on 2026-08-07.** Two facts invalidate what §10.5 and §10.6 assert:
+>
+> 1. **`C9-HARD-01`, `-02` and `-03` are already taken.** C9 is fully seeded at all three levels, and `C9/HARD` holds twelve school-style activities occupying `orderIndex` 1–12:
+>    `C9-HARD-01` *Chaos Simulator* (`MINI_SIM`) · `C9-HARD-02` *Grit vs Sunk Cost* (`CASE_STUDY`) · `C9-HARD-03` *The Setback Reflection* (`OPEN_TEXT_AI`) … through `C9-HARD-12`.
+>    **All three launch buildings collide**, at their C9 slot, on day one.
+> 2. **There is user progress against those ids.** 108 rows in the dev database, including `C9-HARD-05` and `C9-HARD-07`. Renumbering or evicting them dangles real data.
+>
+> §10.6's original claim that *"`HARD` and `PRO` become entirely scenario content — twelve buildings × one activity each fills both grids exactly"* was therefore **false as written**, and is withdrawn. It would have held for a level that did not exist yet. It was never true of `HARD`.
+>
+> **Resolved in §10.6.1: Option C, adopted 2026-08-07.** Scenario activities live at `SCA` and `SCB`; `HARD` is untouched. The ids in each building PRD §10.1 are final. A product-owner summary of the decision, with no engineering detail, is [DECISION_scenario_level_namespace.md](DECISION_scenario_level_namespace.md).
+
 `validate_registry` enforces, per competency-level: **exactly 12 activities, `orderIndex` 1..12, six subtopics × exactly 2 each**. There are exactly twelve buildings. These are the same twelve.
 
 | Slot | Building | Slot | Building |
@@ -640,10 +653,12 @@ Awards remain server-computed, credited once per first pass, idempotent on re-su
 A building owns its slot number across all nine competency files, in both scenario levels:
 
 ```
-Café      → C1-HARD-01 … C9-HARD-01   and   C1-PRO-01 … C9-PRO-01
-MERIDIAN  → C1-HARD-02 … C9-HARD-02   and   C1-PRO-02 … C9-PRO-02
-MAISON    → C1-HARD-03 … C9-HARD-03   and   C1-PRO-03 … C9-PRO-03
+Café      → C1-SCA-01 … C9-SCA-01   and   C1-SCB-01 … C9-SCB-01
+MERIDIAN  → C1-SCA-02 … C9-SCA-02   and   C1-SCB-02 … C9-SCB-02
+MAISON    → C1-SCA-03 … C9-SCA-03   and   C1-SCB-03 … C9-SCB-03
 ```
+
+> **Provisional.** Under §10.6.1's recommended Option C these become `C1-SCA-01 … C9-SCA-01` and `C1-SCB-01 … C9-SCB-01`. The *slot numbers* (01 = Café, 02 = MERIDIAN, 03 = MAISON) are unaffected either way; only the level segment moves.
 
 Two building teams can never touch the same activity, even inside the same competency file. Twelve buildings × 9 competencies × 2 levels = **216 scenario activities** at full seed.
 
@@ -656,14 +671,49 @@ The three launch buildings claim one subtopic per competency each, leaving exact
 
 Slot 12 (Custom) still seeds a real, generic scenario so the grid validates. Only its *interior skin and copy* are client-swapped; the registry rows always exist.
 
-### 10.6 Levels — Level A is `HARD`, Level B is the new `PRO`
+### 10.6 Levels — the scenario levels `SCA` and `SCB`
 
-The backend has three levels: `BEGINNER` (8–13), `MEDIUM` (14–16), `HARD` (17–21). The blueprints define two tracks: **Level A, 16–21** and **Level B, 35–50**.
+The backend has three levels: `BEGINNER` (8–13), `MEDIUM` (14–16), `HARD` (17–21) — all three holding school-style drills. The blueprints define two audience tracks: **Level A, 16–21** and **Level B, 35–50**.
 
-- **Level A → `HARD`.** The 17–21 band is already there and the age fit is close enough that inventing a level for a one-year overlap would be waste.
-- **Level B → a new fourth level `PRO`, `ageBand: "35-50"`.** This is the additive backend change **BE-13** (§18).
+Scenario buildings get **their own two levels**, and share none of the existing three:
 
-**Consequence, stated plainly:** `HARD` and `PRO` become **entirely scenario content** — twelve buildings × one activity each fills both grids exactly, with no room left over. `BEGINNER` and `MEDIUM` keep the existing school-style activity mix (drag-match, MCQ, sort, budget, mini-sim). Anyone wanting to add a non-scenario activity at `HARD` needs a slot, and there are none; that is a feature, not an oversight.
+- **Level A → `SCA`** (`SCENARIO_A`, `ageBand: "16-21"`).
+- **Level B → `SCB`** (`SCENARIO_B`, `ageBand: "35-50"`).
+
+Both are empty by construction, so the twelve-slot scheme of §10.5 fits exactly and collides with nothing. This is the additive backend change **BE-13** (§18).
+
+> **v1.0 chose `HARD` for Level A**, reasoning that the 17–21 band already existed and inventing a level for a one-year overlap would be waste. That reasoning was about *age bands*; the blocker turned out to be *capacity* (§10.5). §10.6.1 records how it was re-decided.
+
+~~**Consequence, stated plainly:** `HARD` and `PRO` become **entirely scenario content** — twelve buildings × one activity each fills both grids exactly, with no room left over.~~
+
+> **Withdrawn 2026-08-07.** That paragraph assumed `HARD` was empty. It is not: `C9/HARD` is fully seeded with twelve authored drills, with user progress against them (§10.5). The sentence is true of the two levels that replaced it — `SCA` and `SCB` are empty by construction — and was never true of `HARD`.
+
+`BEGINNER`, `MEDIUM` and `HARD` keep the existing school-style activity mix (drag-match, MCQ, sort, budget, mini-sim) and are **untouched by any of this**. Anyone wanting to add a drill at `HARD` still can.
+
+### 10.6.1 How the collision was resolved
+
+**The underlying problem is two content models sharing one namespace.** A level was designed to hold twelve *varied drills across six subtopics × 2*. The scenario model wants a level to hold twelve *buildings, one activity each*. Both cannot own `orderIndex` 1–12 of the same competency-level.
+
+| | Option | Cost | Risk |
+|---|---|---|---|
+| **A** | **Evict `C9/HARD`** — move its twelve drills elsewhere to free the slots | There is nowhere to move them: `C9/BEGINNER` and `C9/MEDIUM` are both full at 12. They would have to be deleted | **High.** Destroys authored content and dangles progress rows |
+| **B** | **Raise the per-level cap** to 24 and partition `orderIndex` — 1–12 scenarios, 13–24 drills | Renumbering the drills changes their ids (`C9-HARD-01` → `C9-HARD-13`) | **High.** Ids are the progress key; every existing row for those activities dangles |
+| **C** ✅ | **Give scenarios their own two levels.** Level A → **`SCA`**, Level B → **`SCB`** (`SCENARIO_A` / `SCENARIO_B`), both empty by construction. `HARD` keeps its drills untouched | Two new levels instead of one; 18 level badges instead of 9; the 54 ids in the three building PRDs are renamed `C1-SCA-01` → `C1-SCA-01`, `C1-SCB-01` → `C1-SCB-01` | **Near zero.** Those ids exist only in documents — **not one row is seeded against them** — so renaming is free, and no shipped content or progress row is touched |
+
+**Decision: Option C — adopted 2026-08-07.** Scenario buildings get their own two levels, `SCA` (16–21) and `SCB` (35–50). `HARD` keeps its drills and its progress rows and is untouched. The rationale memo is [DECISION_scenario_level_namespace.md](DECISION_scenario_level_namespace.md), kept for the record.
+
+The original argument for reusing `HARD` was that *"inventing a level for a one-year overlap would be waste"* — a judgment about age bands. That argument is now beside the point: the blocker is **capacity**, not age fit. And the cost comparison has inverted. Renaming ids that exist only in prose is free; renaming ids that exist in a progress table is a migration with a data-loss failure mode.
+
+Option C also fixes something §10.6 got wrong on its own terms. Keeping `PRO` for Level B while inventing a level for Level A would leave the two tracks asymmetrically named for no reason a reader could reconstruct. `SCA` / `SCB` is symmetric, is obviously distinct from the drill levels at a glance, and makes "which grid is this?" answerable from an activity id alone.
+
+**What Option C changes, concretely:**
+
+- **BE-13 grows.** Two levels in the allow-list, not one; `ageBand` `16-21` and `35-50`; **eighteen** `BADGE-C{n}-SCA` / `BADGE-C{n}-SCB` badges; two meta badges.
+- **Id convention** follows the existing abbreviations (`BEG`, `MED`, `HARD`): `C1-SCA-01` … `C9-SCA-12` and `C1-SCB-01` … `C9-SCB-12`.
+- **Every terminals table** in the three building PRDs is re-keyed. The *values* do not change — only the id prefix — so nothing in §10.1's arithmetic is re-derived.
+- **`HARD` is left exactly as it is.** Anyone wanting to add a drill at `HARD` still can, which is now correct rather than "a feature".
+
+The level *names* are a detail and KK may change them; the *structure* — a separate namespace for scenarios — is the decision.
 
 ### 10.7 Which track a player is on
 
@@ -961,14 +1011,15 @@ All additive within v1. Process per master PRD §11.3: issue → openapi PR firs
 
 | ID | Issue | Priority | Blocks |
 |---|---|---|---|
-| **BE-13** | **Add level `PRO`** (`ageBand: "35-50"`) — allow-list in `cmd/validate_registry`, `-strict` 3→4, nine `BADGE-C{n}-PRO`, a fourth meta badge (`BADGE-META-OPERATOR` proposed), the level comment on `ActivityRegistry.Level`. `varchar(16)` already fits | **P0** | Level B entirely |
+| **BE-13** | **Add levels `SCA` + `SCB`** (`ageBand` `16-21` / `35-50`) — allow-list in `cmd/validate_registry`, eighteen `BADGE-C{n}-SCA` / `BADGE-C{n}-SCB`, two meta badges, the level comment on `ActivityRegistry.Level`. `varchar(16)` already fits | **P0** | Both tracks entirely |
 | **BE-14** | **Retune `coinsByProficiency` → `{1:5, 2:15, 3:25}`** in `economy.json`. Content pack, no deploy. Platform-wide rescale — §10.4 | **P0** | The reward design |
 | **BE-15** | `PUT/GET /api/v1/city/state` — track choice, FTUE flags, last tile *(was BE-8)* | **P0** | Track persistence |
 | **BE-16** | `PUT/GET/POST /api/v1/city/buildings/{id}/state` — the season blob, including the `sendBeacon` exit path | **P0** | ADR-006 §11 entirely |
 | **BE-17** | `POST /api/v1/ai/followup` + `POST /api/v1/ai/followup/{id}/commit` — the transfer beat *(replaces BE-9's scope)* | **P0** | ADR-006 §7 |
 | **BE-18** | Extended `trace` submit (`followupId`, `followupChoice`) + the `aiBeat` rubric block | **P0** | Three-beat scoring |
-| **BE-12** *(exists)* | **Seed C1–C9 × HARD and PRO** for slots 01–03 = 54 activities; the full grid is 216 | P1 | Content availability per building |
-| **BE-20** | Un-stale `api/openapi.yaml` — must document `DECISION_TREE` / `trace` / `PRO` / everything above *(was BE-5)* | P1 | Type-safe drift detection |
+| **BE-12** *(exists)* | **Seed C1–C9 × `SCA` and `SCB`** for slots 01–03 = 54 activities; the full grid is 216. Blocked on **BE-21** | P1 | Content availability per building |
+| **BE-20** | Un-stale `api/openapi.yaml` — must document `DECISION_TREE` / `trace` / `SCA` / `SCB` / everything above *(was BE-5)* | P1 | Type-safe drift detection |
+| **BE-21** | Registry validator: bounded by default, exact under `-strict` | **P0** | **BE-12, and therefore every building being real** |
 | **BE-19** | `POST /api/v1/telemetry/mission` — objective-level events | P3 | Nothing |
 
 ---
@@ -1013,10 +1064,11 @@ Offline authoring remains encouraged and is a different activity: Claude draftin
 
 ### 20.3 Open decisions
 
-- **The fourth meta badge name** for `PRO` (`BADGE-META-OPERATOR` proposed) — KK.
+- ~~The scenario level namespace (§10.6.1)~~ — **closed 2026-08-07.** Option C adopted; `SCA` / `SCB` are in the validator allow-list and the first row is seeded.
+- **The two meta badge names** for `SCA` and `SCB` (`BADGE-META-OPERATOR` was proposed when there was one) — KK. Not blocking.
 - **Track override by batch code** — should a cohort be pinned to Level B by its WarRoom batch, overriding player choice? Deferred; player choice ships first.
 - **Shared city palette LUT** — still unauthored, and MAISON's whole identity is colour.
-- **Whether `HARD` being fully consumed by scenarios is acceptable long-term** (§10.6), or whether a fifth level is eventually needed for non-scenario advanced drills.
+- ~~Whether `HARD` being fully consumed by scenarios is acceptable long-term~~ — **withdrawn.** `HARD` is not consumed by scenarios at all under §10.6.1; it keeps its drills and has room for more.
 - **Voice acting** — captions are mandatory regardless; whether any line is ever voiced is a post-launch question.
 - **Speculative generation** of all three transfer branches during beat 1 (ADR-006 §16) — 3× cost, latency becomes a non-issue. Decide after the p95 is measured.
 - **Audio.** Neither shipped building has any, and §6 of every building PRD makes ambience load-bearing. This is the largest unstarted item in the framework.

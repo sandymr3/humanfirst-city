@@ -100,11 +100,11 @@ describe("the shape of a decision", () => {
   it("builds the trace path the backend's evalTrace walks", () => {
     // PRD §10.4 verbatim. It reads the path backwards for the last node it
     // knows, so the leaf has to be last and named `id.seed.follow`.
-    expect(tracePath("C1-HARD-01", "c", "b")).toEqual([
-      "C1-HARD-01.seed",
-      "C1-HARD-01.c",
-      "C1-HARD-01.c.follow",
-      "C1-HARD-01.c.b",
+    expect(tracePath("C1-SCA-01", "c", "b")).toEqual([
+      "C1-SCA-01.seed",
+      "C1-SCA-01.c",
+      "C1-SCA-01.c.follow",
+      "C1-SCA-01.c.b",
     ]);
   });
 

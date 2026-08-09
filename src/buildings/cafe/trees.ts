@@ -63,8 +63,8 @@ export function tracePath(activityId: string, seed: string, follow: string): str
 const HARD_TREES: Readonly<Record<string, Tree>> = {
   // Fully worked in PRD §9.3. The seed and follow-up text below is the shipping
   // text from that section verbatim; the leaf consequences are authored to it.
-  "C1-HARD-01": {
-    activityId: "C1-HARD-01",
+  "C1-SCA-01": {
+    activityId: "C1-SCA-01",
     stage:
       "8:05. The bell goes. Nadia's already reaching for her card before she's at the counter, the way she is every morning. She orders, then stops halfway through putting her phone away. It's the third time this week someone's asked. Behind you, Priya doesn't say anything, which is Priya's way of saying something. There's enough in the till for one move this month.",
     prompt: "You still don't do oat, do you?",
@@ -179,8 +179,8 @@ const HARD_TREES: Readonly<Record<string, Tree>> = {
   // §9.5 gives the seed layer as shipping text and specifies the follow-up
   // branches by prompt and intent. The seeds below are that text; the follow-ups
   // and every consequence are authored against it.
-  "C2-HARD-01": {
-    activityId: "C2-HARD-01",
+  "C2-SCA-01": {
+    activityId: "C2-SCA-01",
     stage:
       "Two weeks in. Priya has the numbers on the back of a docket and has clearly been waiting for you to ask. The iced drink went up on the board in your handwriting and it has been doing four a day since.",
     prompt: "So. Are we talking about the iced thing, or are we leaving it up there?",
@@ -292,8 +292,8 @@ const HARD_TREES: Readonly<Record<string, Tree>> = {
     },
   },
 
-  "C3-HARD-01": {
-    activityId: "C3-HARD-01",
+  "C3-SCA-01": {
+    activityId: "C3-SCA-01",
     stage:
       "The hottest day of the year. Ray's truck is at the kerb before he is at the door, and the smell of it is in the room before he is. He needs an answer tomorrow, he says, because the market wants the same pitch.",
     prompt: "Your crowd, my fries, Saturday. Tell me what's wrong with that.",
@@ -405,8 +405,8 @@ const HARD_TREES: Readonly<Record<string, Tree>> = {
     },
   },
 
-  "C4-HARD-01": {
-    activityId: "C4-HARD-01",
+  "C4-SCA-01": {
+    activityId: "C4-SCA-01",
     stage:
       "22:30. Chairs up, machine cooling and ticking as it goes. One pendant on over the counter. The month's takings are stacked in front of you — the best four weeks since you took the place on. It is also August, and you have run this room long enough to know what September looks like.",
     prompt: "The takings are still on the counter. It is twenty to eleven.",
@@ -518,8 +518,8 @@ const HARD_TREES: Readonly<Record<string, Tree>> = {
     },
   },
 
-  "C5-HARD-01": {
-    activityId: "C5-HARD-01",
+  "C5-SCA-01": {
+    activityId: "C5-SCA-01",
     stage:
       "There is a promo card on the community board that you did not pin there. It is for a delivery app, and it is for this café. Nadia mentions, on her way past, that she has been ordering through it for a month. She means it as a compliment.",
     prompt: "It's so much easier now you're on there. You did know you were on there?",
@@ -631,8 +631,8 @@ const HARD_TREES: Readonly<Record<string, Tree>> = {
     },
   },
 
-  "C6-HARD-01": {
-    activityId: "C6-HARD-01",
+  "C6-SCA-01": {
+    activityId: "C6-SCA-01",
     stage:
       "She has taken the four-top by the window — Marcus's table, which nobody mentions and everybody notices. Laptop open, a coffee she bought herself, and a number she decided on before she came in. Marcus is standing near the door with his paper.",
     prompt:
@@ -745,8 +745,8 @@ const HARD_TREES: Readonly<Record<string, Tree>> = {
     },
   },
 
-  "C7-HARD-01": {
-    activityId: "C7-HARD-01",
+  "C7-SCA-01": {
+    activityId: "C7-SCA-01",
     stage:
       "First grey day of the autumn. She has been late four times in two weeks, and it lands on whoever opened — which has been Tomas, twice, without saying anything about it. The rota by the pass-through has corrections on it that are not yours.",
     prompt: "You wanted a word. Here, or out the back?",
@@ -858,8 +858,8 @@ const HARD_TREES: Readonly<Record<string, Tree>> = {
     },
   },
 
-  "C8-HARD-01": {
-    activityId: "C8-HARD-01",
+  "C8-SCA-01": {
+    activityId: "C8-SCA-01",
     stage:
       "The delivery is in, and there is a bag on the counter end that you did not order: a kilo of the cheaper beans, with the invoice folded underneath it. The number on it would fix this month. Marcus is in his chair behind you, reading.",
     prompt: "Priya, holding the bag up to the light: “They've sent us a present, then.”",
@@ -971,8 +971,8 @@ const HARD_TREES: Readonly<Record<string, Tree>> = {
     },
   },
 
-  "C9-HARD-01": {
-    activityId: "C9-HARD-01",
+  "C9-SCA-01": {
+    activityId: "C9-SCA-01",
     stage:
       "A new café across the road, open a fortnight. Through two panes of glass you can see two of your regulars sitting in it. The four-top by the window is empty for the first time since you took this place on, and Priya has noticed you noticing.",
     prompt:

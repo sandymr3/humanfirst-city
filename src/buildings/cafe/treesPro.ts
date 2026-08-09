@@ -17,8 +17,8 @@ export const PRO_TREES: Readonly<Record<string, Tree>> = {
   // C1 · empathy_pain. The Advanced path is finding out what the request
   // actually costs the person asking — which is why every branch here ends up
   // somewhere other than "did you stock it".
-  "C1-PRO-01": {
-    activityId: "C1-PRO-01",
+  "C1-SCB-01": {
+    activityId: "C1-SCB-01",
     stage:
       "8:05, and you have stood behind a counter at this hour before. Nadia is already reaching for her card. Tomas is on the bar because Priya cannot do six mornings, and you can hear him not quite keeping up behind you.",
     prompt: "You still don't do oat, do you? I'm not having a go. I plan my morning round it now.",
@@ -134,8 +134,8 @@ export const PRO_TREES: Readonly<Record<string, Tree>> = {
   // improvised; here it turns on whether it was designed *before or after the
   // data*, which is the deepest form of it and the thing the follow-up exists
   // to catch (§9.5).
-  "C2-PRO-01": {
-    activityId: "C2-PRO-01",
+  "C2-SCB-01": {
+    activityId: "C2-SCB-01",
     stage:
       "The iced drink has been on three weeks because you told the team to get behind it. Tomas rewrote the board for it on a Monday. Priya has the dockets folded in her apron and has not offered them.",
     prompt: "Do you want the numbers, or do you want to leave it another week?",
@@ -249,8 +249,8 @@ export const PRO_TREES: Readonly<Record<string, Tree>> = {
 
   // C3 · smart_vs_reckless_risk. §9.5: "stress-test the worst case, then
   // commit." Seed layer is the PRD's shipping text.
-  "C3-PRO-01": {
-    activityId: "C3-PRO-01",
+  "C3-SCB-01": {
+    activityId: "C3-SCB-01",
     stage:
       "The letter has been on the hatch a week. Ray comes in with the folder rather than the truck: thirty per cent off a quarter's beans, placed today, back to list on Monday. The saving is real and it is most of your spare cash.",
     prompt:
@@ -362,8 +362,8 @@ export const PRO_TREES: Readonly<Record<string, Tree>> = {
 
   // C4 · cash_flow. Fully worked in PRD §9.4 — seed and all three follow-up
   // branches are that section's text, with the leaf consequences authored to it.
-  "C4-PRO-01": {
-    activityId: "C4-PRO-01",
+  "C4-SCB-01": {
+    activityId: "C4-SCB-01",
     stage:
       "22:30. Chairs up, machine cooling and ticking as it goes. One pendant on over the till. The month's takings are stacked on the counter in front of you — the best four weeks since you took the place on. It is also August, and you have run a room long enough to know what September looks like.",
     prompt: "The best four weeks since you took it on, and it is the twenty-ninth of August.",
@@ -477,8 +477,8 @@ export const PRO_TREES: Readonly<Record<string, Tree>> = {
 
   // C5 · scenario_thinking. "Today's call shapes the next two years" is the
   // definition (§10.1), and the follow-ups are the two years arriving.
-  "C5-PRO-01": {
-    activityId: "C5-PRO-01",
+  "C5-SCB-01": {
+    activityId: "C5-SCB-01",
     stage:
       "A card on the community board you did not pin, and forty per cent of last month's orders behind it. The commission letter came Tuesday. Whatever you settle today you will be living inside for two years.",
     prompt: "I still order through the app. Is that bad? You've gone quiet about it.",
@@ -592,8 +592,8 @@ export const PRO_TREES: Readonly<Record<string, Tree>> = {
 
   // C6 · negotiation. Level A is a discount; here it is a year, a signature and
   // somebody who genuinely has other options.
-  "C6-PRO-01": {
-    activityId: "C6-PRO-01",
+  "C6-SCB-01": {
+    activityId: "C6-SCB-01",
     stage:
       "She has taken Marcus's table again, and this time there is a contract in the folder. A year's commitment, forty covers a week, and terms that would leave you working at roughly nothing.",
     prompt:
@@ -708,8 +708,8 @@ export const PRO_TREES: Readonly<Record<string, Tree>> = {
 
   // C7 · feedback. The mechanism is the honest conversation, held or avoided —
   // and on this track the person it is about is the one keeping the room open.
-  "C7-PRO-01": {
-    activityId: "C7-PRO-01",
+  "C7-SCB-01": {
+    activityId: "C7-SCB-01",
     stage:
       "First grey day. Tomas is the fastest pair of hands you have and the reason two other people have started swapping shifts to avoid him. The rota by the hatch has been rewritten twice this fortnight, and not by you.",
     prompt: "You've seen it. I'm not going to keep rewriting the rota round it.",
@@ -823,8 +823,8 @@ export const PRO_TREES: Readonly<Record<string, Tree>> = {
 
   // C8 · quality_craftsmanship. The decision is literally about the product, and
   // the follow-up is the product being noticed by the one person who would.
-  "C8-PRO-01": {
-    activityId: "C8-PRO-01",
+  "C8-SCB-01": {
+    activityId: "C8-SCB-01",
     stage:
       "The sample is on the counter end with the invoice folded underneath it. There is a reduction here that this quarter needs and almost nobody would notice for a while. Marcus is in his chair behind you, reading.",
     prompt: "It's fine under milk. I'm not saying take it. I'm saying it's fine under milk.",
@@ -938,8 +938,8 @@ export const PRO_TREES: Readonly<Record<string, Tree>> = {
 
   // C9 · adaptability_pivoting. The Advanced path is adapting without
   // abandoning, which is exactly what the three branches below cost differently.
-  "C9-PRO-01": {
-    activityId: "C9-PRO-01",
+  "C9-SCB-01": {
+    activityId: "C9-SCB-01",
     stage:
       "Well-funded competition, three straight weeks of decline, and staff who have started reading the room. Marcus's chair has been empty twice this fortnight. This is the third hard stretch this year and the first that has not turned by itself.",
     prompt: "Three weeks. I'm not panicking. I'd just like to know what we're doing.",
