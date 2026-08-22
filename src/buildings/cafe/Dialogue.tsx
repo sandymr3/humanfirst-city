@@ -1,81 +1,60 @@
-// The decision on screen.
-//
-// Three options that look exactly alike: same weight, same colour, same shape,
-// listed in the order the content declares them, with no letter, no icon and no
-// affordance that could be read as a ranking. The player is choosing between
-// three things people believe, not picking the right one.
-//
-// What is deliberately absent: a result view, a proficiency, a pass/fail line, a
-// "next" button implying something was computed, a spinner on the third beat, and
-// any mark distinguishing the generated question from the authored ones. The Café
-// does not route through PlayerShell for exactly this reason.
+import { useState } from "react";
 import { useCafeStore, chooseOption, closeConsequence } from "./cafeStore";
 import { castById } from "./cast";
 
+/** The only interactive surface in the café: one question, one answer, one consequence. */
 export function Dialogue() {
   const dialogue = useCafeStore((s) => s.dialogue);
   const consequence = useCafeStore((s) => s.consequence);
+  const [askingAi, setAskingAi] = useState(false);
 
-  if (consequence) {
-    return (
-      <Sheet>
-        <p className="text-sm leading-relaxed text-text">{consequence}</p>
-        <button
-          onClick={closeConsequence}
-          className="mt-5 rounded-lg border border-line/70 px-4 py-1.5 text-xs text-muted transition hover:border-gold/60 hover:text-text"
-        >
-          Back to the room
-        </button>
-      </Sheet>
-    );
+  if (!dialogue && !consequence) return null;
+
+  const speaker = dialogue && dialogue.speaker !== "room" ? castById(dialogue.speaker as never) : null;
+
+  async function answer(optionId: string) {
+    if (!dialogue || askingAi) return;
+    setAskingAi(true);
+    chooseOption(optionId);
+    try {
+      const option = dialogue.options.find((item) => item.id === optionId);
+      const response = await fetch("/api/v1/ai/consequence", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question: dialogue.prompt, answer: option?.text ?? optionId }),
+      });
+      if (response.ok) {
+        const data = (await response.json()) as { consequence?: string };
+        if (data.consequence) useCafeStore.setState({ consequence: data.consequence });
+      }
+    } catch {
+      // The authored consequence remains visible when AI is unavailable.
+    } finally {
+      setAskingAi(false);
+    }
   }
 
-  if (!dialogue) return null;
-
-  const speaker = dialogue.speaker === "room" ? null : castById(dialogue.speaker as never);
-
-  return (
-    <Sheet>
-      {dialogue.stage && (
-        <p className="mb-4 text-sm leading-relaxed text-muted">{dialogue.stage}</p>
-      )}
-
-      <p className="text-sm leading-relaxed text-text">
-        {speaker && <span className="font-semibold text-gold">{speaker.name}: </span>}
-        {speaker ? `“${dialogue.prompt}”` : dialogue.prompt}
-      </p>
-
-      <ul className="mt-5 space-y-2">
-        {dialogue.options.map((o) => (
-          <li key={o.id}>
-            <button
-              onClick={() => chooseOption(o.id)}
-              className="w-full rounded-xl border border-line/70 bg-surface-2/60 px-4 py-3 text-left text-sm leading-relaxed text-text transition hover:border-gold/60 hover:bg-surface-2"
-            >
-              {o.text}
-            </button>
-          </li>
-        ))}
-      </ul>
-    </Sheet>
-  );
-}
-
-/**
- * The decision's own surface. Not the hotspot Modal: a decision is the room
- * talking to you, so it sits in the room rather than covering it, and it never
- * offers a way to dismiss it without answering.
- */
-function Sheet({ children }: { children: React.ReactNode }) {
   return (
     <div className="pointer-events-auto absolute inset-x-0 bottom-0 z-30 flex justify-center p-4">
-      <div
-        role="dialog"
-        aria-label="A decision"
-        className="w-[min(38rem,100%)] rounded-2xl border border-line/70 bg-surface/95 p-6 shadow-2xl backdrop-blur animate-slide-up"
-      >
-        {children}
-      </div>
+      <section role="dialog" aria-label="Blueprint question" aria-live="polite" className="w-[min(38rem,100%)] rounded-2xl border border-line/70 bg-surface/95 p-6 shadow-2xl backdrop-blur animate-slide-up">
+        {consequence ? (
+          <>
+            <p className="text-sm leading-relaxed text-text">{consequence}</p>
+            <button onClick={closeConsequence} className="mt-5 w-full rounded-xl border border-line/70 px-4 py-3 text-sm text-text transition hover:border-gold/60">Continue</button>
+          </>
+        ) : dialogue ? (
+          <>
+            {dialogue.stage && <p className="mb-4 text-sm leading-relaxed text-muted">{dialogue.stage}</p>}
+            <p className="text-sm leading-relaxed text-text">{speaker && <span className="font-semibold text-gold">{speaker.name}: </span>}{speaker ? `“${dialogue.prompt}”` : dialogue.prompt}</p>
+            <div className="mt-5 flex flex-col gap-2">
+              {dialogue.options.map((option) => <button key={option.id} disabled={askingAi} onClick={() => void answer(option.id)} className="w-full rounded-xl border border-line/70 bg-surface-2/60 px-4 py-3 text-left text-sm leading-relaxed text-text transition hover:border-gold/60 disabled:cursor-wait disabled:opacity-60">{option.text}</button>)}
+            </div>
+            {askingAi && <p className="mt-4 text-xs text-muted" role="status">Considering the consequence…</p>}
+          </>
+        ) : null}
+      </section>
     </div>
   );
 }
+
+export default Dialogue;
