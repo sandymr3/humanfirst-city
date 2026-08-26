@@ -36,8 +36,6 @@ import { Tracker } from "./Tracker";
 import { Dialogue } from "./Dialogue";
 import { currentObjective, seasonIsOver, type Progress } from "./missionRunner";
 import { Report } from "./Report";
-import { Threshold } from "./Threshold";
-import { thresholdIsDue } from "./track";
 import type { Beat } from "./missions";
 import { HOTSPOTS as ALL_SPOTS, STATIONS as ALL_STATIONS } from "./room";
 
@@ -68,13 +66,12 @@ export default function CafeInterior({ manifest, onExit }: InteriorProps) {
 
   // Every visit starts at the door with the flap down, which keeps the store and
   // the canvas's own gate set in step (the canvas boots with no gates open).
+  //
+  // Priya used to ask the level question here, before the first mission. The
+  // city asks it at the gate now (ADR-006 §11.1) — one choice for the whole
+  // city, and the room is already the right room by the time the door opens.
   useEffect(() => {
     resetCafeState();
-    // Priya gets her question in before the first mission does. It locks input
-    // the same way any decision does, because it is one.
-    if (thresholdIsDue()) {
-      useCafeStore.setState({ thresholdOpen: true, inputLocked: true });
-    }
   }, []);
 
   const objective = currentObjective(progress);
@@ -232,7 +229,6 @@ export default function CafeInterior({ manifest, onExit }: InteriorProps) {
       {ready && <Tracker />}
       <Dialogue />
       <Report />
-      <Threshold />
 
       {!ready && (
         <div className="absolute inset-0 grid place-items-center bg-ink">

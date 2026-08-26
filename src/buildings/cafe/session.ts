@@ -19,7 +19,7 @@ import type { CastId } from "./cast";
 import type { DecisionSoFar } from "./dialogue";
 import { SEASON_START, type Progress } from "./missionRunner";
 import { OPENING_WORLD, applyPatch, openingWorldFor, type World } from "./world";
-import { trackOrDefault } from "./track";
+import { trackOrDefault } from "@/framework/city/track";
 import type { Decided } from "./report";
 
 const KEY = "city.cafe.season";

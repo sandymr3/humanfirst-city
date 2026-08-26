@@ -14,7 +14,7 @@
 // it, so a bad write is a no-op rather than a room with a hole in it — the same
 // stance the backend takes on the world state it is sent.
 import type { Cell } from "@/lib/pathfinding";
-import { trackOrDefault, type Track } from "./track";
+import { trackOrDefault, type Track } from "@/framework/city/track";
 
 export const WORLD_KEYS = {
   /** The board above the counter, rewritten in Priya's hand between weeks. */

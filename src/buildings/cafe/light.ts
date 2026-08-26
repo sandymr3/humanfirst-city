@@ -15,7 +15,7 @@
 // a low-vision player, so `grade` is clamped below 1 and the night beat is a
 // deep blue at 0.62 rather than black at 0.95. You can still see the chairs.
 import { MISSIONS } from "./missions";
-import { trackOrDefault } from "./track";
+import { trackOrDefault } from "@/framework/city/track";
 
 export interface Light {
   /** Multiplied over the whole frame. */

@@ -11,7 +11,7 @@
 // here knows about Pixi, the store, or the clock.
 import type { CastId } from "./cast";
 import type { WorldPatch } from "./world";
-import { activityIdFor, trackOrDefault, type Track } from "./track";
+import { activityIdFor, trackOrDefault, type Track } from "@/framework/city/track";
 
 export type ObjectiveKind = "go_to" | "wait_for" | "talk_to" | "inspect" | "decide" | "report";
 

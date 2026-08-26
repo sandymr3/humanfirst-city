@@ -14,6 +14,9 @@ import { Toaster } from "./Toaster";
 import { Celebration } from "./Celebration";
 import { TrophyHall } from "./TrophyHall";
 import { ActivityListPanel } from "@/activities/ActivityListPanel";
+import { EnterCity } from "./EnterCity";
+import { hydrateCityState } from "@/framework/city/cityState";
+import { trackIsDue } from "@/framework/city/track";
 import { PlayerShell } from "@/activities/PlayerShell";
 import { MaisonPanel } from "@/buildings/fashion_brand/MaisonPanel";
 import type { LevelActivity } from "@/framework/api/schemas";
@@ -38,6 +41,9 @@ export function CityScreen() {
   const [worldReady, setWorldReady] = useState(false);
   const [loadPct, setLoadPct] = useState(0);
   const konamiRef = useRef(0);
+  // The level question. `null` until the city document has been read, so a
+  // player who answered on another device is never asked twice.
+  const [askTrack, setAskTrack] = useState<boolean | null>(null);
 
   const nearVenue = nearVenueId ? (VENUES.find((v) => v.id === nearVenueId) ?? null) : null;
   const panelOpen = openVenue !== null || playing !== null || worldPanel !== null;
@@ -53,9 +59,24 @@ export function CityScreen() {
     events.emit("venue_opened", v.id); // the world pops the building in response
   }, []);
 
+  // The city document is read once, on arrival. The track lives in it, so the
+  // gate question waits for it rather than asking on top of an answer that is
+  // already on its way.
   useEffect(() => {
-    setInputLocked(panelOpen);
-  }, [panelOpen, setInputLocked]);
+    let live = true;
+    void hydrateCityState().then(() => {
+      if (live) setAskTrack(trackIsDue());
+    });
+    return () => {
+      live = false;
+    };
+  }, []);
+
+  // The gate holds the street the same way a panel does: nothing walks, nothing
+  // is clickable behind it, and the question cannot be dismissed unanswered.
+  useEffect(() => {
+    setInputLocked(panelOpen || askTrack !== false);
+  }, [panelOpen, askTrack, setInputLocked]);
 
   useEffect(() => {
     setInteriorOpen(inInterior);
@@ -97,6 +118,10 @@ export function CityScreen() {
     <div className="relative h-screen w-screen overflow-hidden bg-ink">
       <CityCanvas onReady={() => setWorldReady(true)} onProgress={setLoadPct} />
       {!worldReady && <CityLoader pct={loadPct} />}
+
+      {/* Asked once, at the gate, over a city that has finished loading behind
+          it — the first thing a player sees is the place, not a form. */}
+      {worldReady && askTrack === true && <EnterCity onAnswered={() => setAskTrack(false)} />}
       {/* An interior owns the whole screen and brings its own chrome, so the
           street's HUD and control hint step aside rather than sit on top of it.
           Toasts and celebrations stay — they are about the player, not the view. */}

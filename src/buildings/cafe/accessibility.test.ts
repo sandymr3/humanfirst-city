@@ -13,7 +13,6 @@ import { CAST, guideWithCast, atAnchors } from "./cast";
 import { MISSIONS, PRO_MISSIONS } from "./missions";
 import { WORLD_KEYS, announcementFor, hotspotBody, OPENING_WORLD, type WorldKey } from "./world";
 import { lightForWeek, MAX_GRADE } from "./light";
-import { THRESHOLD } from "./track";
 
 const SEASONS = [...MISSIONS, ...PRO_MISSIONS];
 
@@ -141,17 +140,6 @@ describe("the tracker and the question at the door", () => {
         expect(banned.test(objective.line), objective.line).toBe(false);
         expect(objective.line.length, objective.line).toBeLessThan(48);
       }
-    }
-  });
-
-  it("puts the threshold question in the live region's reach", () => {
-    // It is the first thing that happens to a new player and it is a modal.
-    // Anything about it that only exists visually locks somebody out at minute
-    // one of the whole city.
-    expect(THRESHOLD.stage.trim()).toBeTruthy();
-    expect(THRESHOLD.prompt.trim()).toBeTruthy();
-    for (const option of THRESHOLD.options) {
-      expect(option.says.trim(), option.track).toBeTruthy();
     }
   });
 });
