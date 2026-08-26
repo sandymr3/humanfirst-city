@@ -19,6 +19,7 @@ const played: Season = {
   playerCell: { x: 9, y: 4 },
   unsent: [{ activityId: "C1-SCA-01", taken: { seed: "c", follow: "b" }, durationSec: 412 }],
   decided: [{ activityId: "C1-SCA-01", seed: "c", follow: "b", transfer: "o_c1a" }],
+  pendingFollowupId: "fu_01J8ZQ0S8N4T1V6M",
 };
 
 beforeEach(() => {

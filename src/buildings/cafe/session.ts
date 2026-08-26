@@ -27,14 +27,20 @@ export interface SeasonBlob {
   objectiveIndex: number;
   /** The letters taken so far this mission. `partialPath` on the wire. */
   partialPath: string[];
-  /** The generated beat waiting to be answered. Always null while the bank serves it. */
+  /** The generated beat waiting to be answered. Null when the bank served it. */
   pendingFollowupId: string | null;
   world: World;
   playerCell: [number, number];
   /** Who the live mission has brought in, so a resume does not lose Nadia. */
   visitors: CastId[];
   /** Decisions the backend has not taken yet, kept to retry. */
-  unsent: { activityId: string; taken: DecisionSoFar; durationSec: number }[];
+  unsent: {
+    activityId: string;
+    taken: DecisionSoFar;
+    durationSec: number;
+    /** The generated beat this decision answered, so a retry still counts it. */
+    followup?: { id: string; choice: string } | null;
+  }[];
   /**
    * Every week that has closed, and what was taken in it. A Café extension to
    * §19.2's document: the end-of-season report is built from this trail (§13.2),
@@ -55,6 +61,8 @@ export interface Season {
   playerCell: { x: number; y: number };
   unsent: SeasonBlob["unsent"];
   decided: Decided[];
+  /** The generated beat waiting to be answered, if one is. */
+  pendingFollowupId: string | null;
 }
 
 const BEATS = ["seed", "follow", "transfer"] as const;
@@ -64,7 +72,7 @@ export function toBlob(s: Season): SeasonBlob {
     missionOrder: s.progress.missionOrder,
     objectiveIndex: s.progress.objectiveIndex,
     partialPath: BEATS.map((b) => s.taken[b]).filter((v): v is string => typeof v === "string"),
-    pendingFollowupId: null,
+    pendingFollowupId: s.pendingFollowupId,
     world: s.world,
     playerCell: [s.playerCell.x, s.playerCell.y],
     visitors: s.visitors,
@@ -100,6 +108,7 @@ export function fromBlob(blob: unknown): Season | null {
     playerCell: { x: blob.playerCell[0], y: blob.playerCell[1] },
     unsent: Array.isArray(blob.unsent) ? blob.unsent : [],
     decided: Array.isArray(blob.decided) ? blob.decided.filter(isDecided) : [],
+    pendingFollowupId: typeof blob.pendingFollowupId === "string" ? blob.pendingFollowupId : null,
   };
 }
 
@@ -204,5 +213,6 @@ export function freshSeason(): Season {
     playerCell: { x: 4, y: 8 },
     unsent: [],
     decided: [],
+    pendingFollowupId: null,
   };
 }

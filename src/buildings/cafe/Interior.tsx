@@ -26,6 +26,7 @@ import {
   flushNow,
   openHotspot,
   resetCafeState,
+  retryUnsent,
   speakTo,
   stopSpeaking,
   toggleFlap,
@@ -85,6 +86,10 @@ export default function CafeInterior({ manifest, onExit }: InteriorProps) {
       if (!live) return;
       resetCafeState();
       setSeasonIn(true);
+      // Weeks decided while the backend was unreachable are owed a score and
+      // the coins that come with it. The door opening is when a connection is
+      // most likely to be back.
+      void retryUnsent();
     });
     return () => {
       live = false;
@@ -109,7 +114,7 @@ export default function CafeInterior({ manifest, onExit }: InteriorProps) {
   const dueBeat = objective?.kind === "decide" ? (objective.target as Beat) : null;
   useEffect(() => {
     if (!dueBeat) return;
-    const t = window.setTimeout(() => openDialogue(dueBeat), BEAT_MS);
+    const t = window.setTimeout(() => void openDialogue(dueBeat), BEAT_MS);
     return () => window.clearTimeout(t);
   }, [dueBeat]);
 

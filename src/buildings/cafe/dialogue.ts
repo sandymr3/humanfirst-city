@@ -6,15 +6,18 @@
 // in this file — the Café does not route through PlayerShell, whose ResultView
 // prints "Passed!" and a proficiency, and §11 forbids both.
 //
-// The third beat comes from the fallback bank rather than from the generator.
-// `POST /api/v1/ai/followup` is backend work that has not landed and the
-// framework client is maintainer-owned, so this is the degraded path PRD §2
-// describes: the bank serves every beat and nothing the player sees differs.
-import { api } from "@/framework/api";
+// The third beat is written on the server, about the path this player actually
+// took (ADR-006 §7). It is asked for the instant the second beat commits, so it
+// generates while that consequence is still being read, and it is abandoned at
+// four seconds — past that the building's own authored bank serves it, and
+// nothing the player sees differs. That is not a degraded path; it is the same
+// question from a different pen.
+import { api, type SubmitResponse } from "@/framework/api";
 import { CLIENT_VERSION } from "@/framework/config/appConfig";
 import type { Beat } from "./missions";
 import { resolveSpeaker } from "./missions";
 import { followupFor } from "./followups";
+import type { TransferBeat } from "@/framework/interior/transfer";
 import { tracePath, treeFor } from "./trees";
 import type { WorldPatch } from "./world";
 
@@ -58,10 +61,22 @@ export function openBeat(
   mission: Parameters<typeof resolveSpeaker>[0],
   present: readonly string[],
   world: Parameters<NonNullable<ReturnType<typeof followupFor>>["prompt"]>[0],
+  generated?: TransferBeat | null,
 ): DialogueState | null {
   const speaker = resolveSpeaker(mission, present as never);
 
   if (beat === "transfer") {
+    // Generated, when one arrived in time. Rendered by the same dialogue layer,
+    // in the same shape, with the same three look-alike options — there is
+    // deliberately no presentation that marks it out.
+    if (generated) {
+      return {
+        beat,
+        speaker: present.includes(generated.speakerId) ? generated.speakerId : speaker,
+        prompt: generated.prompt,
+        options: generated.options.map((o) => ({ id: o.id, text: o.text })),
+      };
+    }
     const bank = followupFor(activityId);
     if (!bank) return null;
     return {
@@ -120,32 +135,37 @@ export function resolve(
 /**
  * Send the decision for scoring.
  *
- * `followupId` and `followupChoice` are not on the wire: the framework's
- * TraceResult schema has no room for them and is maintainer-owned, so the
- * submission carries the authored path alone. That is exactly the degraded path
- * the rubric's `aiBeat.required: false` exists for — the mission scores on its
- * terminal and the transfer beat counts for nothing yet.
+ * `followupId` and `followupChoice` are what make the third beat count. With
+ * them the mission scores 0.42 seed / 0.28 follow / 0.30 transfer; without them
+ * it scores on the authored terminal alone, which is what the rubric's
+ * `aiBeat.required: false` exists for and is exactly right when the beat came
+ * from the bank. Either way the client learns nothing: the tier is resolved from
+ * the option id on the server and never leaves it.
  *
- * Failure is expected rather than exceptional: the Café's registry rows are
- * backend content that has not been seeded, so this 404s today. The caller keeps
- * the trace and retries later. **The room moves on the trace, never on the
- * score** (PRD §19.7).
+ * Failure is not exceptional — a flaky connection, an expired session. The
+ * caller keeps the trace and retries later. **The room moves on the trace, never
+ * on the score** (PRD §19.7).
  */
 export async function submitDecision(
   activityId: string,
   taken: DecisionSoFar,
   durationSec: number,
-): Promise<boolean> {
-  if (!taken.seed || !taken.follow) return false;
+  followup?: { id: string; choice: string } | null,
+): Promise<SubmitResponse | null> {
+  if (!taken.seed || !taken.follow) return null;
   try {
-    await api.submit(activityId, {
+    return await api.submit(activityId, {
       clientVersion: CLIENT_VERSION,
       durationSec: Math.max(0, Math.round(durationSec)),
       hintsUsed: 0,
-      result: { trace: { path: tracePath(activityId, taken.seed, taken.follow) } },
+      result: {
+        trace: {
+          path: tracePath(activityId, taken.seed, taken.follow),
+          ...(followup ? { followupId: followup.id, followupChoice: followup.choice } : {}),
+        },
+      },
     });
-    return true;
   } catch {
-    return false;
+    return null;
   }
 }
