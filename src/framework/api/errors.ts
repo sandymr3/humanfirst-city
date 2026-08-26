@@ -22,13 +22,29 @@ export class ApiError extends Error {
   readonly code: ApiErrorCode;
   readonly httpStatus: number;
   readonly redirectUrl: string;
+  /**
+   * The parsed response body, when there was one.
+   *
+   * Most callers want the code and the message and nothing else. The exception
+   * is a 409 from the state endpoints, which carries the server's current
+   * document precisely so the client can resolve without a second round trip —
+   * discarding it here would make that impossible.
+   */
+  readonly body: unknown;
 
-  constructor(code: ApiErrorCode, message: string, httpStatus = 0, redirectUrl = "") {
+  constructor(
+    code: ApiErrorCode,
+    message: string,
+    httpStatus = 0,
+    redirectUrl = "",
+    body: unknown = undefined,
+  ) {
     super(message);
     this.name = "ApiError";
     this.code = code;
     this.httpStatus = httpStatus;
     this.redirectUrl = redirectUrl;
+    this.body = body;
   }
 
   isAuthError(): boolean {
@@ -101,5 +117,5 @@ export function parseEnvelope(status: number, body: unknown): ApiError {
   }
 
   if (status === 401) code = "INVALID_TOKEN"; // status-driven auth (see docstring)
-  return new ApiError(code, message, status, redirect);
+  return new ApiError(code, message, status, redirect, body);
 }

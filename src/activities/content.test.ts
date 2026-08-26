@@ -9,11 +9,12 @@ import { allPaths } from "@/lib/decisionTree";
 describe("authored activity content", () => {
   const entries = Object.entries(ACTIVITY_CONTENT);
 
-  // PRO is the scenario-venue Level B code (docs/maison.md §10.1). The live level
-  // enum is unverified — if the backend calls it ADVANCED this regex and the
-  // season spine's TRACK_LEVEL are the two places that change (§0.4).
+  // BEG/MED/HARD hold the school-style drill mix; SCA and SCB are the scenario
+  // grids the twelve buildings live on (DECISION_scenario_level_namespace.md).
+  // This regex and the season spine's TRACK_LEVEL are the two places that change
+  // if the level codes ever move again.
   it("keys every entry by a canonical registry id", () => {
-    for (const [id] of entries) expect(id).toMatch(/^C\d-(BEG|MED|HARD|PRO)-\d{2}$/);
+    for (const [id] of entries) expect(id).toMatch(/^C\d-(BEG|MED|HARD|SCA|SCB)-\d{2}$/);
   });
 
   it("MCQ content uses q-numbered items with unique a–d options", () => {

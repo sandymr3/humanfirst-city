@@ -12,8 +12,29 @@ import {
   SubmitResponse,
   BadgesResponse,
   ProfileResponse,
+  FollowupPublic,
+  FollowupCommit,
+  StateEnvelope,
+  BuildingStateEnvelope,
+  StateAck,
+  BeaconToken,
+  Me,
+  Wallet,
+  WalletTransactions,
   type SubmitRequest,
+  type StateWriteResult,
 } from "./schemas";
+
+/** What the client asks the server to write about the transfer beat. */
+export interface FollowupParams {
+  activityId: string;
+  track: "SCA" | "SCB";
+  buildingId: string;
+  /** The seed choice and the follow-up choice, in that order. */
+  path: [string, string];
+  speakerId?: string;
+  worldState?: Record<string, string>;
+}
 
 /** Supplies a Firebase ID token; injected so the client stays testable/decoupled. */
 export interface TokenProvider {
@@ -82,6 +103,109 @@ export class ApiClient {
     });
   }
 
+  // ── Bootstrap and the wallet (PRD §9) ───────────────────────────────────────
+
+  /** The first authed call. Also performs the starter grant, server-side. */
+  getMe() {
+    return this.request("GET", "/api/v1/me", Me);
+  }
+
+  getWallet() {
+    return this.request("GET", "/api/v1/wallet", Wallet);
+  }
+
+  /** The coin ledger, newest first. */
+  getWalletTransactions(limit = 25, offset = 0) {
+    return this.request(
+      "GET",
+      `/api/v1/wallet/transactions?limit=${limit}&offset=${offset}`,
+      WalletTransactions,
+    );
+  }
+
+  // ── The generated transfer beat (ADR-006 §7.3) ──────────────────────────────
+
+  /**
+   * Ask for the third beat. Fired the instant the second one commits, so it
+   * generates while that consequence is still being read.
+   *
+   * The server never 5xxs this: no key, model error, deadline, gate failure and
+   * rate limit all resolve to an authored beat. A failure here is therefore a
+   * network or auth failure, and the caller falls through to its local bank.
+   */
+  aiFollowup(params: FollowupParams) {
+    return this.request("POST", "/api/v1/ai/followup", FollowupPublic, params);
+  }
+
+  /**
+   * Commit a choice and receive its consequence.
+   *
+   * The consequences are not shipped with the options on purpose — three
+   * consequences in the payload are three hints at which option is which.
+   */
+  commitFollowup(followupId: string, optionId: string) {
+    return this.request("POST", `/api/v1/ai/followup/${followupId}/commit`, FollowupCommit, {
+      optionId,
+    });
+  }
+
+  // ── Session state (ADR-006 §11) ─────────────────────────────────────────────
+
+  /** City-wide: the track, FTUE flags, where they were standing. */
+  getCityState() {
+    return this.request("GET", "/api/v1/city/state", StateEnvelope);
+  }
+
+  putCityState(rev: number, blob: unknown) {
+    return this.writeState("/api/v1/city/state", { rev, blob });
+  }
+
+  /** The season: mission, objective, world, the pending transfer question. */
+  getBuildingState(buildingId: string) {
+    return this.request("GET", `/api/v1/city/buildings/${buildingId}/state`, BuildingStateEnvelope);
+  }
+
+  putBuildingState(buildingId: string, rev: number, blob: unknown, track?: "SCA" | "SCB") {
+    return this.writeState(`/api/v1/city/buildings/${buildingId}/state`, { rev, blob, track });
+  }
+
+  /**
+   * Mint the short-lived token the exit flush uses.
+   *
+   * `sendBeacon` cannot attach an Authorization header, so the beacon route
+   * authorises on a write-only, single-building token in the body instead.
+   */
+  getBeaconToken(buildingId: string) {
+    return this.request(
+      "GET",
+      `/api/v1/city/beacon-token?buildingId=${encodeURIComponent(buildingId)}`,
+      BeaconToken,
+    );
+  }
+
+  /**
+   * A state write either lands or loses a race.
+   *
+   * A 409 is not an error anybody should see: it carries the server's current
+   * document so the caller can resolve in one round trip, which is what makes
+   * two tabs in the same building survivable. It is returned, not thrown.
+   */
+  private async writeState(path: string, body: unknown): Promise<StateWriteResult> {
+    const { status, body: raw } = await this.performAllowing([409], "PUT", path, body);
+    if (status === 409) {
+      const conflict = raw as { rev?: number; blob?: unknown; updatedAt?: string } | null;
+      return {
+        ok: false,
+        rev: conflict?.rev ?? 0,
+        blob: conflict?.blob ?? null,
+        updatedAt: conflict?.updatedAt ?? "",
+      };
+    }
+    const ack = StateAck.safeParse(raw);
+    if (!ack.success) throw new ApiError("BAD_RESPONSE", "Unexpected response from the server.");
+    return { ok: true, rev: ack.data.rev, updatedAt: ack.data.updatedAt };
+  }
+
   // ── Schema-validated request ────────────────────────────────────────────────
 
   private async request<S extends z.ZodTypeAny>(
@@ -94,6 +218,29 @@ export class ApiClient {
     const parsed = schema.safeParse(raw);
     if (parsed.success) return parsed.data;
     throw new ApiError("BAD_RESPONSE", "Unexpected response from the server.");
+  }
+
+  /**
+   * `perform`, but treating some non-2xx statuses as answers rather than errors.
+   *
+   * Exists for the one case where a status carries a payload the caller needs:
+   * a 409 from the state endpoints returns the server's current document, and
+   * throwing it away would cost a second round trip to get it back.
+   */
+  private async performAllowing(
+    allowed: number[],
+    method: string,
+    path: string,
+    body?: unknown,
+  ): Promise<{ status: number; body: unknown }> {
+    try {
+      return { status: 200, body: await this.perform(method, path, body) };
+    } catch (e) {
+      if (e instanceof ApiError && allowed.includes(e.httpStatus)) {
+        return { status: e.httpStatus, body: e.body };
+      }
+      throw e;
+    }
   }
 
   // ── Core request with auth + retry/refresh policy (returns raw JSON body) ────
