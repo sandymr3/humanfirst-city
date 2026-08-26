@@ -1,25 +1,25 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import {
-  THRESHOLD,
   activeTrack,
   activityIdFor,
   forgetTrack,
   setTrack,
   trackOrDefault,
-} from "./track";
+} from "@/framework/city/track";
 import { MISSIONS, PRO_MISSIONS, seasonFor, missionByOrder } from "./missions";
 import { castFor } from "./cast";
 import { OPENING_WORLD, openingWorldFor, passThroughBody } from "./world";
 import { cooled, lightForWeek } from "./light";
 
-const words = (s: string) => s.trim().split(/\s+/).length;
-
 beforeEach(() => {
   forgetTrack();
 });
 
-describe("Priya's question at the door", () => {
-  it("is asked once, and is unanswered until it is answered", () => {
+// The question itself is asked at the city gate now, not here — see
+// src/ui/EnterCity.test.tsx. What the Café still owns is everything downstream
+// of the answer: which season runs, and what the room looks like on it.
+describe("the answer, once it is given", () => {
+  it("is unanswered until it is answered", () => {
     expect(activeTrack()).toBeNull();
     setTrack("SCB");
     expect(activeTrack()).toBe("SCB");
@@ -31,31 +31,9 @@ describe("Priya's question at the door", () => {
     expect(trackOrDefault()).toBe("SCA");
   });
 
-  it("offers exactly two answers, one per track", () => {
-    expect(THRESHOLD.options).toHaveLength(2);
-    expect(THRESHOLD.options.map((o) => o.track).sort()).toEqual(["SCA", "SCB"]);
-  });
-
-  it("marks neither answer as the ambitious one", () => {
-    // A "Level B" badge here turns a question about experience into a difficulty
-    // select, and takes the season's register with it.
-    const banned = /\b(level|advanced|hard|pro|expert|beginner|easy|difficult|recommended)\b/i;
-    for (const option of THRESHOLD.options) {
-      expect(banned.test(option.text), option.text).toBe(false);
-      expect(banned.test(option.says), option.says).toBe(false);
-    }
-  });
-
-  it("keeps the two answers the same length, for the same reason the options are", () => {
-    // Choice parity (PRD §9.2). It is the tier leak nobody looks for, and it
-    // applies to the one question that is not a decision too.
-    const lengths = THRESHOLD.options.map((o) => words(o.text));
-    expect(Math.max(...lengths) - Math.min(...lengths)).toBeLessThanOrEqual(8);
-  });
-
   it("is stored city-wide, so the next building finds it already answered", () => {
-    // ADR-005 §10.7. The Café asks it because the Café is where a new player
-    // arrives, not because the answer belongs to the Café.
+    // ADR-006 §11.1. One choice for the whole city — the Café reads it, it does
+    // not own it.
     setTrack("SCB");
     expect(localStorage.getItem("city.track")).toContain("SCB");
   });

@@ -16,7 +16,7 @@ import type { Cardinal } from "@/world/assets";
 import type { PersonPalette } from "@/world/characterArt";
 import { GUIDE, type GuidePlace } from "./room";
 import { marcusIsIn, type World } from "./world";
-import { trackOrDefault, type Track } from "./track";
+import { trackOrDefault, type Track } from "@/framework/city/track";
 
 export type CastId = "priya" | "tomas" | "marcus" | "nadia" | "ray" | "ellery";
 

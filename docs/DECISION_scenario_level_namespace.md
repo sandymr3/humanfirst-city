@@ -14,7 +14,7 @@ I need you to pick one of three options below. **My recommendation is Option C**
 
 ## What is blocked until you do
 
-Everything that makes a building *real*. The rooms are walkable and the writing is underway, but not one activity can be loaded into the backend until this is settled — so no scoring, no coins, no progress, no report. Café, MAISON and MERIDIAN are all equally blocked, on day one.
+Everything that makes a building _real_. The rooms are walkable and the writing is underway, but not one activity can be loaded into the backend until this is settled — so no scoring, no coins, no progress, no report. Café, MAISON and MERIDIAN are all equally blocked, on day one.
 
 ---
 
@@ -26,11 +26,11 @@ That works on eight of the nine competencies. It fails on **C9 (Perseverance)**,
 
 ## The three activities in the way
 
-| Slot | Already holds | Was going to be |
-|---|---|---|
-| `C9-HARD-01` | *Chaos Simulator* | the **Café's** C9 mission |
-| `C9-HARD-02` | *Grit vs Sunk Cost* | **MERIDIAN's** C9 mission |
-| `C9-HARD-03` | *The Setback Reflection* | **MAISON's** C9 mission |
+| Slot         | Already holds            | Was going to be           |
+| ------------ | ------------------------ | ------------------------- |
+| `C9-HARD-01` | _Chaos Simulator_        | the **Café's** C9 mission |
+| `C9-HARD-02` | _Grit vs Sunk Cost_      | **MERIDIAN's** C9 mission |
+| `C9-HARD-03` | _The Setback Reflection_ | **MAISON's** C9 mission   |
 
 …and nine more below them. The shelf is full at twelve.
 
@@ -40,11 +40,11 @@ That works on eight of the nine competencies. It fails on **C9 (Perseverance)**,
 
 ## The options
 
-| | Option | What it costs | Risk |
-|---|---|---|---|
-| **A** | **Clear the shelf.** Move C9's twelve existing activities elsewhere | There is nowhere to move them — C9's other two shelves are also full at twelve. In practice this means **deleting twelve authored activities** | **High.** Loses finished content and breaks existing learner records |
-| **B** | **Make the shelf bigger** — hold 24 instead of 12, buildings on top, existing activities below | The existing twelve get renamed as they move down | **High.** Renaming is what breaks learner records |
-| **C** ✅ | **Give the buildings their own shelves.** Two new levels for the twelve buildings; the existing shelves are not touched at all | Two new levels instead of one. 18 achievement badges instead of 9. The buildings' 54 activity names change — **but they only exist in documents today, nothing is loaded** | **Near zero.** No existing content moves, no learner record breaks |
+|          | Option                                                                                                                         | What it costs                                                                                                                                                              | Risk                                                                 |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| **A**    | **Clear the shelf.** Move C9's twelve existing activities elsewhere                                                            | There is nowhere to move them — C9's other two shelves are also full at twelve. In practice this means **deleting twelve authored activities**                             | **High.** Loses finished content and breaks existing learner records |
+| **B**    | **Make the shelf bigger** — hold 24 instead of 12, buildings on top, existing activities below                                 | The existing twelve get renamed as they move down                                                                                                                          | **High.** Renaming is what breaks learner records                    |
+| **C** ✅ | **Give the buildings their own shelves.** Two new levels for the twelve buildings; the existing shelves are not touched at all | Two new levels instead of one. 18 achievement badges instead of 9. The buildings' 54 activity names change — **but they only exist in documents today, nothing is loaded** | **Near zero.** No existing content moves, no learner record breaks   |
 
 ---
 
@@ -54,7 +54,7 @@ Three reasons.
 
 **1. It is the only option that touches nothing that exists.** The buildings' activity names live in three documents and nowhere else — renaming them costs an afternoon of find-and-replace. Every other option renames or deletes content that learners have already played.
 
-**2. The original reasoning no longer applies.** We chose to reuse the existing shelf because the age band happened to fit (17–21 against our 16–21). That was a judgment about *labels*. The problem turned out to be *space*, and no amount of age-band fit creates space on a full shelf.
+**2. The original reasoning no longer applies.** We chose to reuse the existing shelf because the age band happened to fit (17–21 against our 16–21). That was a judgment about _labels_. The problem turned out to be _space_, and no amount of age-band fit creates space on a full shelf.
 
 **3. It fixes a second thing quietly.** The two audience tracks — Level A (16–21) and Level B (35–50) — would otherwise have been stored under two unrelated names, for reasons no future reader could reconstruct. Option C gives them a matched pair.
 

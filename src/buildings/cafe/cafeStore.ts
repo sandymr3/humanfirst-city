@@ -8,6 +8,7 @@
 import { create } from "zustand";
 import type { Cell } from "@/lib/pathfinding";
 import { audio } from "@/framework/audio/audioManager";
+import { events } from "@/framework/events";
 import { GATES, HOTSPOTS, SPAWN, zoneAt, type GateId, type ZoneId } from "./room";
 import { castById, castFor, type CastId } from "./cast";
 import { HOTSPOTS as SPOTS, STATIONS as STNS } from "./room";
@@ -20,7 +21,22 @@ import {
   type RoomEvent,
 } from "./missionRunner";
 import type { Beat } from "./missions";
-import { freshSeason, loadSeason, saveSeason, type Season } from "./session";
+import {
+  BUILDING_ID,
+  flushSeason,
+  freshSeason,
+  loadSeason,
+  saveSeason,
+  saveSeasonNow,
+  type Season,
+} from "./session";
+import {
+  awaitTransfer,
+  commitTransfer,
+  forgetTransfer,
+  requestTransfer,
+} from "@/framework/interior/transfer";
+import { trackOrDefault } from "@/framework/city/track";
 import type { Decided } from "./report";
 import {
   openBeat,
@@ -85,7 +101,7 @@ interface CafeState {
    * Decisions whose submit failed, kept to retry. The Café's registry rows are
    * backend content that has not been seeded, so this is the normal case today.
    */
-  unsent: { activityId: string; taken: DecisionSoFar; durationSec: number }[];
+  unsent: Season["unsent"];
   /**
    * People the live mission has brought into the room on top of whoever the
    * world state says lives here. Nadia comes in at 8:05 and leaves again.
@@ -100,10 +116,12 @@ interface CafeState {
   /** The letter by the pass-through is open. Only ever after week eighteen. */
   reportOpen: boolean;
   /**
-   * Priya's question at the door is on screen. True exactly once per player, on
-   * their first entry into the first building that asks it (PRD §14).
+   * The server's handle for the third beat currently on screen, or null when it
+   * came from the building's own bank. It is what makes the beat count at submit
+   * time, and it is persisted so that walking out mid-question and coming back
+   * finds the same question rather than a new one (ADR-006 §7.5).
    */
-  thresholdOpen: boolean;
+  transferId: string | null;
   /** True while a DOM panel is up — the room ignores clicks and WASD. */
   inputLocked: boolean;
   announcement: Announcement;
@@ -140,7 +158,7 @@ export const useCafeStore = create<CafeState>((set) => ({
   visitors: [],
   decided: [],
   reportOpen: false,
-  thresholdOpen: false,
+  transferId: null,
   flapOpen: false,
   walkTo: null,
   inputLocked: false,
@@ -223,6 +241,7 @@ export function resetCafeState(): void {
     consequence: null,
     taken: season.taken,
     unsent: season.unsent,
+    transferId: season.pendingFollowupId,
     visitors: season.visitors,
     decided: season.decided,
     reportOpen: false,
@@ -246,35 +265,70 @@ function snapshot(): Season {
     playerCell: s.charCell,
     unsent: s.unsent,
     decided: s.decided,
+    pendingFollowupId: s.transferId,
   };
 }
 
-let debounce: number | null = null;
+/**
+ * Send the decisions the backend never heard.
+ *
+ * A season played through a dropped connection is a season the player is owed
+ * coins for. The trace is the record and it survived; this is what turns it back
+ * into a score. Called when the door opens, which is the moment a connection is
+ * most likely to be back.
+ *
+ * Each submit is idempotent server-side, so a double send costs nothing and a
+ * partial drain is safe to repeat.
+ */
+export async function retryUnsent(): Promise<void> {
+  const queued = useCafeStore.getState().unsent;
+  if (queued.length === 0) return;
+
+  const stuck: Season["unsent"] = [];
+  for (const item of queued) {
+    const result = await submitDecision(
+      item.activityId,
+      item.taken,
+      item.durationSec,
+      item.followup ?? null,
+    );
+    if (result) {
+      events.emit("activity_completed", { response: result, silent: true });
+    } else {
+      stuck.push(item);
+    }
+  }
+  useCafeStore.setState({ unsent: stuck });
+  saveSoon();
+}
 
 /**
- * Save, on the schedule PRD §19.3 sets out. Objectives completing, world writes
- * and wandering around are cheap and frequent and coalesce into one write;
- * a committed beat and leaving the building are immediate, because a decision
- * that vanishes is the worst bug this building can have.
+ * Save, on the schedule ADR-006 §11.2 sets out. Objectives completing, world
+ * writes and wandering around are cheap and frequent and coalesce into one
+ * write; a committed beat and leaving the building are immediate, because a
+ * decision that vanishes is the worst bug this building can have.
+ *
+ * The coalescing lives one layer down now, with the thing that owns the
+ * revision — two debounces in a row would only mean the room's idea of "soon"
+ * and the network's could drift apart.
  */
 export function saveNow(): void {
-  if (debounce !== null) {
-    window.clearTimeout(debounce);
-    debounce = null;
-  }
-  saveSeason(snapshot());
+  saveSeasonNow(snapshot());
 }
 
 export function saveSoon(): void {
-  if (debounce !== null) return;
-  debounce = window.setTimeout(() => {
-    debounce = null;
-    saveSeason(snapshot());
-  }, SAVE_DEBOUNCE_MS);
+  saveSeason(snapshot());
 }
 
-/** Five objectives inside a second produce one write. */
-const SAVE_DEBOUNCE_MS = 800;
+/**
+ * The way out — the door, the tab closing, the interior being taken away.
+ *
+ * Distinct from `saveNow` because this is the write that has to survive the page
+ * going away, and the only thing a browser reliably runs then is `sendBeacon`.
+ */
+export function flushNow(): void {
+  flushSeason(snapshot());
+}
 
 /**
  * Open a hotspot's panel. Locks the room's input while it is up, exactly as the
@@ -367,19 +421,41 @@ let missionStartedAt = Date.now();
  * be walkable, and a mission you cannot leave is worse than one you cannot
  * finish properly.
  */
-export function openDialogue(beat: Beat): void {
+export async function openDialogue(beat: Beat): Promise<void> {
   const s = useCafeStore.getState();
   const mission = currentMission(s.progress);
   if (!mission) return;
   if (beat === "seed") missionStartedAt = Date.now();
 
-  const next = openBeat(mission.activityId, beat, s.taken, mission, presentCast(), s.world);
+  // The third beat was asked for the moment the second one committed, and has
+  // been generating behind that consequence ever since. Collecting it here is
+  // usually instant; when it is not, `awaitTransfer` gives up at four seconds
+  // and the bank answers instead. There is deliberately nothing on screen that
+  // marks the difference — no spinner, and no wait the player can attribute.
+  const generated = beat === "transfer" ? await awaitTransfer(mission.activityId) : null;
+
+  const next = openBeat(
+    mission.activityId,
+    beat,
+    s.taken,
+    mission,
+    presentCast(),
+    s.world,
+    generated,
+  );
   if (!next) {
     noteEvent({ kind: "decided", beat });
     return;
   }
-  useCafeStore.setState({ dialogue: next, consequence: null, inputLocked: true });
-  s.announce(`${next.stage ? next.stage + " " : ""}${next.prompt}`);
+  useCafeStore.setState({
+    dialogue: next,
+    consequence: null,
+    inputLocked: true,
+    transferId: beat === "transfer" ? (generated?.followupId ?? null) : null,
+  });
+  // The question the player is looking at survives the tab closing.
+  if (beat === "transfer") saveNow();
+  useCafeStore.getState().announce(`${next.stage ? next.stage + " " : ""}${next.prompt}`);
 }
 
 /**
@@ -393,15 +469,68 @@ export function chooseOption(optionId: string): void {
   const open = s.dialogue;
   if (!mission || !open) return;
 
-  const outcome = resolve(mission.activityId, open.beat, s.taken, optionId);
   const taken: DecisionSoFar = { ...s.taken, [open.beat]: optionId };
-
   audio.play("ui_confirm");
+
+  if (open.beat === "transfer") {
+    // The generated beat's consequence lives on the server: shipping all three
+    // with the options would be shipping three hints at which option is which.
+    useCafeStore.setState({ taken, dialogue: null });
+    void settleTransfer(mission.activityId, s.transferId, optionId, taken);
+    return;
+  }
+
+  const outcome = resolve(mission.activityId, open.beat, s.taken, optionId);
   useCafeStore.setState({ taken, dialogue: null, consequence: outcome?.consequence ?? null });
   if (outcome?.consequence) s.announce(outcome.consequence);
   if (outcome?.world) writeWorld(outcome.world);
   // Immediate, not debounced. This is the one write that must never be lost.
   saveNow();
+
+  if (open.beat === "follow") {
+    // Ask for the third beat NOW, while the second one's consequence is being
+    // read. Four to six seconds of reading is the budget the generation runs
+    // inside, and it is the whole reason the question can be personalised
+    // without the conversation stopping to wait for it (ADR-006 §7.4).
+    requestTransfer({
+      activityId: mission.activityId,
+      track: trackOrDefault(),
+      buildingId: BUILDING_ID,
+      path: [taken.seed ?? "", optionId],
+      speakerId: open.speaker === "room" ? undefined : open.speaker,
+      worldState: useCafeStore.getState().world,
+    });
+  }
+
+  // A beat with nothing authored behind it would otherwise leave the room
+  // locked with no panel to dismiss — the mission moves on instead.
+  if (!outcome?.consequence) closeConsequence();
+}
+
+/**
+ * Commit the third beat and play what came back.
+ *
+ * If the server cannot be reached the mission still closes: the room moves on
+ * the trace and never on the score, and a decision the player has made is not
+ * something a dropped connection gets to take back.
+ */
+async function settleTransfer(
+  activityId: string,
+  transferId: string | null,
+  optionId: string,
+  taken: DecisionSoFar,
+): Promise<void> {
+  const settled = transferId
+    ? await commitTransfer(transferId, optionId)
+    : resolve(activityId, "transfer", taken, optionId);
+
+  if (settled?.consequence) {
+    useCafeStore.setState({ consequence: settled.consequence });
+    useCafeStore.getState().announce(settled.consequence);
+  }
+  if (settled?.world) writeWorld(settled.world as WorldPatch);
+  saveNow();
+  if (!settled?.consequence) closeConsequence();
 }
 
 /**
@@ -420,10 +549,12 @@ export function closeConsequence(): void {
   // activity id with this week's path.
   const activityId = currentMission(s.progress)?.activityId ?? "";
   const taken = s.taken;
+  const transferId = s.transferId;
 
   noteEvent({ kind: "decided", beat });
 
   if (beat !== "transfer") return;
+  forgetTransfer(activityId);
 
   const durationSec = (Date.now() - missionStartedAt) / 1000;
   // The week goes into the record before `taken` is cleared. This is the only
@@ -431,6 +562,7 @@ export function closeConsequence(): void {
   // it is the letter by the pass-through nine weeks later (PRD §13.2).
   useCafeStore.setState({
     taken: {},
+    transferId: null,
     decided: [
       ...useCafeStore.getState().decided.filter((d) => d.activityId !== activityId),
       {
@@ -441,12 +573,24 @@ export function closeConsequence(): void {
       },
     ],
   });
-  void submitDecision(activityId, taken, durationSec).then((sent) => {
-    if (sent) return;
-    // The room has already moved. The score can catch up whenever the backend
-    // has rows for these activities to score against.
-    const q = useCafeStore.getState().unsent;
-    useCafeStore.setState({ unsent: [...q, { activityId, taken, durationSec }] });
+  const followup = transferId && taken.transfer ? { id: transferId, choice: taken.transfer } : null;
+
+  void submitDecision(activityId, taken, durationSec, followup).then((result) => {
+    if (!result) {
+      // The room has already moved. The score can catch up on the next visit —
+      // the trace is the record, and it is the thing that was persisted.
+      const q = useCafeStore.getState().unsent;
+      useCafeStore.setState({ unsent: [...q, { activityId, taken, durationSec, followup }] });
+      return;
+    }
+    // Coins are computed server-side and credited once. The HUD renders the new
+    // balance without comment — the number differs at 5 and at 25, the fanfare
+    // never does (ADR-005 §11.1).
+    // `silent: true` is the whole point: the coin tick and any badge still
+    // happen, because those are the platform's, but nothing congratulates the
+    // player. A burst that fires on `passed` and not otherwise IS a verdict, and
+    // this building does not deliver verdicts.
+    events.emit("activity_completed", { response: result, silent: true });
   });
 }
 

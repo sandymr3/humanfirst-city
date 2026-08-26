@@ -10,7 +10,14 @@ export const ObjectiveResult = z.object({
   answers: z.array(z.object({ itemId: z.string(), choice: z.string() })),
 });
 export const OrderResult = z.object({ sequence: z.array(z.string()) });
-export const TraceResult = z.object({ path: z.array(z.string()) });
+// DECISION_TREE. `path` is the visited node path. The two followup fields are
+// optional and carry the generated third beat: without them the submit scores on
+// the authored terminal alone, which is what keeps every degraded path working.
+export const TraceResult = z.object({
+  path: z.array(z.string()),
+  followupId: z.string().optional(),
+  followupChoice: z.string().optional(),
+});
 export const MetricsResult = z.object({
   values: z.record(z.unknown()),
   decisionLog: z.array(z.unknown()).optional(),
@@ -146,3 +153,117 @@ export type CompetencyProfile = z.infer<typeof CompetencyProfile>;
 
 export const ProfileResponse = z.object({ competencies: z.array(CompetencyProfile) });
 export type ProfileResponse = z.infer<typeof ProfileResponse>;
+
+// ── The generated transfer beat (ADR-006 §7.3) ────────────────────────────────
+
+/** One choice on screen. Opaque id, text, and nothing else — by construction. */
+export const FollowupOption = z.object({ id: z.string(), text: z.string() });
+
+/**
+ * What the server will say about a generated beat.
+ *
+ * No tier, no consequence, no rationale, and deliberately no flag saying whether
+ * this was written by a model or served from the authored bank. A client that
+ * knew could tell the player, and a player who could tell would know this beat
+ * is the one that behaves differently.
+ */
+export const FollowupPublic = z.object({
+  followupId: z.string(),
+  speaker: z.object({ id: z.string(), name: z.string(), role: z.string() }),
+  prompt: z.string(),
+  options: z.array(FollowupOption).length(3),
+});
+export type FollowupPublic = z.infer<typeof FollowupPublic>;
+
+/** Committing a choice is what releases its consequence — see ADR-006 §7.3. */
+export const FollowupCommit = z.object({
+  consequence: z.string(),
+  world: z.record(z.string()).optional().default({}),
+});
+export type FollowupCommit = z.infer<typeof FollowupCommit>;
+
+// ── Session state (ADR-006 §11) ───────────────────────────────────────────────
+
+/** `rev` is 0 and `blob` null when nothing has been written yet — not a 404. */
+export const StateEnvelope = z.object({
+  rev: z.number().int(),
+  blob: z.unknown().nullable(),
+  updatedAt: z.string().optional().default(""),
+});
+export type StateEnvelope = z.infer<typeof StateEnvelope>;
+
+export const BuildingStateEnvelope = StateEnvelope.extend({
+  buildingId: z.string().optional().default(""),
+  track: z.enum(["SCA", "SCB"]).optional(),
+});
+export type BuildingStateEnvelope = z.infer<typeof BuildingStateEnvelope>;
+
+export const StateAck = z.object({
+  rev: z.number().int(),
+  updatedAt: z.string().optional().default(""),
+});
+export type StateAck = z.infer<typeof StateAck>;
+
+export const BeaconToken = z.object({
+  beaconToken: z.string(),
+  expiresAt: z.string().optional().default(""),
+});
+export type BeaconToken = z.infer<typeof BeaconToken>;
+
+/**
+ * A write either lands or loses a race. A 409 is not an error to show anybody —
+ * it carries the server's current document so the caller can resolve in one
+ * round trip (two tabs in the same building is the case it exists for).
+ */
+export type StateWriteResult =
+  | { ok: true; rev: number; updatedAt: string }
+  | { ok: false; rev: number; blob: unknown; updatedAt: string };
+
+// ── The wallet (PRD §9) ───────────────────────────────────────────────────────
+
+export const Wallet = z.object({
+  coins: z.number().int(),
+  lifetimeCoins: z.number().int().optional(),
+});
+export type Wallet = z.infer<typeof Wallet>;
+
+/**
+ * One line of the coin ledger. `reason` is a machine code (ACTIVITY_COMPLETE,
+ * BADGE_AWARD, SHOP_PURCHASE, STARTER_GRANT); the Bank renders it in the city's
+ * own words. Nothing here is a proficiency — the ledger is the most tempting
+ * place in the product to leak the answer key and it must not.
+ */
+export const CoinTransaction = z.object({
+  id: z.string().optional().default(""),
+  amount: z.number().int(),
+  reason: z.string().optional().default(""),
+  refType: z.string().optional().default(""),
+  refId: z.string().optional().default(""),
+  balanceAfter: z.number().int().optional(),
+  createdAt: z.string().optional().default(""),
+});
+export type CoinTransaction = z.infer<typeof CoinTransaction>;
+
+export const WalletTransactions = z.object({
+  transactions: z.array(CoinTransaction).optional().default([]),
+});
+export type WalletTransactions = z.infer<typeof WalletTransactions>;
+
+// ── Bootstrap (GET /me) ───────────────────────────────────────────────────────
+
+// The first authed call: identity, wallet, avatar. It also performs the starter
+// grant, which is why the HUD can show a real balance from the first second.
+export const Me = z.object({
+  user: z
+    .object({
+      id: z.string().optional().default(""),
+      displayName: z.string().optional().default(""),
+      email: z.string().optional().default(""),
+      role: z.string().optional().default("player"),
+    })
+    .optional(),
+  wallet: Wallet.optional(),
+  avatar: z.record(z.string()).optional().default({}),
+  badgesEarned: z.number().int().optional().default(0),
+});
+export type Me = z.infer<typeof Me>;

@@ -1,28 +1,25 @@
 // The season, saved.
 //
-// PRD §19 puts this on the server: `PUT /api/v1/city/buildings/cafe/state`, with
-// a `rev`, a 16 KB blob, and a `sendBeacon` flush on the way out. None of that
-// exists — the endpoints are BE-15/BE-16 and the ApiClient that would call them
-// is maintainer-owned — so the season lives in localStorage instead.
+// The blob is exactly the document ADR-006 §11.1 describes, and it always was —
+// it was written in the server's shape while the endpoints were still being
+// built, precisely so that closing the seam would be three functions rather than
+// a save-format migration players had to be carried across.
 //
-// **The blob is written in the server's shape anyway** (§19.2, ten world keys and
-// all), and everything goes through the adapter below. When the endpoints land,
-// the maintainer replaces two functions and the building does not change. Writing
-// a convenient local shape now would mean rewriting the save format later, and
-// migrating players across it.
-//
-// This is also the degraded path the PRD already specifies for a backend outage
-// (§19.7): localStorage, pushed on the next successful load. Today it is the only
-// path; tomorrow it is the fallback. Same code either way.
+// This is those three functions. They now go through the framework's session
+// layer (src/framework/session/sync.ts), which owns the revision, the debounce,
+// the localStorage mirror and the exit beacon. The Café still does not call
+// fetch (ADR-005 §8.4) and still does not know what a `rev` is.
 import { loadJson, saveJson } from "@/lib/persist";
+import { flushSession, readSession, writeSession, writeSessionNow } from "@/framework/session/sync";
 import type { CastId } from "./cast";
 import type { DecisionSoFar } from "./dialogue";
 import { SEASON_START, type Progress } from "./missionRunner";
 import { OPENING_WORLD, applyPatch, openingWorldFor, type World } from "./world";
-import { trackOrDefault } from "./track";
+import { trackOrDefault } from "@/framework/city/track";
 import type { Decided } from "./report";
 
-const KEY = "city.cafe.season";
+/** Where the season lived before the framework owned it. Read once, then dropped. */
+const LEGACY_KEY = "city.cafe.season";
 
 /** Exactly the document §19.2 describes, minus the `rev` the server owns. */
 export interface SeasonBlob {
@@ -30,14 +27,20 @@ export interface SeasonBlob {
   objectiveIndex: number;
   /** The letters taken so far this mission. `partialPath` on the wire. */
   partialPath: string[];
-  /** The generated beat waiting to be answered. Always null while the bank serves it. */
+  /** The generated beat waiting to be answered. Null when the bank served it. */
   pendingFollowupId: string | null;
   world: World;
   playerCell: [number, number];
   /** Who the live mission has brought in, so a resume does not lose Nadia. */
   visitors: CastId[];
   /** Decisions the backend has not taken yet, kept to retry. */
-  unsent: { activityId: string; taken: DecisionSoFar; durationSec: number }[];
+  unsent: {
+    activityId: string;
+    taken: DecisionSoFar;
+    durationSec: number;
+    /** The generated beat this decision answered, so a retry still counts it. */
+    followup?: { id: string; choice: string } | null;
+  }[];
   /**
    * Every week that has closed, and what was taken in it. A Café extension to
    * §19.2's document: the end-of-season report is built from this trail (§13.2),
@@ -58,6 +61,8 @@ export interface Season {
   playerCell: { x: number; y: number };
   unsent: SeasonBlob["unsent"];
   decided: Decided[];
+  /** The generated beat waiting to be answered, if one is. */
+  pendingFollowupId: string | null;
 }
 
 const BEATS = ["seed", "follow", "transfer"] as const;
@@ -67,7 +72,7 @@ export function toBlob(s: Season): SeasonBlob {
     missionOrder: s.progress.missionOrder,
     objectiveIndex: s.progress.objectiveIndex,
     partialPath: BEATS.map((b) => s.taken[b]).filter((v): v is string => typeof v === "string"),
-    pendingFollowupId: null,
+    pendingFollowupId: s.pendingFollowupId,
     world: s.world,
     playerCell: [s.playerCell.x, s.playerCell.y],
     visitors: s.visitors,
@@ -103,6 +108,7 @@ export function fromBlob(blob: unknown): Season | null {
     playerCell: { x: blob.playerCell[0], y: blob.playerCell[1] },
     unsent: Array.isArray(blob.unsent) ? blob.unsent : [],
     decided: Array.isArray(blob.decided) ? blob.decided.filter(isDecided) : [],
+    pendingFollowupId: typeof blob.pendingFollowupId === "string" ? blob.pendingFollowupId : null,
   };
 }
 
@@ -138,19 +144,61 @@ function isBlob(v: unknown): v is SeasonBlob {
 }
 
 // ── The adapter ──────────────────────────────────────────────────────────────
-// Two functions. Both become one ApiClient call each when BE-15/16 land.
 
+export const BUILDING_ID = "cafe";
+
+/**
+ * A write that may wait. Debounced and coalesced by the layer below, so walking
+ * across the room is one request rather than one per step.
+ */
 export function saveSeason(s: Season): void {
-  saveJson(KEY, toBlob(s));
+  writeSession(BUILDING_ID, toBlob(s));
 }
 
+/**
+ * A write that must not wait — a beat committing. A decision the server never
+ * heard about is a decision that did not happen.
+ */
+export function saveSeasonNow(s: Season): void {
+  writeSessionNow(BUILDING_ID, toBlob(s));
+}
+
+/**
+ * The way out. Goes by `sendBeacon`, which is the only thing a browser reliably
+ * runs while the page is going away — and which is why the backend exposes a
+ * POST that authorises on a token in the body rather than a header.
+ */
+export function flushSeason(s: Season): void {
+  flushSession(BUILDING_ID, toBlob(s));
+}
+
+/**
+ * Synchronous, and reads whatever the framework last mirrored. The interior
+ * hydrates from the server behind its own door-opening line, so by the time the
+ * room boots this is the current season.
+ */
 export function loadSeason(): Season | null {
-  const raw = loadJson<unknown>(KEY, (_v): _v is unknown => true);
-  return raw === null ? null : fromBlob(raw);
+  const raw = readSession(BUILDING_ID) ?? migrateLegacySave();
+  return raw == null ? null : fromBlob(raw);
 }
 
 export function clearSeason(): void {
-  saveJson(KEY, null);
+  writeSessionNow(BUILDING_ID, null);
+  saveJson(LEGACY_KEY, null);
+}
+
+/**
+ * Seasons written before the server had anywhere to put them.
+ *
+ * Read once, and only when the new mirror is empty. A player who was mid-week-6
+ * when this shipped should not be handed a fresh café.
+ */
+function migrateLegacySave(): unknown | null {
+  const raw = loadJson<unknown>(LEGACY_KEY, (_v): _v is unknown => true);
+  if (raw == null) return null;
+  writeSession(BUILDING_ID, raw);
+  saveJson(LEGACY_KEY, null);
+  return raw;
 }
 
 /** A season nobody has played yet. */
@@ -165,5 +213,6 @@ export function freshSeason(): Season {
     playerCell: { x: 4, y: 8 },
     unsent: [],
     decided: [],
+    pendingFollowupId: null,
   };
 }

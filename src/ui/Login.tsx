@@ -35,7 +35,7 @@ export function Login() {
         className="relative z-10 w-[360px] rounded-2xl border border-line/70 bg-surface/80 p-7 shadow-2xl backdrop-blur"
       >
         <h1 className="text-center font-display text-4xl font-semibold tracking-wide text-gold">
-          THE CITY
+          CEO CITY
         </h1>
         <p className="mt-1 text-center text-sm text-muted">Sign in with your WarRoom account</p>
 

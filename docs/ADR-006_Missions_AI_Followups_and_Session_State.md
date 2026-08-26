@@ -4,7 +4,7 @@ _The City · Interior Framework · v1.0 · 2026-08-04 · **Status: Accepted** ·
 
 _Extends **[ADR-005 v2.0](ADR-005_Interior_Framework.md)** (the interior engine, the scene data model, the silent-tier contract, accessibility). **Supersedes ADR-005 §19** (AI content policy) and **amends ADR-005 §9–§10** (the scenario script and the scoring model). Backend contract: **[PRD_Backend_Missions.md](PRD_Backend_Missions.md)**. Consumers: [Café](PRD_Building_Cafe.md) · [MAISON](PRD_Building_MAISON.md) · [MERIDIAN](PRD_Building_MERIDIAN.md)._
 
-> **Read this if you are building a building.** ADR-005 tells you what a room is. This tells you what *happens* in it: how nine competencies become nine missions, how a mission is a chain of things you go and do rather than a question that appears, where the AI is allowed to write and where it is forbidden, how a decision is scored across three beats, and what gets written to the server and when. If you want to change something in here, that is a framework issue and a maintainer PR — never a building-local fork.
+> **Read this if you are building a building.** ADR-005 tells you what a room is. This tells you what _happens_ in it: how nine competencies become nine missions, how a mission is a chain of things you go and do rather than a question that appears, where the AI is allowed to write and where it is forbidden, how a decision is scored across three beats, and what gets written to the server and when. If you want to change something in here, that is a framework issue and a maintainer PR — never a building-local fork.
 
 ---
 
@@ -12,7 +12,7 @@ _Extends **[ADR-005 v2.0](ADR-005_Interior_Framework.md)** (the interior engine,
 
 A building stops being a list of nine decisions staged in a room and becomes **a season of nine missions played in order**.
 
-A mission is a chain of small, concrete objectives — *go to the counter · wait for Nadia · talk to Nadia · decide · decide again · tell Priya* — with the next one always readable in a **tracker panel in the top-left corner**. You are never handed a question. You go somewhere, someone arrives, and the question is the thing they say.
+A mission is a chain of small, concrete objectives — _go to the counter · wait for Nadia · talk to Nadia · decide · decide again · tell Priya_ — with the next one always readable in a **tracker panel in the top-left corner**. You are never handed a question. You go somewhere, someone arrives, and the question is the thing they say.
 
 Each mission's decision is now **three beats, not two**:
 
@@ -45,25 +45,25 @@ And the season is durable: mission index, objective index, world state and the p
 
 ADR-005 gave every building a room, a cast, a nine-tree scenario script and a server-authoritative scoring path. That shipped: Café and MAISON are both walkable, MAISON carries all eighteen trees and 162 leaves, and the silent-tier contract holds end to end.
 
-What it did not give them is **a spine you can feel**. In the shipped MAISON, `nextBeat()` picks the next undecided competency, `liveBeatAt()` makes it live when you approach its station, and that is the whole of the structure. It works, and it is invisible: there is no statement of what you are doing, no sense of a thing being *started* and *finished*, and no reason to walk anywhere except that a station happens to be hot. A player who steps away for two minutes has nothing to come back to except a room.
+What it did not give them is **a spine you can feel**. In the shipped MAISON, `nextBeat()` picks the next undecided competency, `liveBeatAt()` makes it live when you approach its station, and that is the whole of the structure. It works, and it is invisible: there is no statement of what you are doing, no sense of a thing being _started_ and _finished_, and no reason to walk anywhere except that a station happens to be hot. A player who steps away for two minutes has nothing to come back to except a room.
 
 ### 2.2 What the brief now asks for
 
 Three things, in the product owner's words:
 
 1. **"It should be following like a story… completing each mission one by one, the next mission appearing at the top left corner."** A visible, ordered, one-at-a-time quest structure.
-2. **"Each mission shall be like a quest to go to the café counter to begin the quest, and an NPC arrives and talks — or go talk to an NPC character, or do some tasks within the café."** The decision must be *arrived at*, not *served*. Objectives, not triggers.
+2. **"Each mission shall be like a quest to go to the café counter to begin the quest, and an NPC arrives and talks — or go talk to an NPC character, or do some tasks within the café."** The decision must be _arrived at_, not _served_. Objectives, not triggers.
 3. **"For each NPC conversation or task, follow-up scenario-based questions shall be generated and asked by the NPC… for the option they have chosen and their previous paths… analysed by the backend for scoring."** A personalised transfer question, in the same voice, that counts.
 
 Plus two operational requirements: **"on leaving the building, the session state shall be saved to the backend dynamically"**, and **"there shall not be any breaking at edge case scenario — if it is not an NPC asking the question, choose the best possible."**
 
 ### 2.3 Why the third beat is the interesting part
 
-The two authored beats measure *judgment* and *consistency*: you make a call, then the world pushes back and we find out whether the call was real or lucky. That is exactly what ADR-005 §10.2's seed/follow-up matrix was built to catch, and it works.
+The two authored beats measure _judgment_ and _consistency_: you make a call, then the world pushes back and we find out whether the call was real or lucky. That is exactly what ADR-005 §10.2's seed/follow-up matrix was built to catch, and it works.
 
 What neither beat measures is **transfer** — whether the reasoning generalises to a situation the learner has not read before. An authored third beat cannot measure it either, because it would be the same third beat for everyone on that branch, and by the second building a learner is pattern-matching against a fixed corpus.
 
-A question generated *from this player's actual path*, naming the thing *they* actually did, is a different instrument. It cannot be pre-read, it cannot be looked up, and it is the closest thing to a live interviewer this product can afford. That is the case for spending money and complexity on it.
+A question generated _from this player's actual path_, naming the thing _they_ actually did, is a different instrument. It cannot be pre-read, it cannot be looked up, and it is the closest thing to a live interviewer this product can afford. That is the case for spending money and complexity on it.
 
 ### 2.4 The constraint that shapes everything below
 
@@ -75,29 +75,29 @@ A question generated *from this player's actual path*, naming the thing *they* a
 
 ### 3.1 Functional
 
-| ID | Requirement |
-|---|---|
-| **M1** | A building presents **nine missions in a fixed order**. Mission *n+1* is not available, visible or spoilable until *n* closes. |
-| **M2** | A mission is a chain of **typed objectives**. At least one objective in every mission is a movement or a conversation, never only a decision. |
-| **M3** | The **current objective is always readable** without opening anything, in a persistent panel anchored top-left. |
-| **M4** | Objectives complete **on approach or on act**, never on a timer. The fiction applies pressure; the game does not. |
-| **M5** | Each mission's decision is **three beats**: authored seed → authored branch-specific follow-up → **generated transfer question**. |
-| **M6** | The transfer question is generated from **both prior choices and the room's current state**, and asked **in the voice of the beat's host NPC**. |
-| **M7** | Speaker resolution **never fails**. Where no NPC can plausibly speak, the object or the room speaks — never a context-free question box. |
-| **M8** | Generation failure is **invisible to the player**. A scripted third beat is served and the mission completes normally. |
-| **M9** | Scoring stays **entirely server-side** and composes across all three beats. The client learns nothing about quality at any point. |
-| **M10** | Session state is **written to the backend during play and flushed on exit**, and a returning player resumes at the objective they left. |
-| **M11** | The tracker and every generated line are **real DOM**, announced, keyboard-reachable, and free of tier vocabulary. |
+| ID      | Requirement                                                                                                                                     |
+| ------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| **M1**  | A building presents **nine missions in a fixed order**. Mission _n+1_ is not available, visible or spoilable until _n_ closes.                  |
+| **M2**  | A mission is a chain of **typed objectives**. At least one objective in every mission is a movement or a conversation, never only a decision.   |
+| **M3**  | The **current objective is always readable** without opening anything, in a persistent panel anchored top-left.                                 |
+| **M4**  | Objectives complete **on approach or on act**, never on a timer. The fiction applies pressure; the game does not.                               |
+| **M5**  | Each mission's decision is **three beats**: authored seed → authored branch-specific follow-up → **generated transfer question**.               |
+| **M6**  | The transfer question is generated from **both prior choices and the room's current state**, and asked **in the voice of the beat's host NPC**. |
+| **M7**  | Speaker resolution **never fails**. Where no NPC can plausibly speak, the object or the room speaks — never a context-free question box.        |
+| **M8**  | Generation failure is **invisible to the player**. A scripted third beat is served and the mission completes normally.                          |
+| **M9**  | Scoring stays **entirely server-side** and composes across all three beats. The client learns nothing about quality at any point.               |
+| **M10** | Session state is **written to the backend during play and flushed on exit**, and a returning player resumes at the objective they left.         |
+| **M11** | The tracker and every generated line are **real DOM**, announced, keyboard-reachable, and free of tier vocabulary.                              |
 
 ### 3.2 Non-functional
 
-| ID | Requirement |
-|---|---|
+| ID     | Requirement                                                                                                                                                                                    |
+| ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **N1** | Transfer-question latency ≤ **2.5 s p95** from the player committing beat 2 to the NPC speaking beat 3. Beyond 4 s, the fallback is served instead — a slow question is a broken conversation. |
-| **N2** | The interior stays inside ADR-005 §15's frame budget with the tracker mounted. The tracker is DOM; it must not cause a canvas relayout. |
-| **N3** | Generation cost is bounded and observable: one call per mission per attempt, rate-limited per user, cached per path signature. |
-| **N4** | Every state write is idempotent and last-write-wins on an explicit revision, so a flaky connection never corrupts a season. |
-| **N5** | A backend outage degrades to today's behaviour (local persistence, unscored close), never to a lost season. |
+| **N2** | The interior stays inside ADR-005 §15's frame budget with the tracker mounted. The tracker is DOM; it must not cause a canvas relayout.                                                        |
+| **N3** | Generation cost is bounded and observable: one call per mission per attempt, rate-limited per user, cached per path signature.                                                                 |
+| **N4** | Every state write is idempotent and last-write-wins on an explicit revision, so a flaky connection never corrupts a season.                                                                    |
+| **N5** | A backend outage degrades to today's behaviour (local persistence, unscored close), never to a lost season.                                                                                    |
 
 ### 3.3 Constraints
 
@@ -114,26 +114,26 @@ A question generated *from this player's actual path*, naming the thing *they* a
 
 Author a third beat per branch: 9 competencies × 2 tracks × 3 branches = **54 per building, 162 across the three**, each with three options and three consequences.
 
-| Dimension | Assessment |
-|---|---|
-| Cost | Very high — roughly 1,500 new authored strings for three buildings, each needing a tier assignment and a plausible-peers audit |
-| Risk | Low technically, high editorially (prose fatigue is exactly what produces marked options — ADR-005 §20.2) |
-| Measures transfer | **No.** Fixed corpus; learnable by the second building |
-| Latency | Zero |
+| Dimension         | Assessment                                                                                                                     |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| Cost              | Very high — roughly 1,500 new authored strings for three buildings, each needing a tier assignment and a plausible-peers audit |
+| Risk              | Low technically, high editorially (prose fatigue is exactly what produces marked options — ADR-005 §20.2)                      |
+| Measures transfer | **No.** Fixed corpus; learnable by the second building                                                                         |
+| Latency           | Zero                                                                                                                           |
 
-**Rejected as the primary path**, but note it is not wasted: a *reduced* version of it (18 per building, §8.5) is the mandatory fallback, and that reduction is what makes the option affordable at all.
+**Rejected as the primary path**, but note it is not wasted: a _reduced_ version of it (18 per building, §8.5) is the mandatory fallback, and that reduction is what makes the option affordable at all.
 
 ### Option B — AI-generated free-text answer, graded by the existing `ai` rubric
 
 The NPC asks a generated question; the player types a short answer; `internal/scoring`'s existing `ai` rubric kind and `GeminiGrader` score it 1–3 per criterion.
 
-| Dimension | Assessment |
-|---|---|
-| Cost | Low — the grading half already exists and is tested |
-| Signal | Richest of the four options |
+| Dimension     | Assessment                                                                                         |
+| ------------- | -------------------------------------------------------------------------------------------------- |
+| Cost          | Low — the grading half already exists and is tested                                                |
+| Signal        | Richest of the four options                                                                        |
 | Accessibility | Poor. A typing task in the middle of a walking game, on a keyboard-only path, at 35–50, on a phone |
-| Consistency | Two model calls per mission; grading variance is real and unbounded |
-| Silent tier | Hardest to hold — free-text grading wants to return feedback, and feedback is a verdict |
+| Consistency   | Two model calls per mission; grading variance is real and unbounded                                |
+| Silent tier   | Hardest to hold — free-text grading wants to return feedback, and feedback is a verdict            |
 
 **Rejected.** The blueprint is an options-based instrument end to end (`Playroom Scenarios.xlsx` gives three choices and three tiers for every row); making the last beat a different instrument breaks comparability across the twelve buildings and across the two tracks.
 
@@ -141,13 +141,13 @@ The NPC asks a generated question; the player types a short answer; `internal/sc
 
 The model writes the question, three plausible-peer options, one consequence each, and a tier per option. All of it stays on the server; the client receives the prompt, three option texts, and three opaque ids.
 
-| Dimension | Assessment |
-|---|---|
-| Cost | Medium — one new endpoint, one table, one validation layer, one fallback bank of 18 per building |
-| Signal | Good — measures transfer, personalised, unlearnable |
-| Accessibility | Identical to beats 1 and 2. Nothing new to learn |
-| Silent tier | **Structurally safe** — the tier is not in the payload, so it cannot leak through the network tab |
-| Latency | The real cost. §7.4 is how it is paid |
+| Dimension     | Assessment                                                                                        |
+| ------------- | ------------------------------------------------------------------------------------------------- |
+| Cost          | Medium — one new endpoint, one table, one validation layer, one fallback bank of 18 per building  |
+| Signal        | Good — measures transfer, personalised, unlearnable                                               |
+| Accessibility | Identical to beats 1 and 2. Nothing new to learn                                                  |
+| Silent tier   | **Structurally safe** — the tier is not in the payload, so it cannot leak through the network tab |
+| Latency       | The real cost. §7.4 is how it is paid                                                             |
 
 **Chosen.**
 
@@ -196,12 +196,12 @@ Buildings ship `missions.ts` and a `followups/` fallback bank, and nothing else 
 // src/framework/mission/schema.ts  (framework-owned)
 
 export type ObjectiveKind =
-  | "go_to"    // walk to a station
+  | "go_to" // walk to a station
   | "wait_for" // someone arrives; the room stages it
-  | "talk_to"  // start a conversation with an NPC
-  | "inspect"  // read/handle a prop: the board, the rail, the letter tray, the till
-  | "decide"   // one of the three beats
-  | "report";  // go and tell someone what you did
+  | "talk_to" // start a conversation with an NPC
+  | "inspect" // read/handle a prop: the board, the rail, the letter tray, the till
+  | "decide" // one of the three beats
+  | "report"; // go and tell someone what you did
 
 export interface Objective {
   id: string;
@@ -221,18 +221,18 @@ export interface Objective {
 export interface Mission {
   /** 1..9 — the order the season runs in. */
   order: number;
-  id: string;                    // "cafe-m1"
-  competency: string;            // "C1"
+  id: string; // "cafe-m1"
+  competency: string; // "C1"
   /** The house's name for it, not the rubric's. Shown in the tracker. */
   title: string;
   /** Per-track registry activity id — this is what gets submitted. */
   activity: { SCA: string; SCB: string };
   /** Where it happens and who carries it (ADR-005 §8 staging table). */
   station: string;
-  hostNpc: string | null;        // null = the room/an object carries it
+  hostNpc: string | null; // null = the room/an object carries it
   /** One line of staging, played when the mission opens. */
   staging: string;
-  objectives: Objective[];       // ordered; the three `decide` beats are always the last three
+  objectives: Objective[]; // ordered; the three `decide` beats are always the last three
   /** Applied when the mission closes, whatever was chosen. Guarantees M2's visible change. */
   closeWorldState: Record<string, string>;
   /** 2–3 legal world writes the transfer beat may pick from. Server-validated (§8.4). */
@@ -241,7 +241,7 @@ export interface Mission {
 
 export interface MissionSpine {
   buildingId: string;
-  missions: Mission[];           // length 9, order 1..9, strictly sequential
+  missions: Mission[]; // length 9, order 1..9, strictly sequential
 }
 ```
 
@@ -275,29 +275,29 @@ A DOM panel, anchored **top-left of the interior viewport**, inside the interior
 
 **Rules:**
 
-| Rule | Why |
-|---|---|
-| **Only the current objective is shown.** Not the list, not what is next. | The tracker is a compass, not a walkthrough. Showing the chain spoils the staging. |
-| Collapses to a single title line with **`M`**, and the collapsed state persists in the session blob. | ADR-005 §14.2 already uses `M` for the station list; the tracker owns the same key and toggles both. |
-| `aria-live="polite"` fires on **objective change and mission change**, never on every frame. | ADR-005 §14.3. Announcement text is `announce ?? label`. |
-| Real `<button>` for collapse; the panel is in normal focus order; visible focus ring. | ADR-005 §14.1. Nothing readable is ever a canvas texture. |
-| **No tier. No proficiency. No per-mission coin figure. No ✓/✗ on a completed mission** — completed missions are simply gone from the tracker. | ADR-005 §11.1. The tracker is the single most tempting place in the product to add a score, and it is forbidden. |
-| The three pips fill as beats commit. They are **position indicators, not quality indicators** — identical colour, identical shape, no animation difference between beats. | Same. |
-| Under `prefers-reduced-motion`, the panel does not animate between objectives; it cuts. | ADR-005 §14.5. |
+| Rule                                                                                                                                                                      | Why                                                                                                              |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| **Only the current objective is shown.** Not the list, not what is next.                                                                                                  | The tracker is a compass, not a walkthrough. Showing the chain spoils the staging.                               |
+| Collapses to a single title line with **`M`**, and the collapsed state persists in the session blob.                                                                      | ADR-005 §14.2 already uses `M` for the station list; the tracker owns the same key and toggles both.             |
+| `aria-live="polite"` fires on **objective change and mission change**, never on every frame.                                                                              | ADR-005 §14.3. Announcement text is `announce ?? label`.                                                         |
+| Real `<button>` for collapse; the panel is in normal focus order; visible focus ring.                                                                                     | ADR-005 §14.1. Nothing readable is ever a canvas texture.                                                        |
+| **No tier. No proficiency. No per-mission coin figure. No ✓/✗ on a completed mission** — completed missions are simply gone from the tracker.                             | ADR-005 §11.1. The tracker is the single most tempting place in the product to add a score, and it is forbidden. |
+| The three pips fill as beats commit. They are **position indicators, not quality indicators** — identical colour, identical shape, no animation difference between beats. | Same.                                                                                                            |
+| Under `prefers-reduced-motion`, the panel does not animate between objectives; it cuts.                                                                                   | ADR-005 §14.5.                                                                                                   |
 
 **The one visible ordinal is deliberate.** "Mission 3 of 9" tells the player how much season is left, which is the pacing information they legitimately need, and tells them nothing about how they are doing.
 
 ### 6.4 Worked example — Café mission 1
 
-| # | Objective | Target | Label | Cue |
-|---|---|---|---|---|
-| 1 | `go_to` | `st_till` | *take the till* | — |
-| 2 | `wait_for` | `nadia` | *8:05 — the bell* | Nadia comes in fast, already reaching for her card |
-| 3 | `talk_to` | `nadia` | *serve Nadia* | — |
-| 4 | `decide` | `seed` | *decide* | Nadia: *"You still don't do oat, do you?"* |
-| 5 | `decide` | `follow` | *decide* | (branch-specific, authored — PRD_Building_Cafe §9.3) |
-| 6 | `decide` | `transfer` | *decide* | (generated, in Nadia's voice — §7) |
-| 7 | `report` | `priya` | *tell Priya where you landed* | Priya, not looking up: *"So what are we doing?"* |
+| #   | Objective  | Target     | Label                         | Cue                                                  |
+| --- | ---------- | ---------- | ----------------------------- | ---------------------------------------------------- |
+| 1   | `go_to`    | `st_till`  | _take the till_               | —                                                    |
+| 2   | `wait_for` | `nadia`    | _8:05 — the bell_             | Nadia comes in fast, already reaching for her card   |
+| 3   | `talk_to`  | `nadia`    | _serve Nadia_                 | —                                                    |
+| 4   | `decide`   | `seed`     | _decide_                      | Nadia: _"You still don't do oat, do you?"_           |
+| 5   | `decide`   | `follow`   | _decide_                      | (branch-specific, authored — PRD_Building_Cafe §9.3) |
+| 6   | `decide`   | `transfer` | _decide_                      | (generated, in Nadia's voice — §7)                   |
+| 7   | `report`   | `priya`    | _tell Priya where you landed_ | Priya, not looking up: _"So what are we doing?"_     |
 
 Seven objectives, one decision, and the player walked, waited, served and reported. That is the difference between a mission and a question.
 
@@ -323,7 +323,7 @@ Beats 1 and 2 are exactly what ADR-005 §9.2 specified and what the three PRDs a
 
 ### 7.2 What beat 3 is for
 
-Beats 1 and 2 ask *what do you do* and *now that the world has answered, what do you do*. Beat 3 asks **the question an interviewer would ask third**: it names what this player actually did, moves the situation somewhere they have not read about, and finds out whether the reasoning was portable or situational.
+Beats 1 and 2 ask _what do you do_ and _now that the world has answered, what do you do_. Beat 3 asks **the question an interviewer would ask third**: it names what this player actually did, moves the situation somewhere they have not read about, and finds out whether the reasoning was portable or situational.
 
 It is deliberately **not** a harder version of beat 2. Where beat 2 tests consistency inside the same problem, beat 3 tests transfer to an adjacent one — a different pressure, a different stakeholder, a longer horizon, or the same decision arriving again in a changed room.
 
@@ -383,12 +383,12 @@ POST /api/v1/progress/C1-SCA-01/submit
 
 Generation is fired **the instant beat 2 commits**, in parallel with beat 2's consequence playing in the room. The consequence takes 4–6 seconds to read (ADR-005 §9.3, and every PRD's leaf spec), which is the budget the generation runs inside. In the normal case the question is already in hand before the player has finished reading why the almond cartons expired.
 
-| Elapsed | Behaviour |
-|---|---|
-| 0 s | Beat 2 commits. `POST /ai/followup` fires. Beat 2's consequence begins playing. |
-| ≤ 2.5 s (p95) | Response in hand, held until the consequence finishes. |
-| 2.5–4 s | Consequence has finished; the NPC does an idle beat — Priya wipes down, Grace finishes what she is doing, Élise looks up from the bench. Captioned, unremarkable, and in character. |
-| > 4 s | Request abandoned. The scripted fallback (§8.5) is served. **The player is never told.** |
+| Elapsed       | Behaviour                                                                                                                                                                           |
+| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 0 s           | Beat 2 commits. `POST /ai/followup` fires. Beat 2's consequence begins playing.                                                                                                     |
+| ≤ 2.5 s (p95) | Response in hand, held until the consequence finishes.                                                                                                                              |
+| 2.5–4 s       | Consequence has finished; the NPC does an idle beat — Priya wipes down, Grace finishes what she is doing, Élise looks up from the bench. Captioned, unremarkable, and in character. |
+| > 4 s         | Request abandoned. The scripted fallback (§8.5) is served. **The player is never told.**                                                                                            |
 
 The idle beat is not a spinner and must not be one. A loading indicator in the middle of a conversation is the single most immersion-breaking thing this feature could ship, and it also tells the player that this question is different from the last two — which is information they should not have.
 
@@ -402,7 +402,7 @@ The idle beat is not a spinner and must not be one. A loading indicator in the m
 
 ## 8. The generation contract
 
-Everything in this section is normative. Where a rule says *blocking*, failing it means the generated content is discarded and the fallback is served.
+Everything in this section is normative. Where a rule says _blocking_, failing it means the generated content is discarded and the fallback is served.
 
 ### 8.1 Where generation happens
 
@@ -410,17 +410,17 @@ Everything in this section is normative. Where a rule says *blocking*, failing i
 
 ### 8.2 What the model is given
 
-| Input | Source |
-|---|---|
-| Competency + subtopic, with the definition the rubric uses | `internal/registry/content/c{n}.json` |
-| The building's fiction and the mission's staging | building `missions.ts`, mirrored server-side in the followup content pack |
-| The **NPC persona card** — who they are, how they speak, three sample lines, what they would never say | the building PRD §5, mirrored in the content pack |
-| The seed prompt and **the exact option text the player chose** | authored tree |
-| The follow-up prompt and **the exact option text the player chose** | authored tree |
-| Track (`SCA` = 16–21 / `SCB` = 35–50) and what changes between them | ADR-005 §11.4 rule 8 |
-| Current world state, as a **whitelisted key→value map** | building world-state schema |
-| `aiWorldCandidates` — the 2–3 legal world writes this beat may pick from | mission definition |
-| The plausible-peers rules, verbatim | ADR-005 §11.4 |
+| Input                                                                                                  | Source                                                                    |
+| ------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------- |
+| Competency + subtopic, with the definition the rubric uses                                             | `internal/registry/content/c{n}.json`                                     |
+| The building's fiction and the mission's staging                                                       | building `missions.ts`, mirrored server-side in the followup content pack |
+| The **NPC persona card** — who they are, how they speak, three sample lines, what they would never say | the building PRD §5, mirrored in the content pack                         |
+| The seed prompt and **the exact option text the player chose**                                         | authored tree                                                             |
+| The follow-up prompt and **the exact option text the player chose**                                    | authored tree                                                             |
+| Track (`SCA` = 16–21 / `SCB` = 35–50) and what changes between them                                    | ADR-005 §11.4 rule 8                                                      |
+| Current world state, as a **whitelisted key→value map**                                                | building world-state schema                                               |
+| `aiWorldCandidates` — the 2–3 legal world writes this beat may pick from                               | mission definition                                                        |
+| The plausible-peers rules, verbatim                                                                    | ADR-005 §11.4                                                             |
 
 ### 8.3 What the model must return
 
@@ -441,18 +441,18 @@ Everything in this section is normative. Where a rule says *blocking*, failing i
 
 Run in order; the first failure discards the whole generation.
 
-| # | Gate | Rule |
-|---|---|---|
-| 1 | **Schema** | Parses; exactly 3 options; every field present; prompt ≤ 60 words; each option 13–33 words; each consequence ≤ 45 words. |
-| 2 | **Tier completeness** | Exactly one `developing`, one `strong`, one `advanced`. |
-| 3 | **Choice-length parity** | Longest − shortest option ≤ **8 words** (ADR-005 §11.4 rule 2). This is the gate that fires most often; it is also the one that matters most. |
-| 4 | **Tier-vocabulary leak** | No `Developing`/`Strong`/`Advanced` as capitalised labels, no proficiency numbers, no `n/3`, no pass/fail phrasing anywhere in `prompt`, `options[].text` or `consequence`. |
-| 5 | **Verdict language** | No "unfortunately", "you should have", "the better move", "the right call", "correct", "well done", "mistake", "wisely" in any consequence. Consequences report facts (ADR-005 §11.4 rule 6). |
-| 6 | **Self-justification** | Every option contains a reason clause. If only two options explain themselves, the third is marked (ADR-005 §11.4 rule 3). Heuristic: each option must contain at least one of a small connective set (`because`, `and`, `—`, `so`, `since`, `while`). |
-| 7 | **Path reference** | The prompt must reference the player's actual prior situation — checked by requiring ≥ 2 content tokens shared with the chosen seed or follow-up option text. A generic question is a failed generation. |
-| 8 | **World-write legality** | Any `world` object is a member of `aiWorldCandidates`, verbatim. |
-| 9 | **Building-specific gates** | MERIDIAN's **no-advice rule** (PRD_Building_MERIDIAN §11.1): no second-person guidance about real money. Applied as a phrase blocklist plus a shape check. Other buildings may register their own. |
-| 10 | **Injection hardening** | World-state values are echoed from a closed enum, never free text. Nothing the player typed reaches the prompt, because the player never types. |
+| #   | Gate                        | Rule                                                                                                                                                                                                                                                   |
+| --- | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1   | **Schema**                  | Parses; exactly 3 options; every field present; prompt ≤ 60 words; each option 13–33 words; each consequence ≤ 45 words.                                                                                                                               |
+| 2   | **Tier completeness**       | Exactly one `developing`, one `strong`, one `advanced`.                                                                                                                                                                                                |
+| 3   | **Choice-length parity**    | Longest − shortest option ≤ **8 words** (ADR-005 §11.4 rule 2). This is the gate that fires most often; it is also the one that matters most.                                                                                                          |
+| 4   | **Tier-vocabulary leak**    | No `Developing`/`Strong`/`Advanced` as capitalised labels, no proficiency numbers, no `n/3`, no pass/fail phrasing anywhere in `prompt`, `options[].text` or `consequence`.                                                                            |
+| 5   | **Verdict language**        | No "unfortunately", "you should have", "the better move", "the right call", "correct", "well done", "mistake", "wisely" in any consequence. Consequences report facts (ADR-005 §11.4 rule 6).                                                          |
+| 6   | **Self-justification**      | Every option contains a reason clause. If only two options explain themselves, the third is marked (ADR-005 §11.4 rule 3). Heuristic: each option must contain at least one of a small connective set (`because`, `and`, `—`, `so`, `since`, `while`). |
+| 7   | **Path reference**          | The prompt must reference the player's actual prior situation — checked by requiring ≥ 2 content tokens shared with the chosen seed or follow-up option text. A generic question is a failed generation.                                               |
+| 8   | **World-write legality**    | Any `world` object is a member of `aiWorldCandidates`, verbatim.                                                                                                                                                                                       |
+| 9   | **Building-specific gates** | MERIDIAN's **no-advice rule** (PRD_Building_MERIDIAN §11.1): no second-person guidance about real money. Applied as a phrase blocklist plus a shape check. Other buildings may register their own.                                                     |
+| 10  | **Injection hardening**     | World-state values are echoed from a closed enum, never free text. Nothing the player typed reaches the prompt, because the player never types.                                                                                                        |
 
 **One regeneration attempt** on failure, with the failed gate named in the retry instruction. Second failure → fallback. Both outcomes are logged with the gate id, because gate-failure rates are the only honest measure of whether the prompt is good.
 
@@ -481,12 +481,12 @@ Served when: the model is unconfigured · the call errors · the call exceeds 4 
 
 `resolveSpeaker(mission, room, worldState)` — framework-owned, pure, four steps, total:
 
-| Step | Condition | Result |
-|---|---|---|
-| 1 | `mission.hostNpc` is set **and** that NPC is present in the room under the current world state | The host NPC. **This is the case ~95% of the time and it is the intended one.** |
-| 2 | Otherwise, an NPC is present in the player's current zone | The nearest such NPC, by walk distance. They speak *about* the absent host where the fiction needs it (*"Ray hasn't been back. But you've still got Saturday to answer for."*) |
-| 3 | Otherwise, the building's **anchor NPC** — Priya (Café) · Élise (MAISON) · Grace (MERIDIAN) — who is present in **every** world state by construction | The anchor NPC. Each building must guarantee its anchor is unremovable; this is an acceptance criterion. |
-| 4 | Otherwise (`hostNpc: null` by design — the night beat, the letter tray, the wall of screens) | **The object speaks**, as narration in the room's voice, attributed to the prop that carries the mission. The dialogue layer renders the prop's name where a portrait would go. |
+| Step | Condition                                                                                                                                             | Result                                                                                                                                                                          |
+| ---- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1    | `mission.hostNpc` is set **and** that NPC is present in the room under the current world state                                                        | The host NPC. **This is the case ~95% of the time and it is the intended one.**                                                                                                 |
+| 2    | Otherwise, an NPC is present in the player's current zone                                                                                             | The nearest such NPC, by walk distance. They speak _about_ the absent host where the fiction needs it (_"Ray hasn't been back. But you've still got Saturday to answer for."_)  |
+| 3    | Otherwise, the building's **anchor NPC** — Priya (Café) · Élise (MAISON) · Grace (MERIDIAN) — who is present in **every** world state by construction | The anchor NPC. Each building must guarantee its anchor is unremovable; this is an acceptance criterion.                                                                        |
+| 4    | Otherwise (`hostNpc: null` by design — the night beat, the letter tray, the wall of screens)                                                          | **The object speaks**, as narration in the room's voice, attributed to the prop that carries the mission. The dialogue layer renders the prop's name where a portrait would go. |
 
 Notes:
 
@@ -524,17 +524,17 @@ finalOutcome = round( 0.7 × authoredTerminal  +  0.3 × aiTierValue )
 
 Rows are the nine authored terminals (ADR-005 §10.1); columns are the transfer tier.
 
-| authored (seed → follow) | + Developing | + Strong | + Advanced |
-|---|---|---|---|
-| **95** Advanced → Advanced | **71** · P2 | **85** · P3 | **95** · P3 |
-| **81** Advanced → Strong | **61** · P2 | **75** · P3 | **85** · P3 |
-| **74** Strong → Advanced | **56** · P2 | **70** · P2 | **80** · P3 |
-| **63** Advanced → Developing | **49** · P2 | **62** · P2 | **73** · P2 |
-| **60** Strong → Strong | **47** · P2 | **60** · P2 | **71** · P2 |
-| **47** Developing → Advanced | **37** · P1 | **51** · P2 | **61** · P2 |
-| **42** Strong → Developing | **34** · P1 | **47** · P2 | **58** · P2 |
-| **33** Developing → Strong | **28** · P1 | **41** · P1 | **52** · P2 |
-| **15** Developing → Developing | **15** · P1 | **29** · P1 | **39** · P1 |
+| authored (seed → follow)       | + Developing | + Strong    | + Advanced  |
+| ------------------------------ | ------------ | ----------- | ----------- |
+| **95** Advanced → Advanced     | **71** · P2  | **85** · P3 | **95** · P3 |
+| **81** Advanced → Strong       | **61** · P2  | **75** · P3 | **85** · P3 |
+| **74** Strong → Advanced       | **56** · P2  | **70** · P2 | **80** · P3 |
+| **63** Advanced → Developing   | **49** · P2  | **62** · P2 | **73** · P2 |
+| **60** Strong → Strong         | **47** · P2  | **60** · P2 | **71** · P2 |
+| **47** Developing → Advanced   | **37** · P1  | **51** · P2 | **61** · P2 |
+| **42** Strong → Developing     | **34** · P1  | **47** · P2 | **58** · P2 |
+| **33** Developing → Strong     | **28** · P1  | **41** · P1 | **52** · P2 |
+| **15** Developing → Developing | **15** · P1  | **29** · P1 | **39** · P1 |
 
 Read the table and it says three things worth stating out loud, because the end-of-journey report will have to say them:
 
@@ -567,7 +567,7 @@ Unchanged: `{1: 5, 2: 15, 3: 25}` (`Playroom Scenarios.xlsx` → `Rules`; ADR-00
 
 ### 10.5 The mentor lifeline, resolved properly
 
-The `BANK` blueprint sheet scores C2's mentor consultation as *0–1 uses = Developing · 2 = Strong · all 3 = Advanced*. With two beats, ADR-005-era PRDs could only offer two consultation opportunities and recorded the divergence as a compromise (MAISON §9.6, MERIDIAN §9.7).
+The `BANK` blueprint sheet scores C2's mentor consultation as _0–1 uses = Developing · 2 = Strong · all 3 = Advanced_. With two beats, ADR-005-era PRDs could only offer two consultation opportunities and recorded the divergence as a compromise (MAISON §9.6, MERIDIAN §9.7).
 
 **Three beats restores the blueprint exactly.** Sam (MERIDIAN) and Véra (MAISON) are a scored option at each of the three beats, and 0–1 / 2 / 3 uses map to Developing / Strong / Advanced through the tier maps as written. The compromise is withdrawn; the two PRDs are updated to say so.
 
@@ -606,15 +606,15 @@ One blob per user per building, plus one city-wide blob.
 
 ### 11.2 When it is written
 
-| Trigger | Timing |
-|---|---|
-| Mission opens | immediate |
-| Objective completes | debounced 800 ms |
-| Beat commits (any of the three) | immediate — this is the one that must never be lost |
-| World-state write | debounced 800 ms, coalesced with the above |
-| Player crosses a zone boundary | debounced 800 ms (position only) |
-| **Exit through the door** | **immediate, flushed** |
-| `pagehide` / `visibilitychange → hidden` | **immediate, flushed** |
+| Trigger                                  | Timing                                              |
+| ---------------------------------------- | --------------------------------------------------- |
+| Mission opens                            | immediate                                           |
+| Objective completes                      | debounced 800 ms                                    |
+| Beat commits (any of the three)          | immediate — this is the one that must never be lost |
+| World-state write                        | debounced 800 ms, coalesced with the above          |
+| Player crosses a zone boundary           | debounced 800 ms (position only)                    |
+| **Exit through the door**                | **immediate, flushed**                              |
+| `pagehide` / `visibilitychange → hidden` | **immediate, flushed**                              |
 
 ### 11.3 The exit flush
 
@@ -665,7 +665,7 @@ Everything in ADR-005 §14 applies unchanged. What this ADR adds:
 
 - **The tracker is DOM, in focus order, announced on change.** §6.3.
 - **Generated prose is DOM like every other line.** It goes through the same dialogue layer, the same captions, the same focus management. There is no separate presentation for beat 3, deliberately — a player must not be able to tell which beat was generated.
-- **The wait is announced, not spun.** During §7.4's 2.5–4 s window the live region says what the room is doing (*"Priya wipes down the counter"*), not that something is loading. A screen-reader user gets the same in-fiction beat a sighted user sees.
+- **The wait is announced, not spun.** During §7.4's 2.5–4 s window the live region says what the room is doing (_"Priya wipes down the counter"_), not that something is loading. A screen-reader user gets the same in-fiction beat a sighted user sees.
 - **Objective completion is announced** with the objective's `announce ?? label`, so a player who cannot see the tracker still knows the objective moved.
 - **`go_to` objectives are reachable by guided navigation.** Every `go_to` target must be a station in the building's guide list — a CI check, because an objective you cannot reach without a mouse is a blocked season.
 
@@ -678,7 +678,7 @@ Everything in ADR-005 §14 applies unchanged. What this ADR adds:
 - A building's structure becomes one reviewable file (`missions.ts`) instead of an emergent property of station placement.
 - Transfer is measured at all, for the first time, and it is measured with the same instrument shape as everything else.
 - The mentor lifeline matches the blueprint exactly (§10.5) instead of carrying a documented compromise.
-- The silent-tier rule gets *stronger*, not weaker: the tier for beat 3 is not merely hidden from the UI, it is never sent to the client at all.
+- The silent-tier rule gets _stronger_, not weaker: the tier for beat 3 is not merely hidden from the UI, it is never sent to the client at all.
 - Session durability is one framework layer rather than three building-local `localStorage` schemes.
 
 **Harder**
@@ -698,17 +698,17 @@ Everything in ADR-005 §14 applies unchanged. What this ADR adds:
 
 ## 15. Risks
 
-| Risk | Mitigation |
-|---|---|
+| Risk                                                                                        | Mitigation                                                                                                                                                                                     |
+| ------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **The generated option set leaks the tier** — the good one runs longer, the weak one hedges | Gate 3 (word parity ≤ 8) and gate 6 (self-justification) are blocking and automated; the fresh-reader audit samples generated output as well as authored, and gate-failure rates are monitored |
-| **The model writes a verdict into a consequence** | Gate 5's blocklist, plus the same fresh-reader pass. This is the single most likely failure and it is cheap to catch |
-| **MERIDIAN's generated copy reads as financial advice** | Gate 9, registered per building, blocking. PRD_Building_MERIDIAN §11.1 is already an acceptance criterion; this extends it to generated text |
-| **Latency turns a conversation into a wait** | §7.4's parallel fire, the in-character idle beat, and the hard 4 s abandon. No spinner, ever |
-| **The tracker becomes a scoreboard** by well-meaning increment | §6.3's rule table; the tracker is framework code so a building cannot add to it; the tier-leak audit covers it |
-| **The fallback bank is never finished** because generation "works" | `validate_registry` fails on a missing entry, so a building cannot ship without it |
-| **Session writes hammer the backend** | 800 ms debounce, coalescing, 16 KB cap, per-user rate limit; beat commits and exit are the only immediate writes |
-| **Two tabs corrupt a season** | `rev` + `409` + adopt-newer (§11.4) |
-| **A mission's `go_to` target is unreachable without a mouse** | CI check against the building's guide list (§13) |
+| **The model writes a verdict into a consequence**                                           | Gate 5's blocklist, plus the same fresh-reader pass. This is the single most likely failure and it is cheap to catch                                                                           |
+| **MERIDIAN's generated copy reads as financial advice**                                     | Gate 9, registered per building, blocking. PRD_Building_MERIDIAN §11.1 is already an acceptance criterion; this extends it to generated text                                                   |
+| **Latency turns a conversation into a wait**                                                | §7.4's parallel fire, the in-character idle beat, and the hard 4 s abandon. No spinner, ever                                                                                                   |
+| **The tracker becomes a scoreboard** by well-meaning increment                              | §6.3's rule table; the tracker is framework code so a building cannot add to it; the tier-leak audit covers it                                                                                 |
+| **The fallback bank is never finished** because generation "works"                          | `validate_registry` fails on a missing entry, so a building cannot ship without it                                                                                                             |
+| **Session writes hammer the backend**                                                       | 800 ms debounce, coalescing, 16 KB cap, per-user rate limit; beat commits and exit are the only immediate writes                                                                               |
+| **Two tabs corrupt a season**                                                               | `rev` + `409` + adopt-newer (§11.4)                                                                                                                                                            |
+| **A mission's `go_to` target is unreachable without a mouse**                               | CI check against the building's guide list (§13)                                                                                                                                               |
 
 ---
 

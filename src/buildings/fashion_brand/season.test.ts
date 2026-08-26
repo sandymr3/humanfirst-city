@@ -46,7 +46,7 @@ describe("MAISON season spine", () => {
   it("derives eighteen unique activity ids in the canonical slot-03 shape", () => {
     expect(MAISON_ACTIVITY_IDS).toHaveLength(18);
     expect(new Set(MAISON_ACTIVITY_IDS).size).toBe(18);
-    for (const id of MAISON_ACTIVITY_IDS) expect(id).toMatch(/^C[1-9]-(HARD|PRO)-03$/);
+    for (const id of MAISON_ACTIVITY_IDS) expect(id).toMatch(/^C[1-9]-(SCA|SCB)-03$/);
     for (const b of BEATS) {
       expect(b.A.id).toBe(`${b.competency}-${TRACK_LEVEL.A}-03`);
       expect(b.B.id).toBe(`${b.competency}-${TRACK_LEVEL.B}-03`);

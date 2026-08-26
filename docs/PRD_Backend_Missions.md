@@ -13,14 +13,14 @@ _Implements [ADR-006](ADR-006_Missions_AI_Followups_and_Session_State.md). Inher
 
 Six additive changes to `backend-academy`, none of which breaks an existing client:
 
-| | What | Why |
-|---|---|---|
-| **BE-13** | Two scenario levels, `SCA` (16–21) + `SCB` (35–50) | The blueprints define two tracks; neither has a level, and `HARD` is full (§6.4) |
-| **BE-14** | `coinsByProficiency → {1:5, 2:15, 3:25}` | `Playroom Scenarios.xlsx → Rules` |
-| **BE-15** | `PUT/GET /api/v1/city/state` | Track choice and FTUE flags need a home |
-| **BE-16** | `PUT/GET/POST /api/v1/city/buildings/{buildingId}/state` | The season survives leaving the building |
-| **BE-17** | `POST /api/v1/ai/followup` | The generated transfer beat |
-| **BE-18** | Extended `trace` submit + `aiBeat` rubric block | The transfer beat has to count |
+|           | What                                                     | Why                                                                              |
+| --------- | -------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| **BE-13** | Two scenario levels, `SCA` (16–21) + `SCB` (35–50)       | The blueprints define two tracks; neither has a level, and `HARD` is full (§6.4) |
+| **BE-14** | `coinsByProficiency → {1:5, 2:15, 3:25}`                 | `Playroom Scenarios.xlsx → Rules`                                                |
+| **BE-15** | `PUT/GET /api/v1/city/state`                             | Track choice and FTUE flags need a home                                          |
+| **BE-16** | `PUT/GET/POST /api/v1/city/buildings/{buildingId}/state` | The season survives leaving the building                                         |
+| **BE-17** | `POST /api/v1/ai/followup`                               | The generated transfer beat                                                      |
+| **BE-18** | Extended `trace` submit + `aiBeat` rubric block          | The transfer beat has to count                                                   |
 
 Plus **BE-19** (mission telemetry, P3), **BE-20** (un-stale `api/openapi.yaml`, P1) and **BE-21** (let the registry validator accept a partially-populated level, **P0** — §6.5).
 
@@ -36,22 +36,22 @@ Two new tables, two new migrations, one new service, one new content pack. `inte
 
 Written down so nobody rebuilds it.
 
-| Capability | Where |
-|---|---|
-| Firebase auth → auto-provisioned `AcademyUser`; `auth.UserID(c)` in every handler | `internal/auth/middleware.go` |
-| `ActivityRegistry` with a **server-only** `Rubric` and a `Public()` projection that omits it | `internal/models/academy.go` |
-| Rubric kinds `objective · order · trace · metrics · slots · ai`, all evaluated server-side | `internal/scoring/scoring.go` |
-| `evalTrace` — walks the path backwards for the last known terminal, maps through `scoreMap` | `internal/scoring/scoring.go:340` |
-| `scoring.Grader` interface + `services.GeminiGrader` (strict-JSON prompt, lenient parse, `ErrAIUnavailable`) | `internal/services/grading_ai.go` |
-| **Mandatory fallback on AI failure** — `applyFallback(entry)` in the submit path | `internal/services/progress_service.go:299` |
-| `POST /api/v1/progress/{activityId}/start` · `POST /api/v1/progress/{activityId}/submit` · `GET /api/v1/progress` | `cmd/server/main.go`, `internal/handlers/academy_handler.go` |
-| `GET /api/v1/registry/{comp}/{level}` · `/registry/activity/{id}` · `/registry/modules` | `internal/handlers/academy_handler.go` |
-| `GameSession` (user × activity state blob) + `PUT/GET /api/v1/progress/{activityId}/state` | `internal/models/academy.go`, `cmd/server/main.go` |
-| Coin award on first pass, idempotent, server-computed | `internal/services/wallet_service.go`, `internal/economy/content/economy.json` |
-| Registry content packs + hot reload (`POST /api/v1/admin/registry/reload`) | `internal/registry/loader.go` |
-| `cmd/validate_registry` — 12 activities per competency-level, `orderIndex` 1..12, six subtopics × exactly 2 | `cmd/validate_registry/main.go` |
-| goose migrations (MySQL dialect, embedded FS) + GORM `AutoMigrate` for dev/tests + a CI drift check | `internal/db/migrations.go`, `cmd/schemadrift` |
-| Structured error envelope | `internal/httpx/errors.go` |
+| Capability                                                                                                        | Where                                                                          |
+| ----------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| Firebase auth → auto-provisioned `AcademyUser`; `auth.UserID(c)` in every handler                                 | `internal/auth/middleware.go`                                                  |
+| `ActivityRegistry` with a **server-only** `Rubric` and a `Public()` projection that omits it                      | `internal/models/academy.go`                                                   |
+| Rubric kinds `objective · order · trace · metrics · slots · ai`, all evaluated server-side                        | `internal/scoring/scoring.go`                                                  |
+| `evalTrace` — walks the path backwards for the last known terminal, maps through `scoreMap`                       | `internal/scoring/scoring.go:340`                                              |
+| `scoring.Grader` interface + `services.GeminiGrader` (strict-JSON prompt, lenient parse, `ErrAIUnavailable`)      | `internal/services/grading_ai.go`                                              |
+| **Mandatory fallback on AI failure** — `applyFallback(entry)` in the submit path                                  | `internal/services/progress_service.go:299`                                    |
+| `POST /api/v1/progress/{activityId}/start` · `POST /api/v1/progress/{activityId}/submit` · `GET /api/v1/progress` | `cmd/server/main.go`, `internal/handlers/academy_handler.go`                   |
+| `GET /api/v1/registry/{comp}/{level}` · `/registry/activity/{id}` · `/registry/modules`                           | `internal/handlers/academy_handler.go`                                         |
+| `GameSession` (user × activity state blob) + `PUT/GET /api/v1/progress/{activityId}/state`                        | `internal/models/academy.go`, `cmd/server/main.go`                             |
+| Coin award on first pass, idempotent, server-computed                                                             | `internal/services/wallet_service.go`, `internal/economy/content/economy.json` |
+| Registry content packs + hot reload (`POST /api/v1/admin/registry/reload`)                                        | `internal/registry/loader.go`                                                  |
+| `cmd/validate_registry` — 12 activities per competency-level, `orderIndex` 1..12, six subtopics × exactly 2       | `cmd/validate_registry/main.go`                                                |
+| goose migrations (MySQL dialect, embedded FS) + GORM `AutoMigrate` for dev/tests + a CI drift check               | `internal/db/migrations.go`, `cmd/schemadrift`                                 |
+| Structured error envelope                                                                                         | `internal/httpx/errors.go`                                                     |
 
 **Nothing above changes shape.** Every item below either adds to it or composes on top of it.
 
@@ -120,7 +120,7 @@ type AIFollowup struct {
 }
 ```
 
-`FollowupPublic` is the client projection: `followupId`, `speaker`, `prompt`, and `options` reduced to `{ id, text }`. **`tier`, `consequence` tiers, `source`, `model` and `gateFailures` are never in it.** (`consequence` text *is* returned — the player must see what happened — but it is returned as part of the chosen option's resolution at commit time, not up front, so the three consequences are not all readable before choosing.)
+`FollowupPublic` is the client projection: `followupId`, `speaker`, `prompt`, and `options` reduced to `{ id, text }`. **`tier`, `consequence` tiers, `source`, `model` and `gateFailures` are never in it.** (`consequence` text _is_ returned — the player must see what happened — but it is returned as part of the chosen option's resolution at commit time, not up front, so the three consequences are not all readable before choosing.)
 
 ### 3.2 Migrations
 
@@ -224,8 +224,12 @@ PUT  /api/v1/city/state
 Recommended blob shape (client-owned, documented for reviewers, not enforced):
 
 ```jsonc
-{ "track": "SCA", "ftue": { "firstEntry": true, "trackAsked": true },
-  "lastDistrict": "market", "lastTile": [24, 9] }
+{
+  "track": "SCA",
+  "ftue": { "firstEntry": true, "trackAsked": true },
+  "lastDistrict": "market",
+  "lastTile": [24, 9],
+}
 ```
 
 ### 4.2 BE-16 · Building session state
@@ -252,7 +256,7 @@ Recommended blob shape — this is the season, per [ADR-006 §11.1](ADR-006_Miss
   "pendingFollowupId": null,
   "world": { "chalkboard": "oat_asked", "regulars": "thin", "till": "tight" },
   "playerCell": [4, 5],
-  "trackerCollapsed": false
+  "trackerCollapsed": false,
 }
 ```
 
@@ -282,17 +286,17 @@ Request:
   "buildingId": "cafe",
   "path": ["c", "b"],
   "speakerId": "nadia",
-  "worldState": { "chalkboard": "oat_asked", "regulars": "thin", "till": "tight" }
+  "worldState": { "chalkboard": "oat_asked", "regulars": "thin", "till": "tight" },
 }
 ```
 
-| Field | Validation |
-|---|---|
-| `activityId` | must exist, must be `activityType: "DECISION_TREE"`, must carry an `aiBeat` rubric block |
-| `track` | `SCA` \| `SCB`, must match the activity's level |
-| `buildingId` | allow-listed; must own this activity's slot (ADR-005 §10.5) |
-| `path` | exactly 2 elements, each a single letter that exists at its node in the authored tree |
-| `speakerId` | must be a cast member of that building, or the literal `"room"` |
+| Field        | Validation                                                                                                                                                                                    |
+| ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `activityId` | must exist, must be `activityType: "DECISION_TREE"`, must carry an `aiBeat` rubric block                                                                                                      |
+| `track`      | `SCA` \| `SCB`, must match the activity's level                                                                                                                                               |
+| `buildingId` | allow-listed; must own this activity's slot (ADR-005 §10.5)                                                                                                                                   |
+| `path`       | exactly 2 elements, each a single letter that exists at its node in the authored tree                                                                                                         |
+| `speakerId`  | must be a cast member of that building, or the literal `"room"`                                                                                                                               |
 | `worldState` | keys must be in the building's declared world-state schema; values must be in that key's enum. **Anything else is dropped, not rejected** — a stale client must not be able to fail a mission |
 
 Response `200`:
@@ -305,8 +309,8 @@ Response `200`:
   "options": [
     { "id": "o_7f2a91", "text": "…" },
     { "id": "o_c104de", "text": "…" },
-    { "id": "o_39be07", "text": "…" }
-  ]
+    { "id": "o_39be07", "text": "…" },
+  ],
 }
 ```
 
@@ -338,9 +342,9 @@ Rate limit: **40 generations per user per hour** (a nine-mission season plus rep
     "trace": {
       "path": ["C1-SCA-01.seed", "C1-SCA-01.c", "C1-SCA-01.c.follow", "C1-SCA-01.c.b"],
       "followupId": "fu_01J8ZQ0S8N4T1V6M",
-      "followupChoice": "o_c104de"
-    }
-  }
+      "followupChoice": "o_c104de",
+    },
+  },
 }
 ```
 
@@ -374,7 +378,7 @@ Body `{ "optionId": "o_c104de" }` → `200 { "consequence": "…", "world": { "c
 
 This exists so the room can play the consequence and apply the world write **without** the three consequences having been shipped up front — where a curious player could read all three and infer the ranking. It is a one-line handler and it closes a real silent-tier hole.
 
-Idempotent: committing the same option twice returns the same body. Committing a *different* option after the first is `409 ALREADY_COMMITTED` with the original — a decision is a decision.
+Idempotent: committing the same option twice returns the same body. Committing a _different_ option after the first is `409 ALREADY_COMMITTED` with the original — a decision is a decision.
 
 ### 4.7 BE-19 · Mission telemetry (P3, non-blocking)
 
@@ -432,14 +436,14 @@ type FollowupOption struct {
 
 New config keys beside the existing `GEMINI_API_KEY` / `AI_MODEL`:
 
-| Env | Default | Notes |
-|---|---|---|
-| `FOLLOWUP_PROVIDER` | `anthropic` | `anthropic` \| `gemini` \| `off` |
-| `ANTHROPIC_API_KEY` | *(empty)* | Empty ⇒ provider unavailable ⇒ fallback bank. The service is fully functional without it |
-| `FOLLOWUP_MODEL` | `claude-haiku-4-5-20251001` | Latency is the binding constraint ([ADR-006 §7.4](ADR-006_Missions_AI_Followups_and_Session_State.md)) |
-| `FOLLOWUP_TIMEOUT_MS` | `4000` | Hard deadline; beyond it the fallback is served |
-| `FOLLOWUP_RATE_PER_HOUR` | `40` | Per user |
-| `FOLLOWUP_CACHE_VARIANTS` | `4` | Accepted variants held per path signature |
+| Env                       | Default                     | Notes                                                                                                  |
+| ------------------------- | --------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `FOLLOWUP_PROVIDER`       | `anthropic`                 | `anthropic` \| `gemini` \| `off`                                                                       |
+| `ANTHROPIC_API_KEY`       | _(empty)_                   | Empty ⇒ provider unavailable ⇒ fallback bank. The service is fully functional without it               |
+| `FOLLOWUP_MODEL`          | `claude-haiku-4-5-20251001` | Latency is the binding constraint ([ADR-006 §7.4](ADR-006_Missions_AI_Followups_and_Session_State.md)) |
+| `FOLLOWUP_TIMEOUT_MS`     | `4000`                      | Hard deadline; beyond it the fallback is served                                                        |
+| `FOLLOWUP_RATE_PER_HOUR`  | `40`                        | Per user                                                                                               |
+| `FOLLOWUP_CACHE_VARIANTS` | `4`                         | Accepted variants held per path signature                                                              |
 
 The existing Gemini grader keeps `GEMINI_API_KEY` and continues to serve `ai`-rubric grading. The two are independent: grading and generation can run on different providers.
 
@@ -447,17 +451,17 @@ The existing Gemini grader keeps `GEMINI_API_KEY` and continues to serve `ai`-ru
 
 Implemented in `internal/services/followup_gates.go` as a list of named, pure, individually-tested functions. Order matters; the first failure short-circuits.
 
-| # | Gate | Rule | Failure mode observed in practice |
-|---|---|---|---|
-| 1 | `schema` | Parses; exactly 3 options; all fields non-empty; prompt ≤ 60 words; option 13–33 words; consequence ≤ 45 words | Model returns 4 options or a preamble |
-| 2 | `tier_completeness` | Exactly one of each tier | Two "strong"s |
-| 3 | `length_parity` | max(words) − min(words) ≤ **8** across the three options | **The most common failure.** The advanced option accretes clauses |
-| 4 | `tier_vocabulary` | No capitalised `Developing`/`Strong`/`Advanced`, no `n/3`, no proficiency digits, no pass/fail phrasing, anywhere | Model helpfully labels its own options |
-| 5 | `verdict_language` | Blocklist in consequences: `unfortunately`, `you should have`, `the better move`, `the right call`, `correct`, `well done`, `mistake`, `wisely`, `sadly` | Model coaches |
-| 6 | `self_justification` | Every option contains ≥ 1 connective from a small set (`because`, `since`, `so`, `and`, `while`, `—`) | The weak option is a bare imperative |
-| 7 | `path_reference` | ≥ 2 shared content tokens between the prompt and the chosen seed or follow-up text (stopwords removed) | Generic question, ignores the path |
-| 8 | `world_legality` | Any `World` map is a verbatim member of the request's `aiWorldCandidates` | Model invents a key |
-| 9 | `building_gates` | Registered per building. **MERIDIAN: no second-person guidance about real money** (`you should invest`, `pay off your`, `open an account`…) | The bank building starts giving advice |
+| #   | Gate                 | Rule                                                                                                                                                     | Failure mode observed in practice                                 |
+| --- | -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| 1   | `schema`             | Parses; exactly 3 options; all fields non-empty; prompt ≤ 60 words; option 13–33 words; consequence ≤ 45 words                                           | Model returns 4 options or a preamble                             |
+| 2   | `tier_completeness`  | Exactly one of each tier                                                                                                                                 | Two "strong"s                                                     |
+| 3   | `length_parity`      | max(words) − min(words) ≤ **8** across the three options                                                                                                 | **The most common failure.** The advanced option accretes clauses |
+| 4   | `tier_vocabulary`    | No capitalised `Developing`/`Strong`/`Advanced`, no `n/3`, no proficiency digits, no pass/fail phrasing, anywhere                                        | Model helpfully labels its own options                            |
+| 5   | `verdict_language`   | Blocklist in consequences: `unfortunately`, `you should have`, `the better move`, `the right call`, `correct`, `well done`, `mistake`, `wisely`, `sadly` | Model coaches                                                     |
+| 6   | `self_justification` | Every option contains ≥ 1 connective from a small set (`because`, `since`, `so`, `and`, `while`, `—`)                                                    | The weak option is a bare imperative                              |
+| 7   | `path_reference`     | ≥ 2 shared content tokens between the prompt and the chosen seed or follow-up text (stopwords removed)                                                   | Generic question, ignores the path                                |
+| 8   | `world_legality`     | Any `World` map is a verbatim member of the request's `aiWorldCandidates`                                                                                | Model invents a key                                               |
+| 9   | `building_gates`     | Registered per building. **MERIDIAN: no second-person guidance about real money** (`you should invest`, `pay off your`, `open an account`…)              | The bank building starts giving advice                            |
 
 Every failure is recorded in `gate_failures` on the row. **Gate-failure rate by gate id is the single most useful signal for prompt iteration** and is the metric that decides whether ADR-006 §14's "revisit if" threshold is crossed.
 
@@ -469,10 +473,13 @@ Content, not code: `internal/registry/content/followups/{buildingId}.json`, load
 {
   "buildingId": "cafe",
   "personas": {
-    "nadia": { "name": "Nadia", "role": "the commuter",
-               "voice": "Friendly and compressed. Says the important thing on her way out the door.",
-               "samples": ["You still don't do oat, do you?"],
-               "never": ["long speeches", "business vocabulary"] }
+    "nadia": {
+      "name": "Nadia",
+      "role": "the commuter",
+      "voice": "Friendly and compressed. Says the important thing on her way out the door.",
+      "samples": ["You still don't do oat, do you?"],
+      "never": ["long speeches", "business vocabulary"],
+    },
   },
   "fallbacks": [
     {
@@ -480,13 +487,13 @@ Content, not code: `internal/registry/content/followups/{buildingId}.json`, load
       "speakerId": "nadia",
       "prompt": "…",
       "options": [
-        { "text": "…", "tier": "strong",     "consequence": "…" },
+        { "text": "…", "tier": "strong", "consequence": "…" },
         { "text": "…", "tier": "developing", "consequence": "…" },
-        { "text": "…", "tier": "advanced",   "consequence": "…" }
-      ]
-    }
+        { "text": "…", "tier": "advanced", "consequence": "…" },
+      ],
+    },
     // … exactly 18 per building: 9 competencies × 2 tracks
-  ]
+  ],
 }
 ```
 
@@ -510,13 +517,13 @@ Small, because the surface is small: **the player never types anything.** The on
 
 Touches:
 
-| File | Change |
-|---|---|
-| `cmd/validate_registry/main.go` | level allow-list; `-strict` check 3 → 4 levels |
+| File                                            | Change                                                                                      |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `cmd/validate_registry/main.go`                 | level allow-list; `-strict` check 3 → 4 levels                                              |
 | `internal/registry/content/c1.json` … `c9.json` | an `SCA` **and** an `SCB` level block per competency; `BADGE-C{n}-SCA` and `BADGE-C{n}-SCB` |
-| `internal/registry/content/badges.json` | **eighteen** level badges + **two** meta badges (names ADR-005 §20.3, KK to confirm) |
-| `internal/services/badge_service.go` | fourth and fifth entries in the level map |
-| `internal/models/academy.go` | the `Level` comment. `varchar(16)` already fits |
+| `internal/registry/content/badges.json`         | **eighteen** level badges + **two** meta badges (names ADR-005 §20.3, KK to confirm)        |
+| `internal/services/badge_service.go`            | fourth and fifth entries in the level map                                                   |
+| `internal/models/academy.go`                    | the `Level` comment. `varchar(16)` already fits                                             |
 
 ### 6.2 BE-14 · Coin rescale
 
@@ -549,7 +556,7 @@ Three launch buildings × 9 competencies × 2 levels = **54 `DECISION_TREE` rows
 
 > ### ⚠ Correction (2026-08-07) — v1.0 of this section was wrong
 >
-> It said: *"until then the seed runs with `-strict=false` and the ledger tracks the gap."* **`-strict=false` does not relax anything relevant.** Verified in [`cmd/validate_registry/main.go`](../../backend-academy/cmd/validate_registry/main.go):
+> It said: _"until then the seed runs with `-strict=false` and the ledger tracks the gap."_ **`-strict=false` does not relax anything relevant.** Verified in [`cmd/validate_registry/main.go`](../../backend-academy/cmd/validate_registry/main.go):
 >
 > ```go
 > if *strict && len(comp.Levels) != 3 { … }        // line 64 — strict-only
@@ -560,29 +567,29 @@ Three launch buildings × 9 competencies × 2 levels = **54 `DECISION_TREE` rows
 >     }
 > ```
 >
-> `-strict` adds only the *"three levels per competency"* rule. The **twelve-activities-per-level** rule sits inside the level loop and always runs. Seven competencies have **zero** levels today (only C4 has `BEGINNER`, only C9 has all three), so adding `C1-SCA-01` creates a level holding one activity and **fails the build, with no flag that relaxes it**.
+> `-strict` adds only the _"three levels per competency"_ rule. The **twelve-activities-per-level** rule sits inside the level loop and always runs. Seven competencies have **zero** levels today (only C4 has `BEGINNER`, only C9 has all three), so adding `C1-SCA-01` creates a level holding one activity and **fails the build, with no flag that relaxes it**.
 >
 > _Credit: found by the backend owner while checking whether the Café's rows could be seeded._
 
 **Two blockers, both of which must clear before a single row is seeded:**
 
-| # | Blocker | Owner | Fix |
-|---|---|---|---|
-| **1** | The validator rejects a partially-populated level | backend | **BE-21** below |
+| #     | Blocker                                                                                                                | Owner   | Fix                                                                                                          |
+| ----- | ---------------------------------------------------------------------------------------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------ |
+| **1** | The validator rejects a partially-populated level                                                                      | backend | **BE-21** below                                                                                              |
 | **2** | The scenario id scheme collides with seeded content — `C9-HARD-01/02/03` are taken and have progress rows against them | product | [ADR-005 §10.6.1](ADR-005_Interior_Framework.md), recommendation **Option C** (`SCA` / `SCB`). **Needs KK.** |
 
 ### 6.5 BE-21 · Let the validator accept a partially-populated level
 
 **Status: shipped** (`6129f8b`). Was P0 and blocking BE-12.
 
-The "exactly 12" invariant is a *launch* gate that has been enforced as a *build* gate. It is correct at full seed and wrong during rollout — it makes seeding the first building of twelve impossible.
+The "exactly 12" invariant is a _launch_ gate that has been enforced as a _build_ gate. It is correct at full seed and wrong during rollout — it makes seeding the first building of twelve impossible.
 
 **Change:** split the rule by mode.
 
-| Mode | Rule |
-|---|---|
-| default | `len(lv.Activities) <= 12` · `orderIndex` unique and within 1..12 · no duplicate ids · every subtopic in the competency's list |
-| `-strict` | additionally `== 12`, six subtopics × exactly 2, and three levels per competency |
+| Mode      | Rule                                                                                                                           |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| default   | `len(lv.Activities) <= 12` · `orderIndex` unique and within 1..12 · no duplicate ids · every subtopic in the competency's list |
+| `-strict` | additionally `== 12`, six subtopics × exactly 2, and three levels per competency                                               |
 
 `-strict` is what CI runs at launch and what the phase gate in §9 P4 means. The default is what a developer and the seed job run while twelve buildings are being written one at a time.
 
@@ -592,15 +599,15 @@ The "exactly 12" invariant is a *launch* gate that has been enforced as a *build
 
 ## 7. Observability
 
-| Metric | Why |
-|---|---|
-| `followup_generate_total{source=ai\|fallback}` | The headline. A fallback rate above ~10% means the feature is not really shipping |
-| `followup_gate_failure_total{gate}` | Drives prompt iteration; gate 3 will dominate at first |
-| `followup_latency_ms` p50/p95/p99 | ADR-006 §7.4's budget is 2.5 s p95, 4 s hard |
-| `followup_timeout_total` | Distinguishes "slow" from "broken" |
-| `session_write_total{building,trigger}` and `session_conflict_total` | Debounce tuning; conflicts mean two tabs |
-| `beacon_write_total{ok,bad_token}` | The exit flush is the write that must not be lost |
-| `submit_total{hasFollowup}` | How many missions actually completed all three beats |
+| Metric                                                               | Why                                                                               |
+| -------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| `followup_generate_total{source=ai\|fallback}`                       | The headline. A fallback rate above ~10% means the feature is not really shipping |
+| `followup_gate_failure_total{gate}`                                  | Drives prompt iteration; gate 3 will dominate at first                            |
+| `followup_latency_ms` p50/p95/p99                                    | ADR-006 §7.4's budget is 2.5 s p95, 4 s hard                                      |
+| `followup_timeout_total`                                             | Distinguishes "slow" from "broken"                                                |
+| `session_write_total{building,trigger}` and `session_conflict_total` | Debounce tuning; conflicts mean two tabs                                          |
+| `beacon_write_total{ok,bad_token}`                                   | The exit flush is the write that must not be lost                                 |
+| `submit_total{hasFollowup}`                                          | How many missions actually completed all three beats                              |
 
 Structured logs never include the prompt body, the option tiers, or the API key. A generated prompt is logged only on gate failure, and only behind a debug flag.
 
@@ -641,15 +648,15 @@ Structured logs never include the prompt body, the option tiers, or the API key.
 
 ## 9. Phases
 
-| Phase | Deliverable | Gate |
-|---|---|---|
-| **P-1 — Unblock** | **BE-21** (validator modes) + the [ADR-005 §10.6.1](ADR-005_Interior_Framework.md) level decision | One scenario row seeds into an empty level and the default validator run passes |
-| **P0 — Foundations** | BE-13 (the scenario level(s)), BE-14 (coins), BE-20 (openapi), migrations 00004/00005, models, drift check | Default `validate_registry` green with a scenario level present; drift check green |
-| **P1 — Session** | BE-15, BE-16 including the beacon path and token | A season written from one tab, read from another; a killed tab loses nothing after the beacon fires |
-| **P2 — Generation** | BE-17 + `FollowupGenerator` + Claude Haiku 4.5 client + all nine gates + the fallback loader + `/commit` | With the API key removed, a full mission plays on fallbacks and nothing in the response distinguishes it |
-| **P3 — Scoring** | BE-18, the `aiBeat` rubric block, the 27-cell table test | Every cell of ADR-006 §10.2 reproduced exactly |
-| **P4 — Content** | BE-12 seed of the 54 rows; the three fallback banks (18 each) | `validate_registry` green including fallback completeness |
-| **P5 — Telemetry** | BE-19, the §7 metrics | A dashboard showing fallback rate and gate failures by gate |
+| Phase                | Deliverable                                                                                                | Gate                                                                                                     |
+| -------------------- | ---------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| **P-1 — Unblock**    | **BE-21** (validator modes) + the [ADR-005 §10.6.1](ADR-005_Interior_Framework.md) level decision          | One scenario row seeds into an empty level and the default validator run passes                          |
+| **P0 — Foundations** | BE-13 (the scenario level(s)), BE-14 (coins), BE-20 (openapi), migrations 00004/00005, models, drift check | Default `validate_registry` green with a scenario level present; drift check green                       |
+| **P1 — Session**     | BE-15, BE-16 including the beacon path and token                                                           | A season written from one tab, read from another; a killed tab loses nothing after the beacon fires      |
+| **P2 — Generation**  | BE-17 + `FollowupGenerator` + Claude Haiku 4.5 client + all nine gates + the fallback loader + `/commit`   | With the API key removed, a full mission plays on fallbacks and nothing in the response distinguishes it |
+| **P3 — Scoring**     | BE-18, the `aiBeat` rubric block, the 27-cell table test                                                   | Every cell of ADR-006 §10.2 reproduced exactly                                                           |
+| **P4 — Content**     | BE-12 seed of the 54 rows; the three fallback banks (18 each)                                              | `validate_registry` green including fallback completeness                                                |
+| **P5 — Telemetry**   | BE-19, the §7 metrics                                                                                      | A dashboard showing fallback rate and gate failures by gate                                              |
 
 P0–P3 are the critical path for the Café's mission work. P4 blocks every building from being playable against the live registry. P5 is post-launch.
 

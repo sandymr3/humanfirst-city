@@ -8,6 +8,7 @@
 // The backend has no city-state endpoint yet (master PRD §11.3), so localStorage
 // is the whole of persistence. When one lands, this store is what syncs.
 import { create } from "zustand";
+import { activeTrack } from "@/framework/city/track";
 import { loadJson, saveJson } from "@/lib/persist";
 import { events } from "@/framework/events";
 import { worldDeltaAlong, type DecisionTreeContent } from "@/lib/decisionTree";
@@ -79,8 +80,19 @@ function persist(state: Season): void {
   });
 }
 
+/**
+ * The track is one choice for the whole city, made at the gate (ADR-006 §11.1).
+ * MAISON keeps its own A/B naming and its own season, but it must not ask a
+ * question the city has already answered — so a fresh season here starts on the
+ * answer the player already gave.
+ */
+function cityTrack(): Track | null {
+  const city = activeTrack();
+  return city === "SCA" ? "A" : city === "SCB" ? "B" : null;
+}
+
 export const useMaisonStore = create<MaisonState>((set, get) => ({
-  ...(loadJson(STORAGE_KEY, isSeason) ?? freshSeason()),
+  ...(loadJson(STORAGE_KEY, isSeason) ?? freshSeason(cityTrack())),
 
   chooseTrack: (track) => {
     const next = freshSeason(track);
