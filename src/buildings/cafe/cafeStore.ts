@@ -20,7 +20,14 @@ import {
   type RoomEvent,
 } from "./missionRunner";
 import type { Beat } from "./missions";
-import { freshSeason, loadSeason, saveSeason, type Season } from "./session";
+import {
+  flushSeason,
+  freshSeason,
+  loadSeason,
+  saveSeason,
+  saveSeasonNow,
+  type Season,
+} from "./session";
 import type { Decided } from "./report";
 import {
   openBeat,
@@ -247,32 +254,33 @@ function snapshot(): Season {
   };
 }
 
-let debounce: number | null = null;
-
 /**
- * Save, on the schedule PRD §19.3 sets out. Objectives completing, world writes
- * and wandering around are cheap and frequent and coalesce into one write;
- * a committed beat and leaving the building are immediate, because a decision
- * that vanishes is the worst bug this building can have.
+ * Save, on the schedule ADR-006 §11.2 sets out. Objectives completing, world
+ * writes and wandering around are cheap and frequent and coalesce into one
+ * write; a committed beat and leaving the building are immediate, because a
+ * decision that vanishes is the worst bug this building can have.
+ *
+ * The coalescing lives one layer down now, with the thing that owns the
+ * revision — two debounces in a row would only mean the room's idea of "soon"
+ * and the network's could drift apart.
  */
 export function saveNow(): void {
-  if (debounce !== null) {
-    window.clearTimeout(debounce);
-    debounce = null;
-  }
-  saveSeason(snapshot());
+  saveSeasonNow(snapshot());
 }
 
 export function saveSoon(): void {
-  if (debounce !== null) return;
-  debounce = window.setTimeout(() => {
-    debounce = null;
-    saveSeason(snapshot());
-  }, SAVE_DEBOUNCE_MS);
+  saveSeason(snapshot());
 }
 
-/** Five objectives inside a second produce one write. */
-const SAVE_DEBOUNCE_MS = 800;
+/**
+ * The way out — the door, the tab closing, the interior being taken away.
+ *
+ * Distinct from `saveNow` because this is the write that has to survive the page
+ * going away, and the only thing a browser reliably runs then is `sendBeacon`.
+ */
+export function flushNow(): void {
+  flushSeason(snapshot());
+}
 
 /**
  * Open a hotspot's panel. Locks the room's input while it is up, exactly as the

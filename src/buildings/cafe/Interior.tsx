@@ -11,6 +11,8 @@ import { audio } from "@/framework/audio/audioManager";
 import { Icon } from "@/ui/Icon";
 import { Modal } from "@/ui/Modal";
 import { CafeCanvas } from "./CafeCanvas";
+import { armBeacon, hydrateSession, setSessionTrack } from "@/framework/session/sync";
+import { trackOrDefault } from "@/framework/city/track";
 
 /** How long the bell takes to go after a `wait_for` opens. */
 const ARRIVAL_MS = 2200;
@@ -21,7 +23,7 @@ import {
   closeHotspot,
   openDialogue,
   openReport,
-  saveNow,
+  flushNow,
   openHotspot,
   resetCafeState,
   speakTo,
@@ -35,6 +37,7 @@ import { hotspotBody } from "./world";
 import { Tracker } from "./Tracker";
 import { Dialogue } from "./Dialogue";
 import { currentObjective, seasonIsOver, type Progress } from "./missionRunner";
+import { BUILDING_ID } from "./session";
 import { Report } from "./Report";
 import type { Beat } from "./missions";
 import { HOTSPOTS as ALL_SPOTS, STATIONS as ALL_STATIONS } from "./room";
@@ -70,8 +73,22 @@ export default function CafeInterior({ manifest, onExit }: InteriorProps) {
   // Priya used to ask the level question here, before the first mission. The
   // city asks it at the gate now (ADR-006 §11.1) — one choice for the whole
   // city, and the room is already the right room by the time the door opens.
+  //
+  // The season is pulled down first. It is the one await on this path, and it
+  // happens behind the door-opening line the room already shows, so a player who
+  // left mid-week on another device walks back in standing where they left it.
+  const [seasonIn, setSeasonIn] = useState(false);
   useEffect(() => {
-    resetCafeState();
+    let live = true;
+    setSessionTrack(BUILDING_ID, trackOrDefault());
+    void hydrateSession(BUILDING_ID).finally(() => {
+      if (!live) return;
+      resetCafeState();
+      setSeasonIn(true);
+    });
+    return () => {
+      live = false;
+    };
   }, []);
 
   const objective = currentObjective(progress);
@@ -134,7 +151,7 @@ export default function CafeInterior({ manifest, onExit }: InteriorProps) {
    * else is going to run.
    */
   const leaveNow = useCallback(() => {
-    saveNow();
+    flushNow();
     onExit();
   }, [onExit]);
 
@@ -166,7 +183,7 @@ export default function CafeInterior({ manifest, onExit }: InteriorProps) {
   }, [leaveNow]);
 
   useEffect(() => {
-    const flush = () => saveNow();
+    const flush = () => flushNow();
     window.addEventListener("pagehide", flush);
     const onHidden = () => {
       if (document.visibilityState === "hidden") flush();
@@ -180,6 +197,14 @@ export default function CafeInterior({ manifest, onExit }: InteriorProps) {
       flush();
     };
   }, []);
+
+  // The beacon token is minted while the player is still in the room. Minting it
+  // on the way out would put a round trip on the one path that must not have one,
+  // and it expires in five minutes, so a long season re-arms as it goes.
+  useEffect(() => {
+    if (!seasonIn) return;
+    void armBeacon(BUILDING_ID);
+  }, [seasonIn, progress.missionOrder]);
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -226,11 +251,11 @@ export default function CafeInterior({ manifest, onExit }: InteriorProps) {
           has already given the city back by the time this fires. */}
       <CafeCanvas onReady={() => setReady(true)} onError={onExit} />
 
-      {ready && <Tracker />}
+      {ready && seasonIn && <Tracker />}
       <Dialogue />
       <Report />
 
-      {!ready && (
+      {(!ready || !seasonIn) && (
         <div className="absolute inset-0 grid place-items-center bg-ink">
           <p className="text-sm text-muted">Pushing the door open…</p>
         </div>
