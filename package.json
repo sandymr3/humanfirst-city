@@ -2,7 +2,7 @@
   "name": "city-frontend",
   "private": true,
   "version": "0.1.0-f1",
-  "description": "The City — WarRoom Academy training frontend (React + TypeScript + PixiJS). See docs/PRD_City_Frontend.md.",
+  "description": "CEO City — WarRoom Academy training frontend (React + TypeScript + PixiJS). See docs/PRD_City_Frontend.md.",
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",

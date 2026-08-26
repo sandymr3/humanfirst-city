@@ -45,7 +45,7 @@ export function districtAt(x: number, y: number): District {
 // "scenario" venues span many competencies instead of one level list — a whole
 // authored storyline with its own panel (MAISON, docs/maison.md). `competency`/
 // `level` are meaningless for them; the venue's own module owns the spine.
-export type VenueKind = "competency" | "shop" | "trophy" | "locked" | "cafe" | "scenario";
+export type VenueKind = "competency" | "shop" | "trophy" | "locked" | "cafe" | "scenario" | "bank";
 
 export interface CityBuilding {
   id: string;
@@ -103,7 +103,9 @@ function venue(
 
 export const VENUES: CityBuilding[] = [
   // Downtown (blocks 0,0 / 1,0 / 0,1)
-  venue("bank", "Bank", "downtown", 0, 0, 2, 2, 3, 2, { competency: "C4", level: "BEGINNER" }),
+  // Not a level list: the bank is where the coins a season earns actually
+  // are, and where the player can see what they were paid for.
+  venue("bank", "Bank", "downtown", 0, 0, 2, 2, 3, 2, { kind: "bank" }),
   venue("stock_exchange", "Stock Exchange", "downtown", 1, 0, 2, 2, 3, 2, {
     competency: "C4",
     level: "BEGINNER",

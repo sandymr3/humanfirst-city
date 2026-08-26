@@ -28,6 +28,9 @@ export function Hud() {
       // presentation at 5 and at 25, which is what §11 asks for — the number
       // differs, the fanfare never does.
       events.on("activity_completed", ({ response: r }) => {
+        // Every venue's submit moves the balance, so the HUD takes it from the
+        // response rather than from whichever screen happened to be open.
+        useEconomyStore.getState().applyCoinBalance(r.coinBalance);
         if (typeof r.coinsEarned === "number" && r.coinsEarned > 0) {
           setFloater({ id: Date.now(), amount: r.coinsEarned });
         }

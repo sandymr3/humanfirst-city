@@ -30,7 +30,7 @@ function Splash() {
   return (
     <div className="grid min-h-screen place-items-center bg-ink">
       <div className="text-center">
-        <h1 className="font-display text-4xl font-semibold text-gold">THE CITY</h1>
+        <h1 className="font-display text-4xl font-semibold text-gold">CEO CITY</h1>
         <p className="mt-2 text-sm text-muted">Entering…</p>
       </div>
     </div>

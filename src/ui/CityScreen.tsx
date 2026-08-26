@@ -16,6 +16,9 @@ import { TrophyHall } from "./TrophyHall";
 import { ActivityListPanel } from "@/activities/ActivityListPanel";
 import { EnterCity } from "./EnterCity";
 import { hydrateCityState } from "@/framework/city/cityState";
+import { api } from "@/framework/api";
+import { useEconomyStore } from "@/framework/economy/economyStore";
+import { BankPanel } from "./BankPanel";
 import { trackIsDue } from "@/framework/city/track";
 import { PlayerShell } from "@/activities/PlayerShell";
 import { MaisonPanel } from "@/buildings/fashion_brand/MaisonPanel";
@@ -29,6 +32,7 @@ const PANELLED_KINDS: ReadonlySet<VenueKind> = new Set<VenueKind>([
   "competency",
   "trophy",
   "scenario",
+  "bank",
 ]);
 
 export function CityScreen() {
@@ -67,6 +71,17 @@ export function CityScreen() {
     void hydrateCityState().then(() => {
       if (live) setAskTrack(trackIsDue());
     });
+    // The first authed call. It performs the starter grant server-side, which is
+    // why the HUD can show a real number from the first second rather than an em
+    // dash that fills in after the first activity.
+    void api
+      .getMe()
+      .then((me) => {
+        if (live) useEconomyStore.getState().applyWallet(me.wallet);
+      })
+      .catch(() => {
+        // No wallet is a wallet we do not know about, and the HUD says so.
+      });
     return () => {
       live = false;
     };
@@ -156,6 +171,10 @@ export function CityScreen() {
       {!inInterior && openVenue && !playing && openVenue.kind === "trophy" && (
         <TrophyHall onClose={() => setOpenVenue(null)} />
       )}
+      {/* The bank is where the money is, not another level list. */}
+      {!inInterior && openVenue && !playing && openVenue.kind === "bank" && (
+        <BankPanel onClose={() => setOpenVenue(null)} />
+      )}
       {/* A scenario venue owns its own panel — a storyline, not a level list —
           until it registers an interior, at which point the room replaces it. */}
       {!inInterior && openVenue && !playing && openVenue.kind === "scenario" && (
@@ -190,7 +209,7 @@ function CityLoader({ pct }: { pct: number }) {
   return (
     <div className="absolute inset-0 z-20 grid place-items-center bg-ink">
       <div className="w-[min(20rem,80vw)] text-center">
-        <h1 className="font-display text-3xl font-semibold tracking-wide text-gold">THE CITY</h1>
+        <h1 className="font-display text-3xl font-semibold tracking-wide text-gold">CEO CITY</h1>
         <p className="mt-2 text-sm text-muted">
           {shown < 100 ? "Laying out the streets…" : "Opening the gates…"}
         </p>
@@ -255,7 +274,7 @@ function FoundersPanel({ onClose }: { onClose: () => void }) {
   return (
     <Modal onClose={onClose} width="sm" className="text-center">
       <p className="text-xs uppercase tracking-widest text-muted">Founders' Plaque</p>
-      <h2 className="mt-2 font-display text-2xl font-semibold text-gold">THE CITY — EST. 2026</h2>
+      <h2 className="mt-2 font-display text-2xl font-semibold text-gold">CEO CITY — EST. 2026</h2>
       <p className="mt-4 text-sm text-muted">
         Raised brick by brick for the WarRoom Academy, so learning a competency feels like walking
         into a building, not opening a form.
