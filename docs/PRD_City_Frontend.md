@@ -316,15 +316,15 @@ One **player shell** (React) — header: title/competency/level · progress dots
 
 ### 8.1 Type → renderer → submission kind
 
-| Activity types (registry `activityType`)                               | Renderer interaction                      | Result kind submitted              |
-| ---------------------------------------------------------------------- | ----------------------------------------- | ---------------------------------- |
-| MCQ_FEEDBACK, DRAG_MATCH, SPOT_IT, CASE_STUDY, DIAGNOSE, STORY_CHOICE* | choose/drag/tap/tag → itemId+choice pairs | `objective`                        |
-| SORT_ORDER                                                             | arrange sequence                          | `order`                            |
+| Activity types (registry `activityType`)                               | Renderer interaction                           | Result kind submitted                                   |
+| ---------------------------------------------------------------------- | ---------------------------------------------- | ------------------------------------------------------- |
+| MCQ_FEEDBACK, DRAG_MATCH, SPOT_IT, CASE_STUDY, DIAGNOSE, STORY_CHOICE* | choose/drag/tap/tag → itemId+choice pairs      | `objective`                                             |
+| SORT_ORDER                                                             | arrange sequence                               | `order`                                                 |
 | DECISION_TREE (and branching STORY_CHOICE*)                            | node-by-node choices -> `DecisionTreeRenderer` | `trace` (path + optional `followupId`/`followupChoice`) |
-| MINI_SIM, BUDGET_SLIDER                                                | multi-round sim with meters/sliders       | `metrics` (+ optional decisionLog) |
-| BUILD_PLAN                                                             | pick-N-into-slots assembly                | `slots`                            |
-| OPEN_TEXT_AI                                                           | writing panel (word-count bounded)        | `text`                             |
-| DEFEND_PITCH                                                           | chat-style conversation vs AI persona     | `transcript`                       |
+| MINI_SIM, BUDGET_SLIDER                                                | multi-round sim with meters/sliders            | `metrics` (+ optional decisionLog)                      |
+| BUILD_PLAN                                                             | pick-N-into-slots assembly                     | `slots`                                                 |
+| OPEN_TEXT_AI                                                           | writing panel (word-count bounded)             | `text`                                                  |
+| DEFEND_PITCH                                                           | chat-style conversation vs AI persona          | `transcript`                                            |
 
 _\*STORY_CHOICE submits `objective` when beats are independent, `trace` when they branch — per that activity's rubric kind. The shell reads nothing; it posts what the renderer built._
 
@@ -568,16 +568,16 @@ Re-platforming to DOM UI is a large a11y win over a canvas-only game:
 | **F1 — Vertical slice**   | One real venue (Ice Cream Cart) end-to-end: exterior → enter → activity list → play a real C4-BEG activity (objective or metrics) → submit → celebration; player shell + first 3 renderers                                                                                                   | Complete a real registry activity in-world; server result lands in HUD                                                   |
 | **F2 — Economy UX**       | The Shop, customization (4 slots live on the character), Trophy Hall, wallet panel; remaining renderers to 13/13 — **gated on the additive economy endpoints (§11.3) landing**                                                                                                               | Earn → buy → equip → see it on your character; badge toast from a real award                                             |
 | **F3 — Framework freeze** | All 11 venues placed with exteriors + manifests (overlay-mode minimum); `docs/BUILDING_GUIDE.md` + `CLAUDE.md` codegen recipes; ambient systems in budget; **framework API frozen**                                                                                                          | A dev (or Opus, against the recipes) adds a dummy building end-to-end touching only `buildings/<id>/` — the handoff test |
-| **F4 — Content & polish** | Venue interiors per scaffold, FTUE, audio, accessibility pass, perf pass, CORS tightening, launch checklist                                                                                                                                                                 | Public URL, real cohort plays a full session                                                                             |
+| **F4 — Content & polish** | Venue interiors per scaffold, FTUE, audio, accessibility pass, perf pass, CORS tightening, launch checklist                                                                                                                                                                                  | Public URL, real cohort plays a full session                                                                             |
 
 > **Update (2026-08-04).** F0–F2 shipped; F3 shipped in substance (the building registry, the lazy interior gate and the interior seam exist, with the Cafe and MAISON as tenants). F4 is now sequenced explicitly, because three developers are working in parallel against one backend:
 
-| Phase                        | Deliverable                                                                                                                                                | Demo gate                                                                                                            |
-| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| **F4a — Backend foundations** | [PRD_Backend_Missions](PRD_Backend_Missions.md) P0–P3: the scenario levels, the coin rescale, city + building session state, `POST /ai/followup`, three-beat scoring     | A mission scores across three beats and its 27 outcome cells reproduce [ADR-006 §10.2](ADR-006_Missions_AI_Followups_and_Session_State.md) exactly |
-| **F4b — Mission framework**   | `src/framework/mission/` (runner, tracker, speaker resolution), `src/framework/session/` (sync, beacon flush, local mirror), the transfer-beat client       | Walk the Cafe's mission 1 as an objective chain, keyboard-only, with the tracker top-left; kill the tab and resume     |
-| **F4c — Three buildings**     | Cafe CAF-1…CAF-6 · MAISON MAI-5…MAI-9 · MERIDIAN MER-0…MER-7                                                                                              | A complete nine-mission season in each, and the same seasons played with the generator disabled                        |
-| **F4d — Launch**              | FTUE, audio, a11y pass, perf pass, CORS tightening, the 54 registry rows seeded, the fresh-reader plausible-peers audits                                    | Public URL, real cohort plays a full session                                                                          |
+| Phase                         | Deliverable                                                                                                                                                          | Demo gate                                                                                                                                          |
+| ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **F4a — Backend foundations** | [PRD_Backend_Missions](PRD_Backend_Missions.md) P0–P3: the scenario levels, the coin rescale, city + building session state, `POST /ai/followup`, three-beat scoring | A mission scores across three beats and its 27 outcome cells reproduce [ADR-006 §10.2](ADR-006_Missions_AI_Followups_and_Session_State.md) exactly |
+| **F4b — Mission framework**   | `src/framework/mission/` (runner, tracker, speaker resolution), `src/framework/session/` (sync, beacon flush, local mirror), the transfer-beat client                | Walk the Cafe's mission 1 as an objective chain, keyboard-only, with the tracker top-left; kill the tab and resume                                 |
+| **F4c — Three buildings**     | Cafe CAF-1…CAF-6 · MAISON MAI-5…MAI-9 · MERIDIAN MER-0…MER-7                                                                                                         | A complete nine-mission season in each, and the same seasons played with the generator disabled                                                    |
+| **F4d — Launch**              | FTUE, audio, a11y pass, perf pass, CORS tightening, the 54 registry rows seeded, the fresh-reader plausible-peers audits                                             | Public URL, real cohort plays a full session                                                                                                       |
 
 **The one hard cross-building dependency:** MERIDIAN's content phases cannot start until the Cafe proves the mission runner in F4b. It is stated in [MERIDIAN §18.1](PRD_Building_MERIDIAN.md) rather than discovered in week three.
 
@@ -609,29 +609,29 @@ Proposed shapes are a starting point; the backend team owns the final contract.
 
 > **Update (2026-08-04).** BE-1…BE-4 and BE-6 are **shipped**. BE-5, BE-8 and BE-9 are superseded by the mission work and renumbered below. **The full specification of BE-13…BE-20 lives in [PRD_Backend_Missions.md](PRD_Backend_Missions.md)**, which is single-owner by design; this table is the index.
 
-| ID        | Issue                                                          | Priority | Blocks                         | Type               |
-| --------- | -------------------------------------------------------------- | -------- | ------------------------------ | ------------------ |
-| ~~BE-1~~  | Coin economy: `coinsEarned`/`coinBalance` on submit + wallet   | —        | **shipped**                    | schema + endpoints |
-| ~~BE-2~~  | `GET /api/v1/me` bootstrap + idempotent starter grants         | —        | **shipped**                    | endpoint           |
-| ~~BE-3~~  | Shop: `GET /shop/items` · `POST /shop/purchase`                | —        | **shipped**                    | endpoints + tables |
-| ~~BE-4~~  | Inventory + avatar: `GET /inventory` · `GET/PUT /avatar/*`     | —        | **shipped**                    | endpoints + tables |
-| ~~BE-5~~  | Un-stale `api/openapi.yaml`                                    | —        | superseded by **BE-20**        | contract           |
-| ~~BE-6~~  | Standardize the error envelope                                 | —        | **shipped**                    | consistency        |
-| **BE-7**  | Tighten CORS from `*` to an allow-list                         | P1       | F4 launch                      | config             |
-| ~~BE-8~~  | `PUT/GET /api/v1/city/state`                                   | —        | superseded by **BE-15**        | endpoint           |
-| ~~BE-9~~  | `POST /api/v1/ai/dialogue`                                     | —        | superseded by **BE-17**        | endpoint           |
-| **BE-10** | `GET /api/v1/leaderboard?batch=`                               | P3       | post-launch                    | endpoint           |
-| **BE-11** | `POST /api/v1/daily/claim` (reward + streak)                   | P3       | post-launch                    | endpoint           |
-| **BE-12** | Seed the 54 scenario rows (C1–C9 × `SCA`/`SCB` × slots 01–03)  | P1       | every building being *real*    | content            |
-| **BE-13** | Add levels **`SCA`** + **`SCB`** + eighteen level badges       | **P0**   | both tracks entirely           | registry           |
-| **BE-14** | `coinsByProficiency` → `{1:5, 2:15, 3:25}`                     | **P0**   | the reward design              | content pack       |
-| **BE-15** | `PUT/GET /api/v1/city/state` — track, FTUE, last tile          | **P0**   | track persistence              | endpoint + table   |
-| **BE-16** | `PUT/GET/POST /api/v1/city/buildings/{id}/state` + beacon path | **P0**   | the season surviving the door  | endpoint + table   |
-| **BE-17** | `POST /api/v1/ai/followup` (+ `/{id}/commit`) — the transfer beat | **P0** | ADR-006 §7                    | endpoint + table   |
-| **BE-18** | Extended `trace` submit + the `aiBeat` rubric block            | **P0**   | three-beat scoring             | scoring            |
-| **BE-19** | `POST /api/v1/telemetry/mission`                               | P3       | nothing                        | endpoint           |
-| **BE-20** | Un-stale `api/openapi.yaml` — `DECISION_TREE`, `trace`, `SCA`, `SCB`, all of the above | P1 | type-safe drift detection | contract |
-| **BE-21** | Registry validator: accept a partially-populated level (default) vs `-strict` at launch | **P0** | **BE-12 — seeding anything at all** | tooling |
+| ID        | Issue                                                                                   | Priority | Blocks                              | Type               |
+| --------- | --------------------------------------------------------------------------------------- | -------- | ----------------------------------- | ------------------ |
+| ~~BE-1~~  | Coin economy: `coinsEarned`/`coinBalance` on submit + wallet                            | —        | **shipped**                         | schema + endpoints |
+| ~~BE-2~~  | `GET /api/v1/me` bootstrap + idempotent starter grants                                  | —        | **shipped**                         | endpoint           |
+| ~~BE-3~~  | Shop: `GET /shop/items` · `POST /shop/purchase`                                         | —        | **shipped**                         | endpoints + tables |
+| ~~BE-4~~  | Inventory + avatar: `GET /inventory` · `GET/PUT /avatar/*`                              | —        | **shipped**                         | endpoints + tables |
+| ~~BE-5~~  | Un-stale `api/openapi.yaml`                                                             | —        | superseded by **BE-20**             | contract           |
+| ~~BE-6~~  | Standardize the error envelope                                                          | —        | **shipped**                         | consistency        |
+| **BE-7**  | Tighten CORS from `*` to an allow-list                                                  | P1       | F4 launch                           | config             |
+| ~~BE-8~~  | `PUT/GET /api/v1/city/state`                                                            | —        | superseded by **BE-15**             | endpoint           |
+| ~~BE-9~~  | `POST /api/v1/ai/dialogue`                                                              | —        | superseded by **BE-17**             | endpoint           |
+| **BE-10** | `GET /api/v1/leaderboard?batch=`                                                        | P3       | post-launch                         | endpoint           |
+| **BE-11** | `POST /api/v1/daily/claim` (reward + streak)                                            | P3       | post-launch                         | endpoint           |
+| **BE-12** | Seed the 54 scenario rows (C1–C9 × `SCA`/`SCB` × slots 01–03)                           | P1       | every building being _real_         | content            |
+| **BE-13** | Add levels **`SCA`** + **`SCB`** + eighteen level badges                                | **P0**   | both tracks entirely                | registry           |
+| **BE-14** | `coinsByProficiency` → `{1:5, 2:15, 3:25}`                                              | **P0**   | the reward design                   | content pack       |
+| **BE-15** | `PUT/GET /api/v1/city/state` — track, FTUE, last tile                                   | **P0**   | track persistence                   | endpoint + table   |
+| **BE-16** | `PUT/GET/POST /api/v1/city/buildings/{id}/state` + beacon path                          | **P0**   | the season surviving the door       | endpoint + table   |
+| **BE-17** | `POST /api/v1/ai/followup` (+ `/{id}/commit`) — the transfer beat                       | **P0**   | ADR-006 §7                          | endpoint + table   |
+| **BE-18** | Extended `trace` submit + the `aiBeat` rubric block                                     | **P0**   | three-beat scoring                  | scoring            |
+| **BE-19** | `POST /api/v1/telemetry/mission`                                                        | P3       | nothing                             | endpoint           |
+| **BE-20** | Un-stale `api/openapi.yaml` — `DECISION_TREE`, `trace`, `SCA`, `SCB`, all of the above  | P1       | type-safe drift detection           | contract           |
+| **BE-21** | Registry validator: accept a partially-populated level (default) vs `-strict` at launch | **P0**   | **BE-12 — seeding anything at all** | tooling            |
 
 > **⚠ Two blockers sit in front of the P0 work.** The registry validator rejects a partially-populated level, and the scenario activity ids collide with already-seeded content that has user progress against it. See [PRD_Backend_Missions §6.4–6.5](PRD_Backend_Missions.md) and [ADR-005 §10.6.1](ADR-005_Interior_Framework.md). The second one needs KK, not an engineer.
 

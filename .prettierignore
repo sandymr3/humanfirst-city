@@ -5,4 +5,7 @@ playwright-report
 test-results
 package-lock.json
 reference
+
+# Vendored, not ours: pinned by skills-lock.json and replaced wholesale on update.
+.agents/skills
 public/assets

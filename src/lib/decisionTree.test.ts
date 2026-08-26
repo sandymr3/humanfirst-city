@@ -140,9 +140,7 @@ describe("presentation order", () => {
   });
 
   it("varies by beat, so a pattern learned at the seed does not survive", () => {
-    const perNode = new Set(
-      [[], ["a"], ["b"], ["c"]].map((p) => keys("C7-SCA-03", p as string[])),
-    );
+    const perNode = new Set([[], ["a"], ["b"], ["c"]].map((p) => keys("C7-SCA-03", p as string[])));
     expect(perNode.size).toBeGreaterThan(1);
   });
 

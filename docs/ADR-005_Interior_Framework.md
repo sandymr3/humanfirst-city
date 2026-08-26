@@ -4,7 +4,7 @@ _The City · Interior Framework · **v2.0** · 2026-08-04 · **Status: Accepted 
 
 _Extends **ADR-004** (§3 of [PRD_City_Frontend.md](PRD_City_Frontend.md)). **Amended by [ADR-006](ADR-006_Missions_AI_Followups_and_Session_State.md)**, which owns the mission spine, the third decision beat, the combined scoring arithmetic and the AI content policy. Companion documents: the three launch building PRDs — [Café](PRD_Building_Cafe.md) · [MAISON](PRD_Building_MAISON.md) · [MERIDIAN](PRD_Building_MERIDIAN.md) — and the backend contract at [PRD_Backend_Missions.md](PRD_Backend_Missions.md)._
 
-> **Read this first if you are building a venue.** This document is the contract every one of the twelve buildings inherits. A building PRD tells you what its world *is*; this tells you what the world *runs on*, how a decision is scored, and what you are forbidden from showing the learner. If you find yourself wanting to change something in here, that is a framework issue and a maintainer PR — never a building-local fork.
+> **Read this first if you are building a venue.** This document is the contract every one of the twelve buildings inherits. A building PRD tells you what its world _is_; this tells you what the world _runs on_, how a decision is scored, and what you are forbidden from showing the learner. If you find yourself wanting to change something in here, that is a framework issue and a maintainer PR — never a building-local fork.
 
 ---
 
@@ -14,20 +14,19 @@ _Extends **ADR-004** (§3 of [PRD_City_Frontend.md](PRD_City_Frontend.md)). **Am
 
 **Two buildings were then built.** The Café and MAISON both ship, walkable, with 311 passing tests — and they are **2.5D isometric PixiJS rooms**, not first-person 3D. That was not a shortcut; it was arrived at by building it, and it is this ADR's own **Option B** (§4). v2.0 records what is true rather than what was proposed, because a document that says "R3F" while `src/buildings/` ships Pixi actively misleads three developers.
 
-| § | v1.0 | v2.0 |
-|---|---|---|
-| Title / §1 / §5 | First-person R3F, pointer-lock, 1.65 m eye height | **2.5D isometric Pixi sub-scene** borrowing the city's existing `Application` |
-| §8 | Zod `InteriorScene` schema, GLB bundle, collision boxes in metres | **The shipped data model** — `room.ts` cell grid, `props.ts`, `scene.ts`, `cast.ts`, `dressing.ts`, `guide.ts`, `<X>Canvas.tsx` |
-| §9 | Two-beat decision tree | **Three beats** — see [ADR-006 §7](ADR-006_Missions_AI_Followups_and_Session_State.md) |
-| §10 | `0.6 × seed + 0.4 × follow` | **Composed with a third beat at 0.7 / 0.3** — see [ADR-006 §10](ADR-006_Missions_AI_Followups_and_Session_State.md). **Every authored `terminals` table is unchanged.** |
-| §14 | Comfort settings for a first-person camera | Motion sickness is no longer a surface; the guided-navigation and DOM-first rules survive intact and are now shipped |
-| §15 | Triangles, draw calls, GLB size, tab memory | **Sprite counts, baked textures, bake time, draw calls** |
-| §16 | CC0 GLB kits, meshopt, KTX2, a shared 3D rig | **Procedural vector props baked to textures**, with `PROP_SPRITE` as the seam where real art takes over |
-| §17 | Eight framework gaps G1–G8 | Six closed by the shipped code; the open ones are the mission runner, session sync and the transfer-beat client |
-| §19 | AI may vary ambient chatter only | **Superseded by [ADR-006 §12](ADR-006_Missions_AI_Followups_and_Session_State.md)** |
+| §               | v1.0                                                              | v2.0                                                                                                                                                                    |
+| --------------- | ----------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Title / §1 / §5 | First-person R3F, pointer-lock, 1.65 m eye height                 | **2.5D isometric Pixi sub-scene** borrowing the city's existing `Application`                                                                                           |
+| §8              | Zod `InteriorScene` schema, GLB bundle, collision boxes in metres | **The shipped data model** — `room.ts` cell grid, `props.ts`, `scene.ts`, `cast.ts`, `dressing.ts`, `guide.ts`, `<X>Canvas.tsx`                                         |
+| §9              | Two-beat decision tree                                            | **Three beats** — see [ADR-006 §7](ADR-006_Missions_AI_Followups_and_Session_State.md)                                                                                  |
+| §10             | `0.6 × seed + 0.4 × follow`                                       | **Composed with a third beat at 0.7 / 0.3** — see [ADR-006 §10](ADR-006_Missions_AI_Followups_and_Session_State.md). **Every authored `terminals` table is unchanged.** |
+| §14             | Comfort settings for a first-person camera                        | Motion sickness is no longer a surface; the guided-navigation and DOM-first rules survive intact and are now shipped                                                    |
+| §15             | Triangles, draw calls, GLB size, tab memory                       | **Sprite counts, baked textures, bake time, draw calls**                                                                                                                |
+| §16             | CC0 GLB kits, meshopt, KTX2, a shared 3D rig                      | **Procedural vector props baked to textures**, with `PROP_SPRITE` as the seam where real art takes over                                                                 |
+| §17             | Eight framework gaps G1–G8                                        | Six closed by the shipped code; the open ones are the mission runner, session sync and the transfer-beat client                                                         |
+| §19             | AI may vary ambient chatter only                                  | **Superseded by [ADR-006 §12](ADR-006_Missions_AI_Followups_and_Session_State.md)**                                                                                     |
 
 **Unchanged, and load-bearing:** §11 the silent-tier contract · §12 world state · §13 the end-of-journey report · §14's DOM-first accessibility and guided navigation · §10.5's twelve-slot registry binding · §10.6's `HARD`/`PRO` level mapping · §10.7's one-track-per-city rule · the folder-ownership model in §8.4.
-
 
 **Is first-person 3D dead?** No — §16.4's escape hatch stands, and a venue that genuinely needs it (Race Car Manufacturing's pit wall, the Stock Exchange floor) may still take it behind the same contract, the same budgets and a maintainer review. It is no longer the default, and it is no longer building #1's problem.
 
@@ -37,11 +36,11 @@ _Extends **ADR-004** (§3 of [PRD_City_Frontend.md](PRD_City_Frontend.md)). **Am
 
 The city stays exactly as it is: 2.5D isometric, PixiJS, a character walking a tycoon-style street grid. **Crossing a threshold changes the room, not the camera.** The door opens, the street fades, and you are standing inside your own café — same projection, same walk, same character, a completely different place. You walk to the counter. People are working, and they notice you. Someone brings you a problem. You decide. The room changes because of what you decided.
 
-The interior does **not** create a second renderer. Two `PIXI.Application`s alive in one page breaks Pixi v8 — the second renderer's mere existence corrupts the first one's batcher and the city stops drawing forever. So the world layer publishes its `Application` and an interior *borrows* it: hide the city's layers, add your own container, add a ticker callback, put it all back on the way out. That handover is `src/framework/building/interiorStage.ts`, and it is the single most important file in this ADR.
+The interior does **not** create a second renderer. Two `PIXI.Application`s alive in one page breaks Pixi v8 — the second renderer's mere existence corrupts the first one's batcher and the city stops drawing forever. So the world layer publishes its `Application` and an interior _borrows_ it: hide the city's layers, add your own container, add a ticker callback, put it all back on the way out. That handover is `src/framework/building/interiorStage.ts`, and it is the single most important file in this ADR.
 
 There is exactly **one** interior pattern, and every building ships **data** into it: a room grid, props, a cast, a mission spine, a script. Twelve worlds, one runtime, one performance budget, one accessibility layer.
 
-The nine competency decisions inside a building are staged as **missions** — things you go and do — not as a quiz. Every choice is written to read as a plausible peer of the others. The learner is never told which one was better. The tier is computed on the server, the coins tick quietly, and the only place the words *Developing*, *Strong* and *Advanced* ever appear is the report you are handed on your way out.
+The nine competency decisions inside a building are staged as **missions** — things you go and do — not as a quiz. Every choice is written to read as a plausible peer of the others. The learner is never told which one was better. The tier is computed on the server, the coins tick quietly, and the only place the words _Developing_, _Strong_ and _Advanced_ ever appear is the report you are handed on your way out.
 
 ```
         CITY                                    INTERIOR
@@ -96,29 +95,29 @@ If it can be data, then Claude can generate a first draft of a whole interior ag
 
 ### 3.1 Functional
 
-| ID | Requirement | v2.0 |
-|---|---|---|
-| **F1** | The player walks freely through the interior, as a character, in the same projection as the city. | *amended — was "in first person, at human eye height"* |
-| **F2** | Every place and every object is reachable by mouse **and** by an equally capable keyboard-only path. | *amended — was "look around continuously (mouse look)"* |
-| **F3** | NPCs occupy the room, are animated, notice the player, and speak. | |
-| **F4** | A decision is delivered **diegetically** — a person brings it to you, or the room does — not as a context-free question. | |
-| **F5** | The consequence of a decision is delivered as dialogue **and** as a visible, persistent change in the world. | |
-| **F6** | Nine competency decisions per building, in two age tracks, each a **three-beat** tree: judgment, consistency, transfer. | *amended by [ADR-006 §7](ADR-006_Missions_AI_Followups_and_Session_State.md) — was two beats* |
-| **F7** | Scoring is server-authoritative and identical in shape to every other activity in the platform. | |
-| **F8** | The tier is never surfaced during play. It appears once, in an end-of-journey report. | |
-| **F9** | Exiting returns the player to the city, on the same street tile, with world state preserved **and pushed to the server**. | *extended by [ADR-006 §11](ADR-006_Missions_AI_Followups_and_Session_State.md)* |
-| **F10** | The nine decisions are structured as **ordered missions** with visible objectives, not as nine independent stations. | *new, [ADR-006 §6](ADR-006_Missions_AI_Followups_and_Session_State.md)* |
+| ID      | Requirement                                                                                                               | v2.0                                                                                          |
+| ------- | ------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| **F1**  | The player walks freely through the interior, as a character, in the same projection as the city.                         | _amended — was "in first person, at human eye height"_                                        |
+| **F2**  | Every place and every object is reachable by mouse **and** by an equally capable keyboard-only path.                      | _amended — was "look around continuously (mouse look)"_                                       |
+| **F3**  | NPCs occupy the room, are animated, notice the player, and speak.                                                         |                                                                                               |
+| **F4**  | A decision is delivered **diegetically** — a person brings it to you, or the room does — not as a context-free question.  |                                                                                               |
+| **F5**  | The consequence of a decision is delivered as dialogue **and** as a visible, persistent change in the world.              |                                                                                               |
+| **F6**  | Nine competency decisions per building, in two age tracks, each a **three-beat** tree: judgment, consistency, transfer.   | _amended by [ADR-006 §7](ADR-006_Missions_AI_Followups_and_Session_State.md) — was two beats_ |
+| **F7**  | Scoring is server-authoritative and identical in shape to every other activity in the platform.                           |                                                                                               |
+| **F8**  | The tier is never surfaced during play. It appears once, in an end-of-journey report.                                     |                                                                                               |
+| **F9**  | Exiting returns the player to the city, on the same street tile, with world state preserved **and pushed to the server**. | _extended by [ADR-006 §11](ADR-006_Missions_AI_Followups_and_Session_State.md)_               |
+| **F10** | The nine decisions are structured as **ordered missions** with visible objectives, not as nine independent stations.      | _new, [ADR-006 §6](ADR-006_Missions_AI_Followups_and_Session_State.md)_                       |
 
 ### 3.2 Non-functional
 
-| ID | Requirement | Source |
-|---|---|---|
-| **N1** | ≥ 30 fps floor (p95) on the reference profile: 2019 i5 laptop, integrated GPU, Chrome. 60 fps target where hardware allows. | master PRD §12.3 |
-| **N2** | ≤ 1.5 MB added to the bundle per building (the interior is code + baked art, not a model bundle); the city shell stays ≤ 5 MB gzipped. | *amended — was 6 MB of GLB* |
-| **N3** | Venue enter/exit ≤ 1.0 s with the module prefetched on approach. | master PRD §12.3 |
-| **N4** | Keyboard-only playable end to end. Screen-reader navigable. `prefers-reduced-motion` honoured. | master PRD §16 |
-| **N5** | ~~Motion comfort~~ **Withdrawn.** There is no first-person camera, so there is no motion-sickness surface. The comfort *settings* that survive (reduced motion, no camera shake) fold into N4. | *amended* |
-| **N6** | ≤ 600 MB tab memory, with no growth across five enter/exit cycles. | master PRD §12.3 |
+| ID     | Requirement                                                                                                                                                                                    | Source                      |
+| ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------- |
+| **N1** | ≥ 30 fps floor (p95) on the reference profile: 2019 i5 laptop, integrated GPU, Chrome. 60 fps target where hardware allows.                                                                    | master PRD §12.3            |
+| **N2** | ≤ 1.5 MB added to the bundle per building (the interior is code + baked art, not a model bundle); the city shell stays ≤ 5 MB gzipped.                                                         | _amended — was 6 MB of GLB_ |
+| **N3** | Venue enter/exit ≤ 1.0 s with the module prefetched on approach.                                                                                                                               | master PRD §12.3            |
+| **N4** | Keyboard-only playable end to end. Screen-reader navigable. `prefers-reduced-motion` honoured.                                                                                                 | master PRD §16              |
+| **N5** | ~~Motion comfort~~ **Withdrawn.** There is no first-person camera, so there is no motion-sickness surface. The comfort _settings_ that survive (reduced motion, no camera shake) fold into N4. | _amended_                   |
+| **N6** | ≤ 600 MB tab memory, with no growth across five enter/exit cycles.                                                                                                                             | master PRD §12.3            |
 
 ### 3.3 Constraints
 
@@ -137,13 +136,13 @@ If it can be data, then Claude can generate a first draft of a whole interior ag
 
 A single `src/framework/interior/` module built on React-Three-Fiber. It owns the `<Canvas>`, the camera, the player controller, collision, the NPC system, the dialogue layer, the scenario runner and the accessibility layer. A building supplies a Zod-validated `InteriorScene` object, a cast file, a script file and a GLB asset bundle.
 
-| Dimension | Assessment |
-|---|---|
-| Complexity | Med — real-time 3D is genuinely harder than sprites, but the hard parts are written once |
-| Cost | Low per building after the first — the twelfth building costs a fraction of the first |
-| Scalability (content) | Excellent — an interior is typed data, so it is AI-generatable and schema-validated |
-| Team familiarity | Med-High — JS team is strong; R3F is declarative React; Claude is fluent in R3F |
-| Perf risk | Concentrated in one place, where it can be measured and defended |
+| Dimension             | Assessment                                                                               |
+| --------------------- | ---------------------------------------------------------------------------------------- |
+| Complexity            | Med — real-time 3D is genuinely harder than sprites, but the hard parts are written once |
+| Cost                  | Low per building after the first — the twelfth building costs a fraction of the first    |
+| Scalability (content) | Excellent — an interior is typed data, so it is AI-generatable and schema-validated      |
+| Team familiarity      | Med-High — JS team is strong; R3F is declarative React; Claude is fluent in R3F          |
+| Perf risk             | Concentrated in one place, where it can be measured and defended                         |
 
 **Pros:** one perf budget, one a11y implementation, one dialogue system, one scoring path. A building PR is data plus art. The schema is the review surface. The framework/building boundary the master PRD already established (§7.3) survives intact and gets stronger.
 
@@ -151,18 +150,18 @@ A single `src/framework/interior/` module built on React-Three-Fiber. It owns th
 
 ### Option B — 2D presence in Pixi ✅ _(v2.0's choice, in a form v1.0 did not consider)_
 
-v1.0 evaluated this as *first person as a set of painted viewpoint plates with hotspot navigation* — the classic point-and-click adventure grammar — and rejected it on **F1** ("the player hops between fixed viewpoints rather than walking") and on the art budget.
+v1.0 evaluated this as _first person as a set of painted viewpoint plates with hotspot navigation_ — the classic point-and-click adventure grammar — and rejected it on **F1** ("the player hops between fixed viewpoints rather than walking") and on the art budget.
 
 **Both objections dissolve in the form that was actually built.** The room is not a set of plates; it is **the city's own isometric grid, indoors**, so the player walks continuously over a real walkable map and F1 is satisfied by amending "first person" to "as a character". And the art is not bespoke illustration; it is **procedural vector props baked to textures** (§16.1), so there is no illustrator bottleneck at all. The v1.0 analysis below is of the plate-based version and is left for the record.
 
-| Dimension | Assessment |
-|---|---|
-| Complexity | Low — no new renderer, reuses the existing Pixi application |
-| Cost | Lowest per building **if** art exists; art becomes the bottleneck |
+| Dimension   | Assessment                                                                     |
+| ----------- | ------------------------------------------------------------------------------ |
+| Complexity  | Low — no new renderer, reuses the existing Pixi application                    |
+| Cost        | Lowest per building **if** art exists; art becomes the bottleneck              |
 | Scalability | Good technically; poor artistically — each viewpoint is a bespoke illustration |
-| Perf risk | Near zero |
+| Perf risk   | Near zero                                                                      |
 
-**Pros:** ships fastest, runs anywhere, zero motion-sickness surface, and honestly the most *beautiful* result per hour of effort if you have an illustrator.
+**Pros:** ships fastest, runs anywhere, zero motion-sickness surface, and honestly the most _beautiful_ result per hour of effort if you have an illustrator.
 
 **Cons:** the player hops between fixed viewpoints rather than walking, which fails **F1** as written. Every new viewpoint is a new illustration, so "lively" scales with an art budget we do not have (master PRD §14.1 restricts us to free packs, and free 2D interior plates in a consistent style essentially do not exist). Ambient life must be animated by hand per plate.
 
@@ -170,30 +169,30 @@ v1.0 evaluated this as *first person as a set of painted viewpoint plates with h
 
 Each building team picks whatever suits its venue: the Café in 2D, Race Car Manufacturing in 3D, the Stock Exchange as a data-viz surface.
 
-| Dimension | Assessment |
-|---|---|
-| Complexity | High in aggregate — twelve runtimes to keep alive |
-| Cost | Highest — nothing amortises |
-| Scalability | Poor — no shared dialogue, a11y, comfort or scoring layer |
-| Team familiarity | Irrelevant; the problem is coordination, not skill |
+| Dimension        | Assessment                                                |
+| ---------------- | --------------------------------------------------------- |
+| Complexity       | High in aggregate — twelve runtimes to keep alive         |
+| Cost             | Highest — nothing amortises                               |
+| Scalability      | Poor — no shared dialogue, a11y, comfort or scoring layer |
+| Team familiarity | Irrelevant; the problem is coordination, not skill        |
 
 **Pros:** the ceiling per venue is the highest. A venue that genuinely needs something exotic gets it.
 
-**Cons:** twelve accessibility implementations is twelve chances to ship an inaccessible one. Twelve scoring integrations is twelve chances to leak the tier. The framework/building contract dissolves. **Rejected as a baseline** — but note that Option A explicitly *preserves* this as a per-venue escape hatch (§16.4), so nothing is lost except the default.
+**Cons:** twelve accessibility implementations is twelve chances to ship an inaccessible one. Twelve scoring integrations is twelve chances to leak the tier. The framework/building contract dissolves. **Rejected as a baseline** — but note that Option A explicitly _preserves_ this as a per-venue escape hatch (§16.4), so nothing is lost except the default.
 
 ### Option D — Shared R3F engine plus a 2D low-spec tier
 
 Option A, plus an automatically-selected 2D station mode for weak GPUs and reduced-motion users.
 
-| Dimension | Assessment |
-|---|---|
+| Dimension  | Assessment                                                 |
+| ---------- | ---------------------------------------------------------- |
 | Complexity | High — two presentations of every interior to keep in sync |
-| Cost | ~1.5× Option A |
-| Reach | Best |
+| Cost       | ~1.5× Option A                                             |
+| Reach      | Best                                                       |
 
 **Pros:** widest device reach; the reduced-motion story is excellent.
 
-**Cons:** doubles the content surface for every building, and the second presentation is exactly the one nobody will keep updated. **Deferred, not rejected** — §14.5 specifies a *degraded mode within the same 3D scene* (fixed camera, guided teleport between stations, no free look) which gets most of the reach benefit for a fraction of the cost, and does not require a second art pipeline.
+**Cons:** doubles the content surface for every building, and the second presentation is exactly the one nobody will keep updated. **Deferred, not rejected** — §14.5 specifies a _degraded mode within the same 3D scene_ (fixed camera, guided teleport between stations, no free look) which gets most of the reach benefit for a fraction of the cost, and does not require a second art pipeline.
 
 ---
 
@@ -222,7 +221,7 @@ The real trade was **fidelity versus everything else**, and building it settled 
 
 **What Option B bought.** No second renderer, no GLB pipeline, no asset-licensing bottleneck on 3D interior kits (which barely exist at CC0), no motion-comfort surface, no new perf profile to defend, and continuity across the threshold that first person could never have had — you walk out of the room as the same character, at the same angle, onto the same street. The Café's `cafe.jpg` reference happened to have a diamond-checkered floor, which translates to an iso grid one-for-one; that is a small thing, but the whole approach kept producing small things like it.
 
-**What Option B cost.** The room is a room you look *at*, not a room you are *in*. Presence is weaker. F1's "you are standing there" is now "you are walking there", and that is a genuine loss against the original brief. The mitigation is the one the shipped buildings actually use: **the room is small, the camera is close, and everything in it answers the mouse.** MAISON's review found NPCs were the one thing the mouse could not touch, and fixing that did more for presence than any amount of perspective would have.
+**What Option B cost.** The room is a room you look _at_, not a room you are _in_. Presence is weaker. F1's "you are standing there" is now "you are walking there", and that is a genuine loss against the original brief. The mitigation is the one the shipped buildings actually use: **the room is small, the camera is close, and everything in it answers the mouse.** MAISON's review found NPCs were the one thing the mouse could not touch, and fixing that did more for presence than any amount of perspective would have.
 
 **What we did not trade away:** server-authoritative scoring, the additive-only backend contract, the folder-ownership model, DOM-first accessibility, the silent-tier contract, or the city itself.
 
@@ -264,8 +263,8 @@ One cell grid, authored once, and **the single source of layout truth for everyt
 ```ts
 // src/buildings/<id>/room.ts  (building-owned)
 
-export const COLS = 12;              // x
-export const ROWS = 10;              // y — a one-cell wall ring encloses the play area
+export const COLS = 12; // x
+export const ROWS = 10; // y — a one-cell wall ring encloses the play area
 
 export type Cell = readonly [number, number];
 
@@ -277,7 +276,7 @@ export type CellKind = "wall" | "blocked" | "walkable" | "walkover" | "gate";
  *  from here — never from a second list. */
 export const FURNITURE: ReadonlyArray<{
   id: string;
-  kind: string;                       // "counter" | "table" | "rail" | "teller_window" …
+  kind: string; // "counter" | "table" | "rail" | "teller_window" …
   cells: Cell[];
   /** Drawn ON its host cell without blocking — a till, a pastry case, a pendant. */
   surface?: boolean;
@@ -285,26 +284,28 @@ export const FURNITURE: ReadonlyArray<{
   variants?: Record<string, string>;
   /** The prompt shown on approach, in the room's own words. */
   prompt?: string;
-}> = [ /* … */ ];
+}> = [/* … */];
 
 /** Named regions, ordered — FIRST MATCH WINS. Announced on entry; drive audio. */
 export const ZONES: ReadonlyArray<{
-  id: string; label: string; test: (c: Cell) => boolean;
-}> = [ /* … */ ];
+  id: string;
+  label: string;
+  test: (c: Cell) => boolean;
+}> = [/* … */];
 
 /** Where things happen. A station is where the PLAYER stands; a host NPC stands
  *  BESIDE it, never on it. */
 export const STATIONS: ReadonlyArray<{
   id: string;
-  label: string;                      // guided-nav + screen-reader label, e.g. "the till"
+  label: string; // guided-nav + screen-reader label, e.g. "the till"
   cell: Cell;
   facing: "N" | "E" | "S" | "W";
   /** What this station reads when nothing is live. No station is a dead end. */
   prompt: string;
-}> = [ /* … */ ];
+}> = [/* … */];
 
-export const SPAWN: Cell;             // where you arrive
-export const EXIT: Cell;              // the door threshold
+export const SPAWN: Cell; // where you arrive
+export const EXIT: Cell; // the door threshold
 ```
 
 ### 8.1 Authoring rules
@@ -366,19 +367,19 @@ Everything under `src/framework/` is maintainer-owned and CODEOWNERS-protected; 
 
 ### 8.4 What the framework provides vs. what a building owns
 
-| Framework provides — never reimplemented | Building owns |
-|---|---|
-| The `PIXI.Application` and the handover seam (§8.6) | The room's grid, dressing and tints |
-| The building registry, the lazy gate, the manifest schema | Its own manifest entry |
-| Guided navigation as a mechanism, live regions, focus management | Station labels and zone names (the words announced) |
-| The mission runner and the mission tracker (ADR-006 §6) | Its nine missions and their objectives |
-| Dialogue overlay, typography, choice affordances, timing | The dialogue content |
-| `DecisionTreeRenderer`, trace assembly, submit, error handling | The eighteen decision trees per building |
-| **The transfer beat** — fetch, render, fallback-transparency (ADR-006 §7) | Its persona cards and its 18-entry fallback bank |
-| Session sync, debounce, exit flush, local mirror (ADR-006 §11) | What goes in its own session blob |
-| Coin/badge celebration, HUD, audio buses | Ambient audio registration on the framework bus |
-| The end-of-journey report shell | The report's diegetic framing and per-competency copy |
-| **All** API access | Nothing — buildings never call `fetch` |
+| Framework provides — never reimplemented                                  | Building owns                                         |
+| ------------------------------------------------------------------------- | ----------------------------------------------------- |
+| The `PIXI.Application` and the handover seam (§8.6)                       | The room's grid, dressing and tints                   |
+| The building registry, the lazy gate, the manifest schema                 | Its own manifest entry                                |
+| Guided navigation as a mechanism, live regions, focus management          | Station labels and zone names (the words announced)   |
+| The mission runner and the mission tracker (ADR-006 §6)                   | Its nine missions and their objectives                |
+| Dialogue overlay, typography, choice affordances, timing                  | The dialogue content                                  |
+| `DecisionTreeRenderer`, trace assembly, submit, error handling            | The eighteen decision trees per building              |
+| **The transfer beat** — fetch, render, fallback-transparency (ADR-006 §7) | Its persona cards and its 18-entry fallback bank      |
+| Session sync, debounce, exit flush, local mirror (ADR-006 §11)            | What goes in its own session blob                     |
+| Coin/badge celebration, HUD, audio buses                                  | Ambient audio registration on the framework bus       |
+| The end-of-journey report shell                                           | The report's diegetic framing and per-competency copy |
+| **All** API access                                                        | Nothing — buildings never call `fetch`                |
 
 **Hard rule, inherited from master PRD §7.3 and extended:** a building PR touches only `src/buildings/<its-id>/`. `scripts/check_building_boundary.sh` enforces it in CI. Need something the framework does not provide? Framework issue → maintainer PR → every building benefits.
 
@@ -386,7 +387,7 @@ Everything under `src/framework/` is maintainer-owned and CODEOWNERS-protected; 
 
 The discipline ADR-004 set for the city applies unchanged inside a room:
 
-- **React does not re-render the scene graph every frame.** Player position, zone, nearest station, panel state and world state live in Zustand stores read inside the ticker callback. Component re-renders happen when *structure* changes (a prop variant swaps, an NPC leaves), not when *values* change.
+- **React does not re-render the scene graph every frame.** Player position, zone, nearest station, panel state and world state live in Zustand stores read inside the ticker callback. Component re-renders happen when _structure_ changes (a prop variant swaps, an NPC leaves), not when _values_ change.
 - **The DOM owns every word.** Dialogue, choices, prompts, the mission tracker, the report and all HUD are real DOM over the canvas. Nothing readable is ever drawn into a texture. This is what makes the a11y story possible at all.
 - **World → UI** is the typed event bus and store selectors. **UI → world** is store actions. There is no third path.
 - **One guarded path per action.** `actHere()` in the room store is the only way an act happens, whether it came from the `E` key, a click on a prop, or a guided-navigation arrival. Two paths means two sets of guards and one of them will be wrong.
@@ -399,10 +400,10 @@ The discipline ADR-004 set for the city applies unchanged inside a room:
 ```ts
 // src/framework/building/interiorStage.ts
 export interface InteriorHost {
-  app: Application;        // the city's. Borrow it; never destroy it.
-  stage: Container;        // root to add interior containers to
-  hideWorld: () => void;   // hide the city's own layers
-  showWorld: () => void;   // put the city back exactly as it was
+  app: Application; // the city's. Borrow it; never destroy it.
+  stage: Container; // root to add interior containers to
+  hideWorld: () => void; // hide the city's own layers
+  showWorld: () => void; // put the city back exactly as it was
 }
 ```
 
@@ -441,41 +442,41 @@ The nine competency decisions in a building are one typed object per track. The 
 ```ts
 // src/framework/interior/scenario/schema.ts
 const Choice = z.object({
-  id: z.string(),                  // node id fragment: "a" | "b" | "c"
-  text: z.string(),                // what the player picks — a plausible peer
+  id: z.string(), // node id fragment: "a" | "b" | "c"
+  text: z.string(), // what the player picks — a plausible peer
   /** What happens next, in the world and in the room's voice. */
   consequence: z.object({
-    line: z.string(),              // spoken/narrated — never a verdict
-    speaker: z.string().optional(),// npc id; omitted = narration
-    worldState: z.record(z.string()).optional(),  // visible change (§12)
-    beat: z.string().optional(),   // a one-off staged moment
+    line: z.string(), // spoken/narrated — never a verdict
+    speaker: z.string().optional(), // npc id; omitted = narration
+    worldState: z.record(z.string()).optional(), // visible change (§12)
+    beat: z.string().optional(), // a one-off staged moment
   }),
 });
 
 const FollowUp = z.object({
-  id: z.string(),                  // branch id, matches the seed choice id
-  prompt: z.string(),              // branch-specific — this is the point
+  id: z.string(), // branch id, matches the seed choice id
+  prompt: z.string(), // branch-specific — this is the point
   speaker: z.string().optional(),
   choices: z.array(Choice).length(3),
 });
 
 const DecisionTree = z.object({
-  activityId: z.string(),          // e.g. "C1-SCA-01"
-  competency: z.string(),          // "C1"
-  stationId: z.string(),           // where in the room it happens
+  activityId: z.string(), // e.g. "C1-SCA-01"
+  competency: z.string(), // "C1"
+  stationId: z.string(), // where in the room it happens
   seed: z.object({
     prompt: z.string(),
     speaker: z.string().optional(),
-    stage: z.string().optional(),  // a staged beat that sets it up
+    stage: z.string().optional(), // a staged beat that sets it up
     choices: z.array(Choice).length(3),
   }),
-  followUps: z.array(FollowUp).length(3),   // one per seed branch
+  followUps: z.array(FollowUp).length(3), // one per seed branch
 });
 
 export const ScenarioScriptSchema = z.object({
   buildingId: z.string(),
   track: z.enum(["SCA", "SCB"]),
-  intro: z.string(),               // the shared setup, spoken on first entry
+  intro: z.string(), // the shared setup, spoken on first entry
   trees: z.array(DecisionTree).length(9),
 });
 ```
@@ -496,7 +497,7 @@ seed ───┼─ choice b ─→ follow-up branch B ─┼─ a.b   ← auth
                                                             (ADR-006 §7)
 ```
 
-**Nine genuinely distinct leaf nodes.** The follow-up prompt is *branch-specific*: if you rushed the oat milk in, your follow-up is about the expiring almond cartons; if you tested with a counter card, your follow-up is about what the card actually told you. This is better writing, it makes the consistency check real, and — critically — it means the leaf node id alone identifies the authored outcome, so **the client never computes anything about quality**.
+**Nine genuinely distinct leaf nodes.** The follow-up prompt is _branch-specific_: if you rushed the oat milk in, your follow-up is about the expiring almond cartons; if you tested with a counter card, your follow-up is about what the card actually told you. This is better writing, it makes the consistency check real, and — critically — it means the leaf node id alone identifies the authored outcome, so **the client never computes anything about quality**.
 
 The transfer beat hangs off the leaf and is never part of the authored tree. Its options are not node ids, they are opaque per-attempt ids whose tiers exist only in the server's `ai_followups` row.
 
@@ -504,7 +505,7 @@ The transfer beat hangs off the leaf and is never part of the authored tree. Its
 
 Authored trees are written **weakest-first**, because that is the order the blueprints list them in and the readable order to author and review in. Shipped that way, the weak option would sit first at almost every node in a building and a player would learn the position in two beats without reading a word — a tier leak with no tier vocabulary in it at all.
 
-`presentationOrder(activityId, path, items)` in [`decisionTree.ts`](../src/lib/decisionTree.ts) shuffles the three options **per activity and per beat, deterministically** (seeded off the id, so replaying a decision is not a shell game). The choice *keys* are untouched — they are the trace tokens the server scores and they carry no position.
+`presentationOrder(activityId, path, items)` in [`decisionTree.ts`](../src/lib/decisionTree.ts) shuffles the three options **per activity and per beat, deterministically** (seeded off the id, so replaying a decision is not a shell game). The choice _keys_ are untouched — they are the trace tokens the server scores and they carry no position.
 
 This is structural rather than editorial on purpose: MAISON's CI parity check caught the whole building shipping its weak option first, across eighteen trees, because eighteen trees were authored in the doc's order. No author can reintroduce it now.
 
@@ -547,19 +548,19 @@ Autosave is now per-building rather than per-activity: `PUT /api/v1/city/buildin
 
 Each choice is written at one of three tiers. The tier lives **only** in the server rubric, never in client content.
 
-| Tier | Meaning | Value |
-|---|---|---|
-| **Developing** | A real, defensible move that trades the long game for the short one | 15 |
-| **Strong** | Sound judgment — controlled, proportionate, evidence-respecting | 60 |
-| **Advanced** | Sees the actual problem, not the presenting one; acts on it | 95 |
+| Tier           | Meaning                                                             | Value |
+| -------------- | ------------------------------------------------------------------- | ----- |
+| **Developing** | A real, defensible move that trades the long game for the short one | 15    |
+| **Strong**     | Sound judgment — controlled, proportionate, evidence-respecting     | 60    |
+| **Advanced**   | Sees the actual problem, not the presenting one; acts on it         | 95    |
 
 The seed decision is weighted **0.6** and the follow-up **0.4**. The seed is the harder call; the follow-up tests whether the judgment was real or lucky.
 
 | seed ↓ / follow → | Developing | Strong | Advanced |
-|---|---|---|---|
-| **Developing** | **15** | **33** | **47** |
-| **Strong** | **42** | **60** | **74** |
-| **Advanced** | **63** | **81** | **95** |
+| ----------------- | ---------- | ------ | -------- |
+| **Developing**    | **15**     | **33** | **47**   |
+| **Strong**        | **42**     | **60** | **74**   |
+| **Advanced**      | **63**     | **81** | **95**   |
 
 ### 10.2 Outcome → proficiency
 
@@ -592,17 +593,23 @@ Read the two tables together and the consistency check does exactly what the blu
   "rubric": {
     "kind": "trace",
     "terminals": {
-      "C1-SCA-01.a.a": 74, "C1-SCA-01.a.b": 42, "C1-SCA-01.a.c": 60,
-      "C1-SCA-01.b.a": 15, "C1-SCA-01.b.b": 47, "C1-SCA-01.b.c": 33,
-      "C1-SCA-01.c.a": 81, "C1-SCA-01.c.b": 95, "C1-SCA-01.c.c": 63
+      "C1-SCA-01.a.a": 74,
+      "C1-SCA-01.a.b": 42,
+      "C1-SCA-01.a.c": 60,
+      "C1-SCA-01.b.a": 15,
+      "C1-SCA-01.b.b": 47,
+      "C1-SCA-01.b.c": 33,
+      "C1-SCA-01.c.a": 81,
+      "C1-SCA-01.c.b": 95,
+      "C1-SCA-01.c.c": 63,
     },
     "scoreMap": [
       { "minOutcome": 74, "proficiency": 3 },
       { "minOutcome": 42, "proficiency": 2 },
-      { "minOutcome": 0,  "proficiency": 1 }
-    ]
+      { "minOutcome": 0, "proficiency": 1 },
+    ],
   },
-  "passCriteria": { "minProficiency": 2 }
+  "passCriteria": { "minProficiency": 2 },
 }
 ```
 
@@ -631,24 +638,24 @@ Awards remain server-computed, credited once per first pass, idempotent on re-su
 > **Verified against the live registry on 2026-08-07.** Two facts invalidate what §10.5 and §10.6 assert:
 >
 > 1. **`C9-HARD-01`, `-02` and `-03` are already taken.** C9 is fully seeded at all three levels, and `C9/HARD` holds twelve school-style activities occupying `orderIndex` 1–12:
->    `C9-HARD-01` *Chaos Simulator* (`MINI_SIM`) · `C9-HARD-02` *Grit vs Sunk Cost* (`CASE_STUDY`) · `C9-HARD-03` *The Setback Reflection* (`OPEN_TEXT_AI`) … through `C9-HARD-12`.
+>    `C9-HARD-01` _Chaos Simulator_ (`MINI_SIM`) · `C9-HARD-02` _Grit vs Sunk Cost_ (`CASE_STUDY`) · `C9-HARD-03` _The Setback Reflection_ (`OPEN_TEXT_AI`) … through `C9-HARD-12`.
 >    **All three launch buildings collide**, at their C9 slot, on day one.
 > 2. **There is user progress against those ids.** 108 rows in the dev database, including `C9-HARD-05` and `C9-HARD-07`. Renumbering or evicting them dangles real data.
 >
-> §10.6's original claim that *"`HARD` and `PRO` become entirely scenario content — twelve buildings × one activity each fills both grids exactly"* was therefore **false as written**, and is withdrawn. It would have held for a level that did not exist yet. It was never true of `HARD`.
+> §10.6's original claim that _"`HARD` and `PRO` become entirely scenario content — twelve buildings × one activity each fills both grids exactly"_ was therefore **false as written**, and is withdrawn. It would have held for a level that did not exist yet. It was never true of `HARD`.
 >
 > **Resolved in §10.6.1: Option C, adopted 2026-08-07.** Scenario activities live at `SCA` and `SCB`; `HARD` is untouched. The ids in each building PRD §10.1 are final. A product-owner summary of the decision, with no engineering detail, is [DECISION_scenario_level_namespace.md](DECISION_scenario_level_namespace.md).
 
 `validate_registry` enforces, per competency-level: **exactly 12 activities, `orderIndex` 1..12, six subtopics × exactly 2 each**. There are exactly twelve buildings. These are the same twelve.
 
-| Slot | Building | Slot | Building |
-|---|---|---|---|
-| 01 | **Café** | 07 | Gym |
-| 02 | **MERIDIAN** (Bank) | 08 | Race Car Manufacturing |
-| 03 | **MAISON** (Fashion Brand) | 09 | Stock Exchange |
-| 04 | Ice Cream Cart | 10 | Social Media / Personal Brand |
-| 05 | School / College | 11 | Venture Capitalist |
-| 06 | AI IT Company | 12 | Custom (client) |
+| Slot | Building                   | Slot | Building                      |
+| ---- | -------------------------- | ---- | ----------------------------- |
+| 01   | **Café**                   | 07   | Gym                           |
+| 02   | **MERIDIAN** (Bank)        | 08   | Race Car Manufacturing        |
+| 03   | **MAISON** (Fashion Brand) | 09   | Stock Exchange                |
+| 04   | Ice Cream Cart             | 10   | Social Media / Personal Brand |
+| 05   | School / College           | 11   | Venture Capitalist            |
+| 06   | AI IT Company              | 12   | Custom (client)               |
 
 A building owns its slot number across all nine competency files, in both scenario levels:
 
@@ -658,18 +665,18 @@ MERIDIAN  → C1-SCA-02 … C9-SCA-02   and   C1-SCB-02 … C9-SCB-02
 MAISON    → C1-SCA-03 … C9-SCA-03   and   C1-SCB-03 … C9-SCB-03
 ```
 
-> **Provisional.** Under §10.6.1's recommended Option C these become `C1-SCA-01 … C9-SCA-01` and `C1-SCB-01 … C9-SCB-01`. The *slot numbers* (01 = Café, 02 = MERIDIAN, 03 = MAISON) are unaffected either way; only the level segment moves.
+> **Provisional.** Under §10.6.1's recommended Option C these become `C1-SCA-01 … C9-SCA-01` and `C1-SCB-01 … C9-SCB-01`. The _slot numbers_ (01 = Café, 02 = MERIDIAN, 03 = MAISON) are unaffected either way; only the level segment moves.
 
 Two building teams can never touch the same activity, even inside the same competency file. Twelve buildings × 9 competencies × 2 levels = **216 scenario activities** at full seed.
 
 **Subtopic allocation.** Each of the six subtopics must land exactly twice per competency-level. Two ways to get there:
 
-- **Authored (primary).** The building's author picks the subtopic that genuinely fits the decision, and a single **allocation table owned by the registry maintainer** balances the ×2 invariant across the twelve buildings. This is what the three launch PRDs do, and it produces markedly better fits than any formula — the Café's C4 decision *is* cash flow, MERIDIAN's C1 decision *is* root cause.
+- **Authored (primary).** The building's author picks the subtopic that genuinely fits the decision, and a single **allocation table owned by the registry maintainer** balances the ×2 invariant across the twelve buildings. This is what the three launch PRDs do, and it produces markedly better fits than any formula — the Café's C4 decision _is_ cash flow, MERIDIAN's C1 decision _is_ root cause.
 - **Rotation (fallback).** Where no strong fit exists, `subtopics[(k - 1 + i) mod 6]` for competency `Ci`, slot `k` gives a valid allocation by construction (twelve slots over six residues, twice each) without any coordination.
 
 The three launch buildings claim one subtopic per competency each, leaving exactly nine slots per competency for the remaining nine buildings — three subtopics needing one more each, three needing two. The running ledger lives in [PRD_Building_Cafe.md](PRD_Building_Cafe.md) §10.2 and is the maintainer's to keep current. `validate_registry` is the gate either way.
 
-Slot 12 (Custom) still seeds a real, generic scenario so the grid validates. Only its *interior skin and copy* are client-swapped; the registry rows always exist.
+Slot 12 (Custom) still seeds a real, generic scenario so the grid validates. Only its _interior skin and copy_ are client-swapped; the registry rows always exist.
 
 ### 10.6 Levels — the scenario levels `SCA` and `SCB`
 
@@ -682,7 +689,7 @@ Scenario buildings get **their own two levels**, and share none of the existing 
 
 Both are empty by construction, so the twelve-slot scheme of §10.5 fits exactly and collides with nothing. This is the additive backend change **BE-13** (§18).
 
-> **v1.0 chose `HARD` for Level A**, reasoning that the 17–21 band already existed and inventing a level for a one-year overlap would be waste. That reasoning was about *age bands*; the blocker turned out to be *capacity* (§10.5). §10.6.1 records how it was re-decided.
+> **v1.0 chose `HARD` for Level A**, reasoning that the 17–21 band already existed and inventing a level for a one-year overlap would be waste. That reasoning was about _age bands_; the blocker turned out to be _capacity_ (§10.5). §10.6.1 records how it was re-decided.
 
 ~~**Consequence, stated plainly:** `HARD` and `PRO` become **entirely scenario content** — twelve buildings × one activity each fills both grids exactly, with no room left over.~~
 
@@ -692,17 +699,17 @@ Both are empty by construction, so the twelve-slot scheme of §10.5 fits exactly
 
 ### 10.6.1 How the collision was resolved
 
-**The underlying problem is two content models sharing one namespace.** A level was designed to hold twelve *varied drills across six subtopics × 2*. The scenario model wants a level to hold twelve *buildings, one activity each*. Both cannot own `orderIndex` 1–12 of the same competency-level.
+**The underlying problem is two content models sharing one namespace.** A level was designed to hold twelve _varied drills across six subtopics × 2_. The scenario model wants a level to hold twelve _buildings, one activity each_. Both cannot own `orderIndex` 1–12 of the same competency-level.
 
-| | Option | Cost | Risk |
-|---|---|---|---|
-| **A** | **Evict `C9/HARD`** — move its twelve drills elsewhere to free the slots | There is nowhere to move them: `C9/BEGINNER` and `C9/MEDIUM` are both full at 12. They would have to be deleted | **High.** Destroys authored content and dangles progress rows |
-| **B** | **Raise the per-level cap** to 24 and partition `orderIndex` — 1–12 scenarios, 13–24 drills | Renumbering the drills changes their ids (`C9-HARD-01` → `C9-HARD-13`) | **High.** Ids are the progress key; every existing row for those activities dangles |
+|          | Option                                                                                                                                                                         | Cost                                                                                                                                                                | Risk                                                                                                                                                               |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **A**    | **Evict `C9/HARD`** — move its twelve drills elsewhere to free the slots                                                                                                       | There is nowhere to move them: `C9/BEGINNER` and `C9/MEDIUM` are both full at 12. They would have to be deleted                                                     | **High.** Destroys authored content and dangles progress rows                                                                                                      |
+| **B**    | **Raise the per-level cap** to 24 and partition `orderIndex` — 1–12 scenarios, 13–24 drills                                                                                    | Renumbering the drills changes their ids (`C9-HARD-01` → `C9-HARD-13`)                                                                                              | **High.** Ids are the progress key; every existing row for those activities dangles                                                                                |
 | **C** ✅ | **Give scenarios their own two levels.** Level A → **`SCA`**, Level B → **`SCB`** (`SCENARIO_A` / `SCENARIO_B`), both empty by construction. `HARD` keeps its drills untouched | Two new levels instead of one; 18 level badges instead of 9; the 54 ids in the three building PRDs are renamed `C1-SCA-01` → `C1-SCA-01`, `C1-SCB-01` → `C1-SCB-01` | **Near zero.** Those ids exist only in documents — **not one row is seeded against them** — so renaming is free, and no shipped content or progress row is touched |
 
 **Decision: Option C — adopted 2026-08-07.** Scenario buildings get their own two levels, `SCA` (16–21) and `SCB` (35–50). `HARD` keeps its drills and its progress rows and is untouched. The rationale memo is [DECISION_scenario_level_namespace.md](DECISION_scenario_level_namespace.md), kept for the record.
 
-The original argument for reusing `HARD` was that *"inventing a level for a one-year overlap would be waste"* — a judgment about age bands. That argument is now beside the point: the blocker is **capacity**, not age fit. And the cost comparison has inverted. Renaming ids that exist only in prose is free; renaming ids that exist in a progress table is a migration with a data-loss failure mode.
+The original argument for reusing `HARD` was that _"inventing a level for a one-year overlap would be waste"_ — a judgment about age bands. That argument is now beside the point: the blocker is **capacity**, not age fit. And the cost comparison has inverted. Renaming ids that exist only in prose is free; renaming ids that exist in a progress table is a migration with a data-loss failure mode.
 
 Option C also fixes something §10.6 got wrong on its own terms. Keeping `PRO` for Level B while inventing a level for Level A would leave the two tracks asymmetrically named for no reason a reader could reconstruct. `SCA` / `SCB` is symmetric, is obviously distinct from the drill levels at a glance, and makes "which grid is this?" answerable from an activity id alone.
 
@@ -710,16 +717,16 @@ Option C also fixes something §10.6 got wrong on its own terms. Keeping `PRO` f
 
 - **BE-13 grows.** Two levels in the allow-list, not one; `ageBand` `16-21` and `35-50`; **eighteen** `BADGE-C{n}-SCA` / `BADGE-C{n}-SCB` badges; two meta badges.
 - **Id convention** follows the existing abbreviations (`BEG`, `MED`, `HARD`): `C1-SCA-01` … `C9-SCA-12` and `C1-SCB-01` … `C9-SCB-12`.
-- **Every terminals table** in the three building PRDs is re-keyed. The *values* do not change — only the id prefix — so nothing in §10.1's arithmetic is re-derived.
+- **Every terminals table** in the three building PRDs is re-keyed. The _values_ do not change — only the id prefix — so nothing in §10.1's arithmetic is re-derived.
 - **`HARD` is left exactly as it is.** Anyone wanting to add a drill at `HARD` still can, which is now correct rather than "a feature".
 
-The level *names* are a detail and KK may change them; the *structure* — a separate namespace for scenarios — is the decision.
+The level _names_ are a detail and KK may change them; the _structure_ — a separate namespace for scenarios — is the decision.
 
 ### 10.7 Which track a player is on
 
 Identity carries no age. [`warroom/directory.go`](../../backend-academy/internal/warroom/directory.go) mirrors id, email, name, batch code and role — nothing more.
 
-So the track is a **one-time choice at the building threshold**, framed diegetically rather than as an age form. The Café asks it as *"Is this your first place, or have you done this before?"*; MAISON as *"Is MAISON the label you're starting, or the one you're taking over?"*; MERIDIAN as *"Are you stepping onto the floor, or into the corner office?"*. Once chosen, it persists for the whole city (all buildings share it) via `city/state` (BE-8) with a `localStorage` fallback until that endpoint lands.
+So the track is a **one-time choice at the building threshold**, framed diegetically rather than as an age form. The Café asks it as _"Is this your first place, or have you done this before?"_; MAISON as _"Is MAISON the label you're starting, or the one you're taking over?"_; MERIDIAN as _"Are you stepping onto the floor, or into the corner office?"_. Once chosen, it persists for the whole city (all buildings share it) via `city/state` (BE-8) with a `localStorage` fallback until that endpoint lands.
 
 The choice is changeable from settings, with a plain warning that the two tracks are separate progress. An admin/batch-code override is an open decision (§20).
 
@@ -733,25 +740,25 @@ This section is normative. It is the part of this ADR that is easiest to violate
 
 ### 11.1 What the learner never sees during a scenario
 
-| Forbidden | Why |
-|---|---|
-| The words *Developing*, *Strong*, *Advanced* | The tier vocabulary is report-only |
-| A proficiency number in any form (`2/3`, `P2`, stars, bars) | Numeric feedback re-frames a judgment call as a test |
-| "Passed" / "Not yet" / "Correct" / "Try again" | There is no pass state for a business decision |
-| A ✓ or ✗ affordance on a choice, before or after | Same |
-| Differing coin amounts *announced*, compared or explained | The coins scale; the commentary does not |
-| A "best choice was…" reveal | The consequence *is* the reveal |
-| Hints, or a hint button | A hint on a values question is a tier leak |
-| Any styling that ranks the three choices (order, colour, weight, icon) | Visual ranking is a text-free tier leak |
-| **A quality marker of any kind in the mission tracker** — a tick, a grade, a colour, a "well done" | The tracker is the most tempting place in the product to add a score. It is framework code precisely so a building cannot (ADR-006 §6.3) |
-| **Any indication that the third beat was generated rather than authored** — a spinner, a badge, a different typography, a "personalised for you" | A player who knows which beat is different treats it differently, and it stops measuring transfer (ADR-006 §7.4) |
-| **A win jingle or confetti on completing a decision** | A verdict delivered before the player has read the world their decision changed. MAISON shipped this and it was a §11 violation, caught in review |
+| Forbidden                                                                                                                                        | Why                                                                                                                                               |
+| ------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| The words _Developing_, _Strong_, _Advanced_                                                                                                     | The tier vocabulary is report-only                                                                                                                |
+| A proficiency number in any form (`2/3`, `P2`, stars, bars)                                                                                      | Numeric feedback re-frames a judgment call as a test                                                                                              |
+| "Passed" / "Not yet" / "Correct" / "Try again"                                                                                                   | There is no pass state for a business decision                                                                                                    |
+| A ✓ or ✗ affordance on a choice, before or after                                                                                                 | Same                                                                                                                                              |
+| Differing coin amounts _announced_, compared or explained                                                                                        | The coins scale; the commentary does not                                                                                                          |
+| A "best choice was…" reveal                                                                                                                      | The consequence _is_ the reveal                                                                                                                   |
+| Hints, or a hint button                                                                                                                          | A hint on a values question is a tier leak                                                                                                        |
+| Any styling that ranks the three choices (order, colour, weight, icon)                                                                           | Visual ranking is a text-free tier leak                                                                                                           |
+| **A quality marker of any kind in the mission tracker** — a tick, a grade, a colour, a "well done"                                               | The tracker is the most tempting place in the product to add a score. It is framework code precisely so a building cannot (ADR-006 §6.3)          |
+| **Any indication that the third beat was generated rather than authored** — a spinner, a badge, a different typography, a "personalised for you" | A player who knows which beat is different treats it differently, and it stops measuring transfer (ADR-006 §7.4)                                  |
+| **A win jingle or confetti on completing a decision**                                                                                            | A verdict delivered before the player has read the world their decision changed. MAISON shipped this and it was a §11 violation, caught in review |
 
 ### 12 characters is not a rule, but this is: **if a learner could screenshot the screen and identify the intended answer, we have failed.**
 
 ### 11.2 What the learner does see
 
-- **The consequence, in the room's voice.** Not "that was suboptimal" but *"the oat milk sells fine. Three weeks later you find two unopened almond cartons behind the fridge, past date."* The world reports facts; the learner draws the conclusion.
+- **The consequence, in the room's voice.** Not "that was suboptimal" but _"the oat milk sells fine. Three weeks later you find two unopened almond cartons behind the fridge, past date."_ The world reports facts; the learner draws the conclusion.
 - **A visible, persistent change.** The chalkboard is rewritten. A regular's table is empty. The rack has different price tags. §12.
 - **The coin counter moving.** Quietly — the existing `Celebration` coin-fly is reused, with no text, no fanfare tier, no sound escalation between 5 and 25. A player who earns 5 and a player who earns 25 see the same animation at different magnitudes and are told nothing.
 - **Their own choices, recalled.** The follow-up prompt refers to what they actually did. That is the strongest possible feedback and it costs nothing.
@@ -761,7 +768,7 @@ This section is normative. It is the part of this ADR that is easiest to violate
 v1.0 named two violations in the code. Both are fixed, and a third was found in play:
 
 1. **[`PlayerShell.tsx`](../src/activities/PlayerShell.tsx) `ResultView`** rendered `"Passed!" / "Not yet — keep going"`, `Proficiency {n}/3 · best {n}/3` and `+{n} coins`. → **Done.** The shell has a **presentation mode**: `"coached"` (correct for BEGINNER/MEDIUM skill drills) and `"scenario"`. Scenario mode renders no result view at all — the consequence already played in-world and the shell returns control to the room. Mode is derived from the activity's type (`DECISION_TREE` → `scenario`), never set per-building, so a building cannot opt out.
-2. **[`ActivityListPanel.tsx`](../src/activities/ActivityListPanel.tsx) `StatusChip`** rendered `★ {bestProficiency}/3`. → **Done.** In scenario venues the chip is a neutral state marker: *not yet · in progress · done*.
+2. **[`ActivityListPanel.tsx`](../src/activities/ActivityListPanel.tsx) `StatusChip`** rendered `★ {bestProficiency}/3`. → **Done.** In scenario venues the chip is a neutral state marker: _not yet · in progress · done_.
 3. **Completing a beat fired a win jingle and confetti** (found in MAISON's M6 review). → **Done.** A celebration on commit is a verdict delivered before the player has read the world their decision changed. The coin fly remains, silent and magnitude-proportional; nothing else does.
 
 The structural change is also shipped: the scenario renders **inside the room**, not inside a `Modal`. `PlayerShell` has a world-hosted path with no modal chrome — the dialogue layer is the presentation.
@@ -772,12 +779,13 @@ The structural change is also shipped: the scenario renders **inside the room**,
 
 For content authors, and for anyone reviewing a building PRD:
 
-1. **Every option must be something a competent person actually does.** The Developing option is not stupid; it is *short-termist, or fear-driven, or ego-protective* — the failure modes of real operators under real pressure. "Ignore it and hope" is not an option; "act fast on what customers said, because moving first wins in a small shop" is.
-2. **Equal length, equal specificity, equal confidence — and this one is measured, not judged.** The weak option must not be shorter, vaguer, or hedged. In practice the failure runs the other way: the *Advanced* option accretes clauses because it has more to justify, and within a few dozen decisions **"pick the longest option" becomes a winning strategy** — a tier leak with no tier vocabulary in it at all. The rule is therefore numeric:
+1. **Every option must be something a competent person actually does.** The Developing option is not stupid; it is _short-termist, or fear-driven, or ego-protective_ — the failure modes of real operators under real pressure. "Ignore it and hope" is not an option; "act fast on what customers said, because moving first wins in a small shop" is.
+2. **Equal length, equal specificity, equal confidence — and this one is measured, not judged.** The weak option must not be shorter, vaguer, or hedged. In practice the failure runs the other way: the _Advanced_ option accretes clauses because it has more to justify, and within a few dozen decisions **"pick the longest option" becomes a winning strategy** — a tier leak with no tier vocabulary in it at all. The rule is therefore numeric:
 
    > **Within any set of three choices, the longest and the shortest must differ by no more than 8 words.**
 
    This is trivially checkable by script over the content files and belongs in CI, not in a reviewer's judgment. The three launch PRDs were drafted, measured, found in breach (worst trio: 22 words of spread, with the Advanced option nearly three times the length of its peers), and rewritten to comply — see each PRD's §18.3. Assume any new building will fail this on the first pass; every building has so far.
+
 3. **Equal justification.** Every option carries its own reason. If only two options explain themselves, the third is marked.
 4. **No loaded verbs.** "Panic and overhaul everything" marks itself; "make a bold, fast pivot to counter them before you lose more" does not. Where a source blueprint uses a loaded phrasing, the PRD rewrites it and says so.
 5. **Shuffle the tier order per decision.** Never let position correlate with tier. The client letters `a/b/c` are shuffled independently for every activity.
@@ -791,15 +799,15 @@ Every building PRD carries a **plausible-peers audit** in its acceptance criteri
 
 **The machine pass** runs in CI over the building's `trees/` and `followups/` and catches what a reader will not:
 
-| Check | Rule |
-|---|---|
-| Choice-length parity | Longest − shortest ≤ **8 words** within every trio (§11.4 rule 2) |
-| Tier-vocabulary leak | No `Developing`/`Strong`/`Advanced` as capitalised labels, no proficiency numbers, no `n/3`, no pass/fail phrasing anywhere in shipped strings |
-| Verdict language | No "unfortunately", "you should have", "the better move", "correct", "well done" in any consequence |
-| Tier-map hygiene | Each node uses each tier exactly once; no letter permutation repeated within a building; terminals match the §10.1 arithmetic exactly |
-| Trace integrity | Every constructible path ends at a rubric terminal; every terminal is reachable |
-| **Fallback completeness** | Exactly 18 fallback transfer beats per building (9 competencies × 2 tracks), each passing every check above. Enforced by `validate_registry` — a missing one is a build failure (ADR-006 §8.5) |
-| **Objective reachability** | Every mission `go_to` target is a station in the building's guide list, so no objective needs a mouse (ADR-006 §13) |
+| Check                      | Rule                                                                                                                                                                                           |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Choice-length parity       | Longest − shortest ≤ **8 words** within every trio (§11.4 rule 2)                                                                                                                              |
+| Tier-vocabulary leak       | No `Developing`/`Strong`/`Advanced` as capitalised labels, no proficiency numbers, no `n/3`, no pass/fail phrasing anywhere in shipped strings                                                 |
+| Verdict language           | No "unfortunately", "you should have", "the better move", "correct", "well done" in any consequence                                                                                            |
+| Tier-map hygiene           | Each node uses each tier exactly once; no letter permutation repeated within a building; terminals match the §10.1 arithmetic exactly                                                          |
+| Trace integrity            | Every constructible path ends at a rubric terminal; every terminal is reachable                                                                                                                |
+| **Fallback completeness**  | Exactly 18 fallback transfer beats per building (9 competencies × 2 tracks), each passing every check above. Enforced by `validate_registry` — a missing one is a build failure (ADR-006 §8.5) |
+| **Objective reachability** | Every mission `go_to` target is a station in the building's guide list, so no objective needs a mouse (ADR-006 §13)                                                                            |
 
 **The same checks run server-side, per generation, on the transfer beat** — that is [ADR-006 §8.4](ADR-006_Missions_AI_Followups_and_Session_State.md)'s gate list, and it exists because a model will cheerfully write the good option longer, hedge the weak one, and add "unfortunately" to a consequence. Generated content that fails a gate never reaches a client. Gate-failure rate by gate id is a monitored metric.
 
@@ -820,7 +828,7 @@ type WorldState = Record<string, string>;
 
 - A decision's `consequence.worldState` merges into the map.
 - Props with a `variants` record swap their visible model/material when their key changes.
-- NPC idle animations, patrol routes and ambient lines are gated on world-state keys, so the room's *mood* shifts too.
+- NPC idle animations, patrol routes and ambient lines are gated on world-state keys, so the room's _mood_ shifts too.
 - Ambient beats can be gated the same way — a busier room fires its beats more often.
 
 **Constraints.** Keep it under about a dozen keys per building; every key must map to something the player can actually see; and it is presentation only — **it never influences scoring, which is entirely determined by the trace path.** That separation is what lets an offline submit report plainly that nothing scored it while the room still moves.
@@ -887,13 +895,13 @@ Two rules learned in review:
 
 > **v2.0.** The v1.0 table was written for a first-person camera and most of it no longer applies — there is no head bob, no FOV, no vignette and no snap turn in an isometric room. Withdrawn rows are struck; what remains is what still exists.
 
-| Setting | Default | Notes |
-|---|---|---|
-| ~~Head bob~~ · ~~Field of view~~ · ~~Vignette~~ · ~~Snap turn~~ | — | **Withdrawn** — no first-person camera |
-| Movement speed | Walking pace | No run. There is nowhere to hurry to |
-| Staged motion / screen effects | Off under reduced motion | Ambient beats that move the frame are suppressed |
-| Captions | **On** | All spoken lines are captioned regardless of audio state |
-| Mission tracker | Expanded | Collapsible with `M`; the state persists in the session blob |
+| Setting                                                         | Default                  | Notes                                                        |
+| --------------------------------------------------------------- | ------------------------ | ------------------------------------------------------------ |
+| ~~Head bob~~ · ~~Field of view~~ · ~~Vignette~~ · ~~Snap turn~~ | —                        | **Withdrawn** — no first-person camera                       |
+| Movement speed                                                  | Walking pace             | No run. There is nowhere to hurry to                         |
+| Staged motion / screen effects                                  | Off under reduced motion | Ambient beats that move the frame are suppressed             |
+| Captions                                                        | **On**                   | All spoken lines are captioned regardless of audio state     |
+| Mission tracker                                                 | Expanded                 | Collapsible with `M`; the state persists in the session blob |
 
 ### 14.5 Reduced motion
 
@@ -915,19 +923,19 @@ Type ≥ 16 px logical with ×1.25/×1.5 user scale; a dyslexia-friendly font op
 
 Acceptance numbers, measured on the reference profile (2019 i5, integrated GPU, Chrome), at every phase gate. **v2.0 restates these for 2D** — triangles, materials and GLB size are meaningless here.
 
-| Metric | Budget | Enforcement |
-|---|---|---|
-| Frame rate | **≥ 30 fps p95**, 60 target | Playwright + `requestAnimationFrame` sampling in CI on a fixed walk path |
-| Sprites on screen | ≤ 400 | Scene budget review + a dev-mode counter |
-| Draw calls | ≤ 60 | Static dressing baked into a small number of containers; repeated props share a texture |
-| Baked textures per room | ≤ 40 unique | Procedural props are baked **once at scene build**, never redrawn per frame (§16) |
-| Texture memory | ≤ 48 MB | `resolution: 2` on baked art; nothing upscaled past `MAX_UPSCALE` |
-| Scene build (bake) time | **≤ 400 ms**, behind the fade | Measured from mount to first interactive frame |
-| Interior chunk | **≤ 1.5 MB** added to the bundle | `vite build` size gate per building chunk; the city shell must not grow |
-| Animated characters | ≤ 6 on screen | Cast count is a scene-review item; crowds are posed static sprites |
-| Ticker callbacks | 1 per interior | The room owns one callback; nothing else may add one |
-| Enter / exit | ≤ 1.0 s each with prefetch | Measured from keypress to first interactive frame |
-| Tab memory | ≤ 600 MB steady, **no growth across five enter/exit cycles** | Disposal test in CI — every baked texture and container the room created is destroyed on exit |
+| Metric                  | Budget                                                       | Enforcement                                                                                   |
+| ----------------------- | ------------------------------------------------------------ | --------------------------------------------------------------------------------------------- |
+| Frame rate              | **≥ 30 fps p95**, 60 target                                  | Playwright + `requestAnimationFrame` sampling in CI on a fixed walk path                      |
+| Sprites on screen       | ≤ 400                                                        | Scene budget review + a dev-mode counter                                                      |
+| Draw calls              | ≤ 60                                                         | Static dressing baked into a small number of containers; repeated props share a texture       |
+| Baked textures per room | ≤ 40 unique                                                  | Procedural props are baked **once at scene build**, never redrawn per frame (§16)             |
+| Texture memory          | ≤ 48 MB                                                      | `resolution: 2` on baked art; nothing upscaled past `MAX_UPSCALE`                             |
+| Scene build (bake) time | **≤ 400 ms**, behind the fade                                | Measured from mount to first interactive frame                                                |
+| Interior chunk          | **≤ 1.5 MB** added to the bundle                             | `vite build` size gate per building chunk; the city shell must not grow                       |
+| Animated characters     | ≤ 6 on screen                                                | Cast count is a scene-review item; crowds are posed static sprites                            |
+| Ticker callbacks        | 1 per interior                                               | The room owns one callback; nothing else may add one                                          |
+| Enter / exit            | ≤ 1.0 s each with prefetch                                   | Measured from keypress to first interactive frame                                             |
+| Tab memory              | ≤ 600 MB steady, **no growth across five enter/exit cycles** | Disposal test in CI — every baked texture and container the room created is destroyed on exit |
 
 **Optimisation order when a budget is missed** (apply top-down, never skip): reduce ambient beats → reduce cast on screen → merge static dressing into fewer baked containers → lower bake resolution → reduce room size. **Never** reduce dialogue, choices, mission objectives or accessibility features to hit a frame budget.
 
@@ -957,7 +965,7 @@ export const PROP_SPRITE: Partial<Record<string, string>> = { /* kind → asset 
 
 Free with explicit commercial license only; CC0 strongly preferred. Every pack is logged in `public/assets/ASSETS_LICENSES.md` with source URL, author, license, commercial-use proof and date **before** any work builds on it (master PRD §14.1, existing CI gate).
 
-- **Kenney** (kenney.nl) — *Isometric Miniature*, Furniture Kit, Food Kit, Mini Market, Retro Urban Kit. CC0, and already the city's art lineage, which matters for continuity across the threshold.
+- **Kenney** (kenney.nl) — _Isometric Miniature_, Furniture Kit, Food Kit, Mini Market, Retro Urban Kit. CC0, and already the city's art lineage, which matters for continuity across the threshold.
 - **Poly Pizza** and similar aggregators — licenses vary per asset (much of it CC-BY, requiring attribution). Per-asset verification, never bulk import.
 
 ### 16.3 Conformance — the free-pack trap, again
@@ -988,20 +996,20 @@ A venue that genuinely needs something this pattern cannot express — including
 
 v1.0 listed eight blockers. Six are closed by the shipped Café and MAISON work; the remainder, plus the new ones ADR-006 introduces, are below.
 
-| # | Gap | Status |
-|---|---|---|
-| **G1** | **Manifests unused** — `cityMap.ts` was the de facto registry | **Closed.** `framework/building/registry.ts` maps venue id → manifest; `cityMap` still owns tile placement and the manifest's `exterior` block mirrors it documentarily. Keeping the two in step is a review item |
-| **G2** | **One venue = one competency** | **Closed.** `hostedActivities` drives the list and the season fans out eighteen parallel registry queries via TanStack Query. One missing row must not blank the board |
-| **G3** | **No `trace` renderer** | **Closed.** `DecisionTreeRenderer` + `src/lib/decisionTree.ts`, rendering in the room rather than in a `Modal` |
-| **G4** | **Result presentation leaks the tier** | **Closed.** `coached` / `scenario` presentation mode, derived from activity type. See §11.3 |
-| **G5** | **No R3F dependency** | **Withdrawn.** No longer needed — §5 |
-| **G6** | **No Radix / Motion / dnd-kit** | **Open, downgraded.** The dialogue layer's focus management is hand-rolled and currently correct. Radix remains the recommendation if a second focus-trapping surface appears; it is no longer a blocker |
-| **G7** | **`city/state` not live** | **Open → specified.** [PRD_Backend_Missions §4.1–4.2](PRD_Backend_Missions.md) (BE-15/BE-16). `localStorage` mirror stays behind the same interface |
-| **G8** | **Two WebGL contexts** | **Closed, and it was worse than described** — two Pixi `Application`s corrupt the first's batcher outright. `interiorStage.ts` is the fix; §8.6 the protocol |
-| **G9** | **No mission runner or tracker** | **Open.** [ADR-006 §6](ADR-006_Missions_AI_Followups_and_Session_State.md). `src/framework/mission/`. Blocks every building's mission work — build it in the Café and share it |
-| **G10** | **No session sync layer** | **Open.** [ADR-006 §11](ADR-006_Missions_AI_Followups_and_Session_State.md). `src/framework/session/`, including the `sendBeacon` exit flush |
-| **G11** | **No transfer-beat client** | **Open.** [ADR-006 §7](ADR-006_Missions_AI_Followups_and_Session_State.md). `src/framework/interior/scenario/transfer.ts`. Must be presentationally identical to the authored beats and must never show a spinner |
-| **G12** | **Interior teardown is not fail-safe.** A bake that throws leaves the city hidden and frozen | **Open.** Arm `detach` before the async build starts and `.catch` the build — §8.6. Listed as a Café debt in [MAISON §19.3](PRD_Building_MAISON.md) |
+| #       | Gap                                                                                          | Status                                                                                                                                                                                                            |
+| ------- | -------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **G1**  | **Manifests unused** — `cityMap.ts` was the de facto registry                                | **Closed.** `framework/building/registry.ts` maps venue id → manifest; `cityMap` still owns tile placement and the manifest's `exterior` block mirrors it documentarily. Keeping the two in step is a review item |
+| **G2**  | **One venue = one competency**                                                               | **Closed.** `hostedActivities` drives the list and the season fans out eighteen parallel registry queries via TanStack Query. One missing row must not blank the board                                            |
+| **G3**  | **No `trace` renderer**                                                                      | **Closed.** `DecisionTreeRenderer` + `src/lib/decisionTree.ts`, rendering in the room rather than in a `Modal`                                                                                                    |
+| **G4**  | **Result presentation leaks the tier**                                                       | **Closed.** `coached` / `scenario` presentation mode, derived from activity type. See §11.3                                                                                                                       |
+| **G5**  | **No R3F dependency**                                                                        | **Withdrawn.** No longer needed — §5                                                                                                                                                                              |
+| **G6**  | **No Radix / Motion / dnd-kit**                                                              | **Open, downgraded.** The dialogue layer's focus management is hand-rolled and currently correct. Radix remains the recommendation if a second focus-trapping surface appears; it is no longer a blocker          |
+| **G7**  | **`city/state` not live**                                                                    | **Open → specified.** [PRD_Backend_Missions §4.1–4.2](PRD_Backend_Missions.md) (BE-15/BE-16). `localStorage` mirror stays behind the same interface                                                               |
+| **G8**  | **Two WebGL contexts**                                                                       | **Closed, and it was worse than described** — two Pixi `Application`s corrupt the first's batcher outright. `interiorStage.ts` is the fix; §8.6 the protocol                                                      |
+| **G9**  | **No mission runner or tracker**                                                             | **Open.** [ADR-006 §6](ADR-006_Missions_AI_Followups_and_Session_State.md). `src/framework/mission/`. Blocks every building's mission work — build it in the Café and share it                                    |
+| **G10** | **No session sync layer**                                                                    | **Open.** [ADR-006 §11](ADR-006_Missions_AI_Followups_and_Session_State.md). `src/framework/session/`, including the `sendBeacon` exit flush                                                                      |
+| **G11** | **No transfer-beat client**                                                                  | **Open.** [ADR-006 §7](ADR-006_Missions_AI_Followups_and_Session_State.md). `src/framework/interior/scenario/transfer.ts`. Must be presentationally identical to the authored beats and must never show a spinner |
+| **G12** | **Interior teardown is not fail-safe.** A bake that throws leaves the city hidden and frozen | **Open.** Arm `detach` before the async build starts and `.catch` the build — §8.6. Listed as a Café debt in [MAISON §19.3](PRD_Building_MAISON.md)                                                               |
 
 ---
 
@@ -1009,24 +1017,24 @@ v1.0 listed eight blockers. Six are closed by the shipped Café and MAISON work;
 
 All additive within v1. Process per master PRD §11.3: issue → openapi PR first → implementation → deploy. **The full specification is [PRD_Backend_Missions.md](PRD_Backend_Missions.md)**; this table is the index.
 
-| ID | Issue | Priority | Blocks |
-|---|---|---|---|
-| **BE-13** | **Add levels `SCA` + `SCB`** (`ageBand` `16-21` / `35-50`) — allow-list in `cmd/validate_registry`, eighteen `BADGE-C{n}-SCA` / `BADGE-C{n}-SCB`, two meta badges, the level comment on `ActivityRegistry.Level`. `varchar(16)` already fits | **P0** | Both tracks entirely |
-| **BE-14** | **Retune `coinsByProficiency` → `{1:5, 2:15, 3:25}`** in `economy.json`. Content pack, no deploy. Platform-wide rescale — §10.4 | **P0** | The reward design |
-| **BE-15** | `PUT/GET /api/v1/city/state` — track choice, FTUE flags, last tile *(was BE-8)* | **P0** | Track persistence |
-| **BE-16** | `PUT/GET/POST /api/v1/city/buildings/{id}/state` — the season blob, including the `sendBeacon` exit path | **P0** | ADR-006 §11 entirely |
-| **BE-17** | `POST /api/v1/ai/followup` + `POST /api/v1/ai/followup/{id}/commit` — the transfer beat *(replaces BE-9's scope)* | **P0** | ADR-006 §7 |
-| **BE-18** | Extended `trace` submit (`followupId`, `followupChoice`) + the `aiBeat` rubric block | **P0** | Three-beat scoring |
-| **BE-12** *(exists)* | **Seed C1–C9 × `SCA` and `SCB`** for slots 01–03 = 54 activities; the full grid is 216. Blocked on **BE-21** | P1 | Content availability per building |
-| **BE-20** | Un-stale `api/openapi.yaml` — must document `DECISION_TREE` / `trace` / `SCA` / `SCB` / everything above *(was BE-5)* | P1 | Type-safe drift detection |
-| **BE-21** | Registry validator: bounded by default, exact under `-strict` | **P0** | **BE-12, and therefore every building being real** |
-| **BE-19** | `POST /api/v1/telemetry/mission` — objective-level events | P3 | Nothing |
+| ID                   | Issue                                                                                                                                                                                                                                        | Priority | Blocks                                             |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | -------------------------------------------------- |
+| **BE-13**            | **Add levels `SCA` + `SCB`** (`ageBand` `16-21` / `35-50`) — allow-list in `cmd/validate_registry`, eighteen `BADGE-C{n}-SCA` / `BADGE-C{n}-SCB`, two meta badges, the level comment on `ActivityRegistry.Level`. `varchar(16)` already fits | **P0**   | Both tracks entirely                               |
+| **BE-14**            | **Retune `coinsByProficiency` → `{1:5, 2:15, 3:25}`** in `economy.json`. Content pack, no deploy. Platform-wide rescale — §10.4                                                                                                              | **P0**   | The reward design                                  |
+| **BE-15**            | `PUT/GET /api/v1/city/state` — track choice, FTUE flags, last tile _(was BE-8)_                                                                                                                                                              | **P0**   | Track persistence                                  |
+| **BE-16**            | `PUT/GET/POST /api/v1/city/buildings/{id}/state` — the season blob, including the `sendBeacon` exit path                                                                                                                                     | **P0**   | ADR-006 §11 entirely                               |
+| **BE-17**            | `POST /api/v1/ai/followup` + `POST /api/v1/ai/followup/{id}/commit` — the transfer beat _(replaces BE-9's scope)_                                                                                                                            | **P0**   | ADR-006 §7                                         |
+| **BE-18**            | Extended `trace` submit (`followupId`, `followupChoice`) + the `aiBeat` rubric block                                                                                                                                                         | **P0**   | Three-beat scoring                                 |
+| **BE-12** _(exists)_ | **Seed C1–C9 × `SCA` and `SCB`** for slots 01–03 = 54 activities; the full grid is 216. Blocked on **BE-21**                                                                                                                                 | P1       | Content availability per building                  |
+| **BE-20**            | Un-stale `api/openapi.yaml` — must document `DECISION_TREE` / `trace` / `SCA` / `SCB` / everything above _(was BE-5)_                                                                                                                        | P1       | Type-safe drift detection                          |
+| **BE-21**            | Registry validator: bounded by default, exact under `-strict`                                                                                                                                                                                | **P0**   | **BE-12, and therefore every building being real** |
+| **BE-19**            | `POST /api/v1/telemetry/mission` — objective-level events                                                                                                                                                                                    | P3       | Nothing                                            |
 
 ---
 
 ## 19. AI content policy
 
-> **v2.0 · superseded by [ADR-006 §12](ADR-006_Missions_AI_Followups_and_Session_State.md).** v1.0 said *"AI may never author, vary, reword or reorder a decision prompt, a choice, or a consequence."* That is still true of the **seed and the follow-up**, whose node ids are bound to server rubric terminals — one reworded choice silently changes what is being measured. It is **no longer true of the third beat**, which is generated by design.
+> **v2.0 · superseded by [ADR-006 §12](ADR-006_Missions_AI_Followups_and_Session_State.md).** v1.0 said _"AI may never author, vary, reword or reorder a decision prompt, a choice, or a consequence."_ That is still true of the **seed and the follow-up**, whose node ids are bound to server rubric terminals — one reworded choice silently changes what is being measured. It is **no longer true of the third beat**, which is generated by design.
 >
 > The current policy in one line: **AI may author the transfer beat and ambient chatter, server-side, through blocking validation gates, with a scripted fallback behind it — and nothing else, ever.** The client never calls a model, never holds a key, never sees a tier and never grades anything locally. Read ADR-006 §12 for the full rule set.
 
@@ -1038,29 +1046,29 @@ Offline authoring remains encouraged and is a different activity: Claude draftin
 
 ### 20.1 Phases
 
-| Phase | Deliverable | Demo gate | Status |
-|---|---|---|---|
-| **I0 — Interior seam** | `framework/building/`: manifest, registry, lazy gate, `interiorStage.ts` handover. A gray-box room: walk, collide, one NPC with gaze, guided navigation. Grid + nav unit-tested | Walk a gray box from the city and back, at 30 fps on the reference laptop, with a mouse and without one | **Done** |
-| **I1 — Café vertical slice** | The Café interior dressed; the decision loop end-to-end; scenario presentation mode; world state driving visible props | Make a real decision in a real room and watch the chalkboard change; the server-scored result lands with no tier visible anywhere | **Done** |
-| **I2 — MAISON** | All nine competencies × two tracks; ten world-state keys; the lookbook; the dev fixture | Play a full nine-decision season and read the lookbook | **Done** (311 tests; audio and hero art outstanding — [MAISON §19.3](PRD_Building_MAISON.md)) |
-| **I3 — Missions & the transfer beat** | `framework/mission/` + `framework/session/` + `transfer.ts` (G9–G11); the Café's nine missions; the backend's P0–P3 ([PRD_Backend_Missions §9](PRD_Backend_Missions.md)) | A nine-mission season with the tracker top-left, a generated third beat in the host's voice, and the season surviving a killed tab | **Next** |
-| **I4 — MERIDIAN** | The bank as an iso room against the same pattern; queue and screens; the board pack | A complete year in one sitting | Pending I3 |
-| **I5 — Framework freeze** | `docs/INTERIOR_GUIDE.md` + `CLAUDE.md` codegen recipes; the handoff test | A dev (or Claude, against the recipes) adds a fourth building touching only `src/buildings/<id>/` | Pending I4 |
-| **I6 — Scale-out** | The remaining eight buildings against the frozen contract | — | — |
+| Phase                                 | Deliverable                                                                                                                                                                     | Demo gate                                                                                                                          | Status                                                                                        |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| **I0 — Interior seam**                | `framework/building/`: manifest, registry, lazy gate, `interiorStage.ts` handover. A gray-box room: walk, collide, one NPC with gaze, guided navigation. Grid + nav unit-tested | Walk a gray box from the city and back, at 30 fps on the reference laptop, with a mouse and without one                            | **Done**                                                                                      |
+| **I1 — Café vertical slice**          | The Café interior dressed; the decision loop end-to-end; scenario presentation mode; world state driving visible props                                                          | Make a real decision in a real room and watch the chalkboard change; the server-scored result lands with no tier visible anywhere  | **Done**                                                                                      |
+| **I2 — MAISON**                       | All nine competencies × two tracks; ten world-state keys; the lookbook; the dev fixture                                                                                         | Play a full nine-decision season and read the lookbook                                                                             | **Done** (311 tests; audio and hero art outstanding — [MAISON §19.3](PRD_Building_MAISON.md)) |
+| **I3 — Missions & the transfer beat** | `framework/mission/` + `framework/session/` + `transfer.ts` (G9–G11); the Café's nine missions; the backend's P0–P3 ([PRD_Backend_Missions §9](PRD_Backend_Missions.md))        | A nine-mission season with the tracker top-left, a generated third beat in the host's voice, and the season surviving a killed tab | **Next**                                                                                      |
+| **I4 — MERIDIAN**                     | The bank as an iso room against the same pattern; queue and screens; the board pack                                                                                             | A complete year in one sitting                                                                                                     | Pending I3                                                                                    |
+| **I5 — Framework freeze**             | `docs/INTERIOR_GUIDE.md` + `CLAUDE.md` codegen recipes; the handoff test                                                                                                        | A dev (or Claude, against the recipes) adds a fourth building touching only `src/buildings/<id>/`                                  | Pending I4                                                                                    |
+| **I6 — Scale-out**                    | The remaining eight buildings against the frozen contract                                                                                                                       | —                                                                                                                                  | —                                                                                             |
 
 ### 20.2 Risks
 
-| Risk | Mitigation |
-|---|---|
-| **The tier leaks** — through copy, styling, ordering, a debug field, the mission tracker, or a well-meaning "nice work!" | §11 as a normative contract; presentation mode derived from activity type so a building cannot opt out; the tracker is framework code so a building cannot add to it; **the generated beat's tiers are never sent to the client at all**; the plausible-peers audit as a blocking review gate |
-| **Generated choices don't read as peers** — the model writes the good option longer | [ADR-006 §8.4](ADR-006_Missions_AI_Followups_and_Session_State.md)'s nine blocking gates, run per generation, with gate-failure rate as a monitored metric. Gate 3 (word parity) will dominate |
-| **Authored choices don't read as peers** | §11.4 authoring rules; §11.5 audit by someone who did not write it; `presentationOrder()` makes the position leak structurally impossible (§9.2.1) |
-| **The transfer beat is late and the conversation stalls** | ADR-006 §7.4: fire in parallel with beat 2's consequence, an in-character idle beat in the gap, a hard 4 s abandon to the fallback, and **never a spinner** |
-| **The fallback bank is never finished** because generation "works" | `validate_registry` fails on a missing fallback entry, so a building cannot ship without all 18 |
-| **Procedural art plateaus** and the rooms read as placeholder | `PROP_SPRITE` is the seam; hero props (the espresso machine, the garment set, the wall of screens) are named per building and are the first real art commissioned |
-| **Layout truth drifts** across `room.ts` / `scene.ts` / the canvas | §8.1: everything derives from `FURNITURE`. This has already happened once and cost a review cycle |
-| **Interior teardown leaves the city hidden** (G12) | Arm `detach` before the async build; `.catch` the build; the five-cycle memory test in CI |
-| **Content volume**: 216 scenario activities × 9 leaves = 1,944 authored consequence beats at full seed, **plus 18 fallback transfer beats per building** | Data-first so Claude drafts and humans judge; one fully-worked exemplar per building fixes the pattern; the twelve-slot model means twelve independent authors never block each other |
+| Risk                                                                                                                                                     | Mitigation                                                                                                                                                                                                                                                                                    |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **The tier leaks** — through copy, styling, ordering, a debug field, the mission tracker, or a well-meaning "nice work!"                                 | §11 as a normative contract; presentation mode derived from activity type so a building cannot opt out; the tracker is framework code so a building cannot add to it; **the generated beat's tiers are never sent to the client at all**; the plausible-peers audit as a blocking review gate |
+| **Generated choices don't read as peers** — the model writes the good option longer                                                                      | [ADR-006 §8.4](ADR-006_Missions_AI_Followups_and_Session_State.md)'s nine blocking gates, run per generation, with gate-failure rate as a monitored metric. Gate 3 (word parity) will dominate                                                                                                |
+| **Authored choices don't read as peers**                                                                                                                 | §11.4 authoring rules; §11.5 audit by someone who did not write it; `presentationOrder()` makes the position leak structurally impossible (§9.2.1)                                                                                                                                            |
+| **The transfer beat is late and the conversation stalls**                                                                                                | ADR-006 §7.4: fire in parallel with beat 2's consequence, an in-character idle beat in the gap, a hard 4 s abandon to the fallback, and **never a spinner**                                                                                                                                   |
+| **The fallback bank is never finished** because generation "works"                                                                                       | `validate_registry` fails on a missing fallback entry, so a building cannot ship without all 18                                                                                                                                                                                               |
+| **Procedural art plateaus** and the rooms read as placeholder                                                                                            | `PROP_SPRITE` is the seam; hero props (the espresso machine, the garment set, the wall of screens) are named per building and are the first real art commissioned                                                                                                                             |
+| **Layout truth drifts** across `room.ts` / `scene.ts` / the canvas                                                                                       | §8.1: everything derives from `FURNITURE`. This has already happened once and cost a review cycle                                                                                                                                                                                             |
+| **Interior teardown leaves the city hidden** (G12)                                                                                                       | Arm `detach` before the async build; `.catch` the build; the five-cycle memory test in CI                                                                                                                                                                                                     |
+| **Content volume**: 216 scenario activities × 9 leaves = 1,944 authored consequence beats at full seed, **plus 18 fallback transfer beats per building** | Data-first so Claude drafts and humans judge; one fully-worked exemplar per building fixes the pattern; the twelve-slot model means twelve independent authors never block each other                                                                                                         |
 
 ### 20.3 Open decisions
 
