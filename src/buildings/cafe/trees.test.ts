@@ -1,10 +1,13 @@
 import { describe, it, expect } from "vitest";
 import { TREES, tracePath, treeFor } from "./trees";
 import { FOLLOWUPS } from "./followups";
-import { MISSIONS, PRO_MISSIONS, resolveSpeaker } from "./missions";
+import { QUESTIONS } from "./interview";
+import { activityIdFor } from "@/framework/city/track";
 
 /** Both tracks. Everything in this file holds for eighteen rows or for none. */
-const SEASONS = [...MISSIONS, ...PRO_MISSIONS];
+const ACTIVITY_IDS = (["SCA", "SCB"] as const).flatMap((track) =>
+  QUESTIONS.map((c) => activityIdFor(c, track)),
+);
 import { OPENING_WORLD, WORLD_KEYS, isLegal, isWorldKey, type WorldKey } from "./world";
 import { CAST, type CastId } from "./cast";
 
@@ -108,12 +111,9 @@ describe("the shape of a decision", () => {
     ]);
   });
 
-  it("names a tree by an activity the season actually runs", () => {
+  it("names a tree by an activity the interview actually asks", () => {
     for (const id of Object.keys(TREES)) {
-      expect(
-        SEASONS.some((m) => m.activityId === id),
-        `${id} belongs to no mission`,
-      ).toBe(true);
+      expect(ACTIVITY_IDS.includes(id), `${id} is asked by no question`).toBe(true);
     }
     expect(treeFor("nothing-like-this")).toBeNull();
   });
@@ -176,24 +176,24 @@ describe("choice parity — the tier leak nobody looks for", () => {
   });
 });
 
-describe("the season is completely written", () => {
-  it("gives every mission a decision", () => {
-    for (const m of SEASONS) {
-      expect(TREES[m.activityId], `${m.activityId} has no tree`).toBeTruthy();
+describe("the interview is completely written", () => {
+  it("gives every question a decision", () => {
+    for (const id of ACTIVITY_IDS) {
+      expect(TREES[id], `${id} has no tree`).toBeTruthy();
     }
   });
 
-  it("gives every mission a transfer beat to fall back on", () => {
+  it("gives every question a transfer beat to fall back on", () => {
     // PRD §5.4 makes a missing fallback a build failure rather than a runtime
     // surprise, and this is the Café's version of that check. It is what makes
     // "nothing breaks with the generator switched off" a property of the
     // building rather than an intention about it.
-    for (const m of SEASONS) {
-      expect(FOLLOWUPS[m.activityId], `${m.activityId} has no fallback beat`).toBeTruthy();
+    for (const id of ACTIVITY_IDS) {
+      expect(FOLLOWUPS[id], `${id} has no fallback beat`).toBeTruthy();
     }
   });
 
-  it("writes a distinct decision for every week", () => {
+  it("writes a distinct decision for every question", () => {
     const prompts = Object.values(TREES).map((t) => t.prompt);
     expect(new Set(prompts).size, "two weeks ask the same question").toBe(prompts.length);
     const stages = Object.values(TREES).map((t) => t.stage);
@@ -215,9 +215,9 @@ describe("the season is completely written", () => {
 });
 
 describe("the transfer beat", () => {
-  it("belongs to a mission and speaks as somebody in the building", () => {
+  it("belongs to a question and speaks as somebody in the building", () => {
     for (const beat of Object.values(FOLLOWUPS)) {
-      expect(SEASONS.some((m) => m.activityId === beat.activityId)).toBe(true);
+      expect(ACTIVITY_IDS.includes(beat.activityId)).toBe(true);
       expect(beat.speakerId === "room" || castIds.has(beat.speakerId)).toBe(true);
       expect(beat.options).toHaveLength(3);
       expect(new Set(beat.options.map((o) => o.id)).size).toBe(3);
@@ -245,37 +245,6 @@ describe("the transfer beat", () => {
       for (const o of beat.options) {
         expect(o.id, `${beat.activityId}: ${o.id}`).not.toMatch(/^(a|b|c|1|2|3)$/i);
       }
-    }
-  });
-});
-
-describe("who asks the question", () => {
-  const present = (...ids: CastId[]) => ids;
-
-  it("gives it to the host when the host is in the room", () => {
-    const m1 = MISSIONS[0];
-    expect(resolveSpeaker(m1, present("priya", "nadia"))).toBe("nadia");
-  });
-
-  it("falls back to Priya when the host has gone, which Nadia always has", () => {
-    const m1 = MISSIONS[0];
-    expect(resolveSpeaker(m1, present("priya", "marcus"))).toBe("priya");
-  });
-
-  it("hands week twelve to Marcus, who is standing there holding his paper", () => {
-    const m6 = MISSIONS.find((m) => m.order === 6)!;
-    expect(resolveSpeaker(m6, present("priya", "marcus"))).toBe("marcus");
-    expect(resolveSpeaker(m6, present("priya", "marcus", "ellery"))).toBe("ellery");
-  });
-
-  it("lets the room narrate the night beat, because being alone is the point", () => {
-    const m4 = MISSIONS.find((m) => m.order === 4)!;
-    expect(resolveSpeaker(m4, present("priya"))).toBe("room");
-  });
-
-  it("always finds somebody, for every mission, in an empty room", () => {
-    for (const m of MISSIONS) {
-      expect(resolveSpeaker(m, []), `${m.activityId} has no speaker`).toBeTruthy();
     }
   });
 });

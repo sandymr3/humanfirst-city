@@ -6,7 +6,7 @@ import {
   setTrack,
   trackOrDefault,
 } from "@/framework/city/track";
-import { MISSIONS, PRO_MISSIONS, seasonFor, missionByOrder } from "./missions";
+import { QUESTIONS, activityAt } from "./interview";
 import { castFor } from "./cast";
 import { OPENING_WORLD, openingWorldFor, passThroughBody } from "./world";
 import { cooled, lightForWeek } from "./light";
@@ -17,7 +17,8 @@ beforeEach(() => {
 
 // The question itself is asked at the city gate now, not here — see
 // src/ui/EnterCity.test.tsx. What the Café still owns is everything downstream
-// of the answer: which season runs, and what the room looks like on it.
+// of the answer: which nine questions get asked, and what the room looks like
+// while they are.
 describe("the answer, once it is given", () => {
   it("is unanswered until it is answered", () => {
     expect(activeTrack()).toBeNull();
@@ -27,7 +28,7 @@ describe("the answer, once it is given", () => {
 
   it("answers Level A for anybody who has never been asked", () => {
     // Every pure lookup in the building calls this. A null track must never
-    // reach a season table.
+    // reach an activity id.
     expect(trackOrDefault()).toBe("SCA");
   });
 
@@ -46,58 +47,23 @@ describe("the eighteen registry rows", () => {
   });
 
   it("gives every competency a row on both tracks, all eighteen distinct", () => {
-    const ids = [...MISSIONS, ...PRO_MISSIONS].map((m) => m.activityId);
+    const ids = (["SCA", "SCB"] as const).flatMap((t) => QUESTIONS.map((c) => activityIdFor(c, t)));
     expect(ids).toHaveLength(18);
     expect(new Set(ids).size).toBe(18);
-    for (const m of PRO_MISSIONS) {
-      expect(m.activityId).toBe(activityIdFor(m.competency, "SCB"));
-    }
-  });
-});
-
-describe("the Level B season", () => {
-  it("runs the same nine weeks in the same order", () => {
-    // Same geometry, same chalkboard, different weight (PRD §14). A track that
-    // reordered the season would be a second building wearing this one's name.
-    expect(PRO_MISSIONS.map((m) => m.order)).toEqual(MISSIONS.map((m) => m.order));
-    expect(PRO_MISSIONS.map((m) => m.week)).toEqual(MISSIONS.map((m) => m.week));
-    expect(PRO_MISSIONS.map((m) => m.competency)).toEqual(MISSIONS.map((m) => m.competency));
   });
 
-  it("ends every chain on the same three beats", () => {
-    for (const m of PRO_MISSIONS) {
-      const beats = m.objectives.filter((o) => o.kind === "decide").map((o) => o.target);
-      expect(beats, m.activityId).toEqual(["seed", "follow", "transfer"]);
-      expect(
-        m.objectives.slice(-4).some((o) => o.kind === "decide"),
-        m.activityId,
-      ).toBe(true);
-    }
-  });
-
-  it("opens every chain on something you have to go to, wait for or talk to", () => {
-    // The failure mode this structure exists to avoid: decisions as modals in a
-    // nice backdrop (PRD §18.4). It holds on both tracks or it holds on neither.
-    for (const m of PRO_MISSIONS) {
-      expect(["go_to", "wait_for", "talk_to", "inspect"], m.activityId).toContain(
-        m.objectives[0].kind,
-      );
-    }
-  });
-
-  it("stages every week differently from Level A", () => {
-    for (const pro of PRO_MISSIONS) {
-      const a = MISSIONS.find((m) => m.competency === pro.competency)!;
-      expect(pro.staging, `${pro.activityId} reuses Level A's staging`).not.toBe(a.staging);
-    }
-  });
-
-  it("is what missionByOrder returns once the player has answered", () => {
+  it("asks the nine in the blueprint's order, on whichever track was answered", () => {
     setTrack("SCB");
-    expect(missionByOrder(1)?.activityId).toBe("C1-SCB-01");
+    expect(QUESTIONS.map((_, i) => activityAt(i))).toEqual(
+      QUESTIONS.map((c) => activityIdFor(c, "SCB")),
+    );
     setTrack("SCA");
-    expect(missionByOrder(1)?.activityId).toBe("C1-SCA-01");
-    expect(seasonFor("SCB")).toBe(PRO_MISSIONS);
+    expect(activityAt(0)).toBe("C1-SCA-01");
+    expect(activityAt(8)).toBe("C9-SCA-01");
+  });
+
+  it("has nothing to ask past the ninth", () => {
+    expect(activityAt(9)).toBeNull();
   });
 });
 
@@ -130,8 +96,11 @@ describe("the Level B room", () => {
     expect(hard).not.toContain("supplier");
   });
 
-  it("runs a stop cooler all year without going dark", () => {
-    for (const week of MISSIONS.map((m) => m.week)) {
+  it("runs a stop cooler without going dark", () => {
+    // The week table outlived the season it was written for — the later stages
+    // will want a time of day of their own — so the cooling still has to hold
+    // for every entry in it, not just the one the interview uses.
+    for (const week of [1, 3, 5, 8, 11, 14, 18]) {
       const b = cooled(lightForWeek(week));
       expect(b.grade, `week ${week}`).toBeGreaterThanOrEqual(lightForWeek(week).grade);
     }

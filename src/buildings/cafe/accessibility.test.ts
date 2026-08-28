@@ -10,11 +10,8 @@
 import { describe, it, expect } from "vitest";
 import { GUIDE, HOTSPOTS, ZONES } from "./room";
 import { CAST, guideWithCast, atAnchors } from "./cast";
-import { MISSIONS, PRO_MISSIONS } from "./missions";
 import { WORLD_KEYS, announcementFor, hotspotBody, OPENING_WORLD, type WorldKey } from "./world";
 import { lightForWeek, MAX_GRADE } from "./light";
-
-const SEASONS = [...MISSIONS, ...PRO_MISSIONS];
 
 describe("guided navigation", () => {
   it("names every place in the room's own words", () => {
@@ -48,23 +45,6 @@ describe("guided navigation", () => {
     }
   });
 
-  it("can reach every place the season sends you, on both tracks", () => {
-    // A place only a mouse can get to is a mission a keyboard player cannot
-    // finish. Seasonal hotspots are the exception and are handled by the runner
-    // putting the live one at the front of the list.
-    const reachable = new Set([...GUIDE.map((g) => g.id), ...CAST.map((m) => m.id)]);
-    const seasonal = new Set(HOTSPOTS.filter((h) => h.seasonal).map((h) => h.id));
-    for (const mission of SEASONS) {
-      for (const objective of mission.objectives) {
-        if (objective.kind === "decide") continue;
-        expect(
-          reachable.has(objective.target) || seasonal.has(objective.target),
-          `${mission.activityId}: nothing in the guide reaches ${objective.target}`,
-        ).toBe(true);
-      }
-    }
-  });
-
   it("keeps the seasonal places out of the standing list", () => {
     // A button reading "the sample bag" in week one is a promise about week
     // sixteen.
@@ -93,53 +73,10 @@ describe("what gets said out loud", () => {
     }
   });
 
-  it("announces Marcus's chair emptying, which is the beat that is only a picture", () => {
-    // §15 names this one specifically: the single most important non-verbal beat
-    // in the building. It is said twice — once by the world key and once by the
-    // week-18 objective's own cue.
-    expect(announcementFor("regulars", "thin")).toContain("empty");
-    const week18 = MISSIONS.find((m) => m.week === 18)!;
-    const cues = week18.objectives.map((o) => o.cue ?? "").join(" ");
-    expect(cues).toContain("empty");
-  });
-
-  it("says something about every week's light, so the season shift is not only visual", () => {
-    for (const mission of MISSIONS) {
-      expect(lightForWeek(mission.week).says.trim(), `week ${mission.week}`).toBeTruthy();
-    }
-  });
-
-  it("names the pass-through's privacy in the text as well as in the audio", () => {
-    // §15 wants it in three channels. Two of them are here: the prompt text and
-    // the body a screen reader gets. The third is the duck, which is audio.
-    expect(hotspotBody("ht_pass", OPENING_WORLD)).toContain("earshot");
-    for (const mission of SEASONS) {
-      const quiet = mission.objectives.find((o) => o.cue?.includes("earshot"));
-      if (mission.competency === "C7") {
-        expect(quiet, `${mission.activityId} never says it is out of earshot`).toBeTruthy();
-      }
-    }
-  });
-
   it("gives the room a name for wherever you are standing", () => {
     for (const zone of ZONES) {
       expect(zone.label, zone.id).toMatch(/^[a-z]/);
       expect(zone.label.trim(), zone.id).toBeTruthy();
-    }
-  });
-});
-
-describe("the tracker and the question at the door", () => {
-  it("shows one line, in the room's own words, with no quality marker in it", () => {
-    // §11.1. The tracker is the most tempting surface in the building to put a
-    // number on, which is exactly why it is checked here as well as there.
-    const banned = /\b(score|points?|correct|complete[d]?%|\d+\s*\/\s*\d+|rating|grade)\b/i;
-    for (const mission of SEASONS) {
-      for (const objective of mission.objectives) {
-        expect(objective.line, `${mission.activityId}: "${objective.line}"`).toMatch(/^[a-z0-9]/);
-        expect(banned.test(objective.line), objective.line).toBe(false);
-        expect(objective.line.length, objective.line).toBeLessThan(48);
-      }
     }
   });
 });
@@ -150,15 +87,6 @@ describe("the night beat stays navigable", () => {
     // unreadable. A dramatic week 8 nobody can walk through is a wall.
     expect(lightForWeek(8).grade).toBeLessThanOrEqual(MAX_GRADE);
     expect(MAX_GRADE).toBeLessThan(0.7);
-  });
-
-  it("puts nothing behind the darkness that is not also in the DOM", () => {
-    // Everything the night beat asks of you is an objective with a line, and
-    // every line is DOM text over the canvas rather than anything drawn into it.
-    const night = MISSIONS.find((m) => m.week === 8)!;
-    for (const objective of night.objectives) {
-      expect(objective.line.trim(), night.activityId).toBeTruthy();
-    }
   });
 });
 

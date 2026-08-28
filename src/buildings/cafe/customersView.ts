@@ -73,11 +73,11 @@ interface Body {
 export interface CustomersView {
   textures: Texture[];
   /**
-   * `world` and `missionOrder` decide how many of them the room carries; the
+   * `world` decides how many of them the room carries; the
    * night beat carries none. `onBell` fires when somebody opens the door, so the
    * ambient layer can ring it and swell the street for a moment.
    */
-  update(dtS: number, world: World, missionOrder: number, onBell: () => void): void;
+  update(dtS: number, world: World, onBell: () => void): void;
   /** How many are on screen, for the ambient budget and for the tests. */
   countInside(): number;
   destroy(): void;
@@ -137,9 +137,9 @@ export function createCustomers(
   let elapsed = 0;
 
   /** Send somebody in, if the room has room for them. */
-  function admit(world: World, missionOrder: number, onBell: () => void): void {
+  function admit(world: World, onBell: () => void): void {
     const inside = bodies.filter((b) => b.phase !== "away");
-    if (inside.length >= crowdSize(world, missionOrder, reduced)) return;
+    if (inside.length >= crowdSize(world, reduced)) return;
     const next = bodies.find((b) => b.phase === "away");
     if (!next) return;
 
@@ -200,19 +200,19 @@ export function createCustomers(
 
     countInside: () => bodies.filter((b) => b.phase !== "away").length,
 
-    update(dtS, world, missionOrder, onBell) {
+    update(dtS, world, onBell) {
       elapsed += dtS;
 
       bell -= dtS;
       if (bell <= 0) {
         bell = nextBell(world, reduced, Math.random());
-        admit(world, missionOrder, onBell);
+        admit(world, onBell);
       }
 
       // The room closing under them — the night beat, or the regulars thinning
       // out mid-visit. They finish their drink on the way to the door rather
       // than blinking out of existence.
-      const cap = crowdSize(world, missionOrder, reduced);
+      const cap = crowdSize(world, reduced);
       const inside = bodies.filter((b) => b.phase !== "away");
       if (inside.length > cap) {
         for (const b of inside.slice(cap)) {

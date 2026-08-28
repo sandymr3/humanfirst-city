@@ -8,11 +8,9 @@ import {
   type RoomNow,
 } from "./ambient";
 import { OPENING_WORLD, type World } from "./world";
-import { MISSIONS } from "./missions";
 
 const now = (over: Partial<RoomNow> = {}): RoomNow => ({
   world: OPENING_WORLD,
-  missionOrder: 1,
   seated: 2,
   atMachine: true,
   ...over,
@@ -82,14 +80,6 @@ describe("when a beat means nothing, it does not fire", () => {
     const fired = run(pinned(), 400, now({ world: thin }));
     expect(fired).not.toContain("page");
     expect(run(pinned(), 400, now())).toContain("page");
-  });
-
-  it("keeps the whole room quiet on the closed night", () => {
-    // Week 8: chairs up, machine cooling, nobody to perform for. The pigeon is
-    // the one thing outside the room and is allowed to stay.
-    const night = MISSIONS.find((m) => m.week === 8)!;
-    const fired = run(pinned(), 400, now({ missionOrder: night.order, seated: 0 }));
-    expect(new Set(fired)).toEqual(new Set(["pigeon"]));
   });
 
   it("comes back when the room does, rather than discharging what it owed", () => {

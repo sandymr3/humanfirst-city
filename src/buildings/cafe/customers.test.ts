@@ -10,14 +10,12 @@ import {
   goalFor,
   nextBell,
   nextPhase,
-  roomIsClosed,
   sitFor,
   staysIn,
   type Phase,
 } from "./customers";
 import { FURNITURE, NO_GATES_OPEN, makeRoomGrid } from "./room";
 import { CAST } from "./cast";
-import { MISSIONS } from "./missions";
 import { OPENING_WORLD, WORLD_KEYS, type World } from "./world";
 import { findPath } from "@/lib/pathfinding";
 
@@ -134,9 +132,9 @@ describe("the loop itself", () => {
 
 describe("how many of them there are", () => {
   it("scales with who still comes in", () => {
-    const full = crowdSize(worldWith("full"), 1, false);
-    const steady = crowdSize(worldWith("steady"), 1, false);
-    const thin = crowdSize(worldWith("thin"), 1, false);
+    const full = crowdSize(worldWith("full"), false);
+    const steady = crowdSize(worldWith("steady"), false);
+    const thin = crowdSize(worldWith("thin"), false);
     expect(full).toBeGreaterThan(steady);
     expect(steady).toBeGreaterThan(thin);
     expect(thin).toBeGreaterThanOrEqual(1);
@@ -144,19 +142,7 @@ describe("how many of them there are", () => {
 
   it("has a size for every legal value of regulars", () => {
     for (const value of WORLD_KEYS.regulars) {
-      expect(crowdSize(worldWith(value), 1, false), value).toBeGreaterThan(0);
-    }
-  });
-
-  it("empties the room on the night beat, because the café is shut", () => {
-    // Week 8 is the one time in the building you are alone, and it carries the
-    // money decision on purpose (PRD §3.4).
-    const night = MISSIONS.find((m) => m.week === 8)!;
-    expect(roomIsClosed(night.order)).toBe(true);
-    expect(crowdSize(worldWith("full"), night.order, false)).toBe(0);
-    for (const m of MISSIONS) {
-      if (m.week === 8) continue;
-      expect(crowdSize(worldWith("full"), m.order, false), `week ${m.week}`).toBeGreaterThan(0);
+      expect(crowdSize(worldWith(value), false), value).toBeGreaterThan(0);
     }
   });
 
@@ -165,8 +151,8 @@ describe("how many of them there are", () => {
     // room rather than a calmer one, so the floor is one.
     for (const value of WORLD_KEYS.regulars) {
       const world = worldWith(value);
-      const n = crowdSize(world, 1, false);
-      const r = crowdSize(world, 1, true);
+      const n = crowdSize(world, false);
+      const r = crowdSize(world, true);
       expect(r, value).toBeLessThanOrEqual(n);
       expect(r, value).toBeGreaterThanOrEqual(1);
     }
@@ -175,7 +161,7 @@ describe("how many of them there are", () => {
   it("stays under the four-animated-characters budget with the cast in the room", () => {
     // PRD §16: ≤ 4 animated characters on screen. The cast is at most three at
     // once by §8.1's table, and the player is one of them.
-    expect(crowdSize(worldWith("full"), 1, false) + 3 + 1).toBeLessThanOrEqual(8);
+    expect(crowdSize(worldWith("full"), false) + 3 + 1).toBeLessThanOrEqual(8);
   });
 });
 
