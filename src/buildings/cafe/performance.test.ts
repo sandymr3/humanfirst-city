@@ -13,7 +13,6 @@ import { SEATS, crowdSize } from "./customers";
 import { BEATS } from "./ambient";
 import { MAX_STEAM_PUFFS } from "./steam";
 import { WORLD_KEYS, OPENING_WORLD, type World } from "./world";
-import { MISSIONS, PRO_MISSIONS } from "./missions";
 
 /** Every world the season can actually be in, one key at a time. */
 function everyWorld(): World[] {
@@ -60,19 +59,9 @@ describe("animated characters", () => {
     }
   });
 
-  it("brings in at most one visitor per mission, on both tracks", () => {
-    for (const mission of [...MISSIONS, ...PRO_MISSIONS]) {
-      const arrivals = mission.objectives.filter((o) => o.kind === "wait_for");
-      expect(
-        arrivals.length,
-        `${mission.activityId} waits for ${arrivals.length} people`,
-      ).toBeLessThanOrEqual(1);
-    }
-  });
-
   it("keeps the ambient floor small enough that the room is still a café", () => {
     for (const world of everyWorld()) {
-      expect(crowdSize(world, 1, false), `regulars=${world.regulars}`).toBeLessThanOrEqual(
+      expect(crowdSize(world, false), `regulars=${world.regulars}`).toBeLessThanOrEqual(
         SEATS.length,
       );
     }
@@ -91,15 +80,6 @@ describe("the ambient budget", () => {
     // A particle system that allocates under load is a particle system that
     // stutters exactly when the room is busiest.
     expect(MAX_STEAM_PUFFS).toBeLessThanOrEqual(8);
-  });
-});
-
-describe("the season's own size", () => {
-  it("carries no duplicated staging between the two tracks", () => {
-    // The Level B table is derived from Level A rather than copied, so the two
-    // seasons cost one table and a set of overrides rather than two tables.
-    const staging = [...MISSIONS, ...PRO_MISSIONS].map((m) => m.staging);
-    expect(new Set(staging).size).toBe(staging.length);
   });
 });
 

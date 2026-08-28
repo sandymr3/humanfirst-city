@@ -1,6 +1,9 @@
-// The season's light (PRD §3.4). Nine decisions, one year, and the room ages
-// through it — so the light is a function of the week, not of anything you
-// decide.
+// The room's light (PRD §3.4).
+//
+// It used to age through a year — nine weeks, nine lights, a cross-fade between
+// them. An interview happens in one morning, so it is one light, and the table
+// below survives because it is what the room is graded against and because the
+// stages after this one will want a time of day of their own.
 //
 // Pure. It answers "what colour is this week" and "what do we say about it";
 // the canvas owns the fade and the Graphics.
@@ -14,7 +17,6 @@
 // **The floor matters.** §15 requires that the room never becomes unreadable for
 // a low-vision player, so `grade` is clamped below 1 and the night beat is a
 // deep blue at 0.62 rather than black at 0.95. You can still see the chairs.
-import { MISSIONS } from "./missions";
 import { trackOrDefault } from "@/framework/city/track";
 
 export interface Light {
@@ -121,15 +123,13 @@ export function lightForWeek(week: number): Light {
 }
 
 /**
- * The light for a point in the season. `missionOrder` is the runner's, so 1..9
- * during the year and 10 once it is done.
+ * The light the interview happens in.
+ *
+ * Level B is one stop cooler, applied as a transform rather than a second table
+ * so the two tracks can never drift into being different rooms.
  */
-export function lightForMission(missionOrder: number): Light {
-  const mission = MISSIONS.find((m) => m.order === missionOrder);
-  const light = mission ? lightForWeek(mission.week) : AFTER_LIGHT;
-  // Both seasons run the same nine weeks, so the week comes off the Level A
-  // table on either track. Only the grade differs.
-  return trackOrDefault() === "SCB" ? cooled(light) : light;
+export function interviewLight(): Light {
+  return trackOrDefault() === "SCB" ? cooled(OPEN_LIGHT) : OPEN_LIGHT;
 }
 
 /**

@@ -1,10 +1,11 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
 import { openBeat, submitDecision } from "./dialogue";
-import { MISSIONS } from "./missions";
+import { INTERVIEWER, QUESTIONS } from "./interview";
+import { activityIdFor } from "@/framework/city/track";
 import { OPENING_WORLD } from "./world";
 import { api } from "@/framework/api";
 
-const mission = MISSIONS[0];
+const activityId = activityIdFor(QUESTIONS[0], "SCA");
 const present = ["priya", "nadia"];
 
 const GENERATED = {
@@ -36,10 +37,10 @@ afterEach(() => vi.restoreAllMocks());
 describe("the third beat on screen", () => {
   it("uses the generated question when one arrived", () => {
     const beat = openBeat(
-      mission.activityId,
+      activityId,
       "transfer",
       { seed: "c", follow: "b" },
-      mission,
+      INTERVIEWER,
       present,
       OPENING_WORLD,
       GENERATED,
@@ -50,10 +51,10 @@ describe("the third beat on screen", () => {
 
   it("uses the building's own when none did", () => {
     const beat = openBeat(
-      mission.activityId,
+      activityId,
       "transfer",
       { seed: "c", follow: "b" },
-      mission,
+      INTERVIEWER,
       present,
       OPENING_WORLD,
       null,
@@ -66,9 +67,15 @@ describe("the third beat on screen", () => {
   // same three look-alike options, same speaker resolution, no marker of any
   // kind — if these two diverged in structure the beat would announce itself.
   it("is the same shape either way", () => {
-    const args = ["transfer", { seed: "c", follow: "b" }, mission, present, OPENING_WORLD] as const;
-    const generated = openBeat(mission.activityId, ...args, GENERATED)!;
-    const banked = openBeat(mission.activityId, ...args, null)!;
+    const args = [
+      "transfer",
+      { seed: "c", follow: "b" },
+      INTERVIEWER,
+      present,
+      OPENING_WORLD,
+    ] as const;
+    const generated = openBeat(activityId, ...args, GENERATED)!;
+    const banked = openBeat(activityId, ...args, null)!;
     expect(Object.keys(generated).sort()).toEqual(Object.keys(banked).sort());
     expect(generated.options).toHaveLength(banked.options.length);
     expect(JSON.stringify(generated)).not.toMatch(/tier|developing|strong|advanced/i);
@@ -78,10 +85,10 @@ describe("the third beat on screen", () => {
   // same question from Priya, so who is in the room wins over who wrote it.
   it("hands the question to somebody who is actually there", () => {
     const beat = openBeat(
-      mission.activityId,
+      activityId,
       "transfer",
       { seed: "c", follow: "b" },
-      mission,
+      INTERVIEWER,
       ["priya"],
       OPENING_WORLD,
       GENERATED,
@@ -95,7 +102,7 @@ describe("what the submit carries", () => {
   // transfer instead of the authored terminal alone.
   it("names the generated beat and the option taken", async () => {
     const submit = submitted();
-    await submitDecision(mission.activityId, { seed: "c", follow: "b", transfer: "o_2" }, 412, {
+    await submitDecision(activityId, { seed: "c", follow: "b", transfer: "o_2" }, 412, {
       id: "fu_1",
       choice: "o_2",
     });
@@ -112,7 +119,7 @@ describe("what the submit carries", () => {
   // on the authored terminal alone — which is what aiBeat.required: false is for.
   it("omits them when the beat came from the bank", async () => {
     const submit = submitted();
-    await submitDecision(mission.activityId, { seed: "c", follow: "b" }, 412, null);
+    await submitDecision(activityId, { seed: "c", follow: "b" }, 412, null);
     const trace = submit.mock.calls[0][1].result as { trace: Record<string, unknown> };
     expect(trace.trace).not.toHaveProperty("followupId");
     expect(trace.trace).not.toHaveProperty("followupChoice");
@@ -120,15 +127,13 @@ describe("what the submit carries", () => {
 
   it("hands back the score so the coins can be credited", async () => {
     submitted();
-    const res = await submitDecision(mission.activityId, { seed: "c", follow: "b" }, 412);
+    const res = await submitDecision(activityId, { seed: "c", follow: "b" }, 412);
     expect(res?.coinsEarned).toBe(25);
     expect(res?.coinBalance).toBe(125);
   });
 
   it("says nothing landed rather than throwing when the server is unreachable", async () => {
     vi.spyOn(api, "submit").mockRejectedValue(new Error("offline"));
-    await expect(
-      submitDecision(mission.activityId, { seed: "c", follow: "b" }, 412),
-    ).resolves.toBeNull();
+    await expect(submitDecision(activityId, { seed: "c", follow: "b" }, 412)).resolves.toBeNull();
   });
 });

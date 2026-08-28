@@ -14,8 +14,7 @@
 // question from a different pen.
 import { api, type SubmitResponse } from "@/framework/api";
 import { CLIENT_VERSION } from "@/framework/config/appConfig";
-import type { Beat } from "./missions";
-import { resolveSpeaker } from "./missions";
+import type { Beat } from "./interview";
 import { followupFor } from "./followups";
 import type { TransferBeat } from "@/framework/interior/transfer";
 import { tracePath, treeFor } from "./trees";
@@ -58,13 +57,12 @@ export function openBeat(
   activityId: string,
   beat: Beat,
   taken: DecisionSoFar,
-  mission: Parameters<typeof resolveSpeaker>[0],
+  /** Who is asking. In the interview this is always the hiring manager. */
+  speaker: string,
   present: readonly string[],
   world: Parameters<NonNullable<ReturnType<typeof followupFor>>["prompt"]>[0],
   generated?: TransferBeat | null,
 ): DialogueState | null {
-  const speaker = resolveSpeaker(mission, present as never);
-
   if (beat === "transfer") {
     // Generated, when one arrived in time. Rendered by the same dialogue layer,
     // in the same shape, with the same three look-alike options — there is

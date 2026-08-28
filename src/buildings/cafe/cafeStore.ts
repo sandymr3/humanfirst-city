@@ -11,24 +11,25 @@ import { audio } from "@/framework/audio/audioManager";
 import { events } from "@/framework/events";
 import { GATES, HOTSPOTS, SPAWN, zoneAt, type GateId, type ZoneId } from "./room";
 import { castById, castFor, type CastId } from "./cast";
-import { HOTSPOTS as SPOTS, STATIONS as STNS } from "./room";
 import {
-  SEASON_START,
+  INTERVIEWER,
+  INTERVIEW_START,
+  QUESTIONS,
+  activityAt,
   advance,
-  currentMission,
-  currentObjective,
-  type Progress,
-  type RoomEvent,
-} from "./missionRunner";
-import type { Beat } from "./missions";
+  isOver,
+  type Answered,
+  type Beat,
+  type InterviewProgress,
+} from "./interview";
 import {
   BUILDING_ID,
-  flushSeason,
-  freshSeason,
-  loadSeason,
-  saveSeason,
-  saveSeasonNow,
-  type Season,
+  flushInterview,
+  freshInterview,
+  loadInterview,
+  saveInterview,
+  saveInterviewNow,
+  type Interview,
 } from "./session";
 import {
   awaitTransfer,
@@ -37,7 +38,6 @@ import {
   requestTransfer,
 } from "@/framework/interior/transfer";
 import { trackOrDefault } from "@/framework/city/track";
-import type { Decided } from "./report";
 import {
   openBeat,
   resolve,
@@ -89,32 +89,29 @@ interface CafeState {
    * submitted trace, and nothing here decides a proficiency.
    */
   world: World;
-  /** Which mission, and how far into its chain. */
-  progress: Progress;
+  /** Which question she is on, and which of its three beats. */
+  progress: InterviewProgress;
+  /** She has started. False while the player is still crossing the room. */
+  interviewing: boolean;
   /** The beat on screen, if one is. */
   dialogue: DialogueState | null;
   /** The room's answer to what you just chose, shown before the room returns. */
   consequence: string | null;
-  /** The letters taken so far this mission — what goes on the wire. */
+  /** The letters taken so far on this question — what goes on the wire. */
   taken: DecisionSoFar;
   /**
    * Decisions whose submit failed, kept to retry. The Café's registry rows are
    * backend content that has not been seeded, so this is the normal case today.
    */
-  unsent: Season["unsent"];
+  unsent: Interview["unsent"];
   /**
-   * People the live mission has brought into the room on top of whoever the
-   * world state says lives here. Nadia comes in at 8:05 and leaves again.
+   * Every question that has closed and what was taken on it. The offer at the
+   * end is written from this and nothing else reads it — no part of the room's
+   * behaviour depends on what you answered four questions ago.
    */
-  visitors: CastId[];
-  /**
-   * Every week that has closed and what was taken in it. The end-of-season
-   * report is built from this (PRD §13.2) and nothing else reads it — no part of
-   * the room's behaviour depends on what you decided nine weeks ago.
-   */
-  decided: Decided[];
-  /** The letter by the pass-through is open. Only ever after week eighteen. */
-  reportOpen: boolean;
+  answered: Answered[];
+  /** Her decision is on screen. Only ever after the ninth question. */
+  offerOpen: boolean;
   /**
    * The server's handle for the third beat currently on screen, or null when it
    * came from the building's own bank. It is what makes the beat count at submit
@@ -150,14 +147,14 @@ export const useCafeStore = create<CafeState>((set) => ({
   speakingToId: null,
   spokenLine: "",
   world: { ...OPENING_WORLD },
-  progress: SEASON_START,
+  progress: INTERVIEW_START,
+  interviewing: false,
   dialogue: null,
   consequence: null,
   taken: {},
   unsent: [],
-  visitors: [],
-  decided: [],
-  reportOpen: false,
+  answered: [],
+  offerOpen: false,
   transferId: null,
   flapOpen: false,
   walkTo: null,
@@ -219,12 +216,12 @@ export function toggleFlap(): boolean {
 /**
  * Start a visit. The *room* always starts the same way — at the door, flap down,
  * nothing open — because the canvas boots with no gates open and a stale
- * `flapOpen: true` here would desync the two. The *season* is whatever you left
- * behind, which is the whole point: you walk back into the café you made.
+ * `flapOpen: true` here would desync the two. The *interview* is whatever you
+ * left behind: walk out on question six and you sit back down on question six.
  */
 export function resetCafeState(): void {
   resetSpoken();
-  const season = loadSeason() ?? freshSeason();
+  const sitting = loadInterview() ?? freshInterview();
   useCafeStore.setState({
     charCell: { ...SPAWN },
     zoneId: zoneAt(SPAWN).id,
@@ -235,16 +232,19 @@ export function resetCafeState(): void {
     openHotspotId: null,
     speakingToId: null,
     spokenLine: "",
-    world: season.world,
-    progress: season.progress,
+    world: sitting.world,
+    progress: sitting.progress,
+    // Sitting back down is deliberate every time. A resumed interview that
+    // started asking the moment the door opened would put a question on screen
+    // before the player had looked at the room.
+    interviewing: false,
     dialogue: null,
     consequence: null,
-    taken: season.taken,
-    unsent: season.unsent,
-    transferId: season.pendingFollowupId,
-    visitors: season.visitors,
-    decided: season.decided,
-    reportOpen: false,
+    taken: sitting.taken,
+    unsent: sitting.unsent,
+    transferId: sitting.pendingFollowupId,
+    answered: sitting.answered,
+    offerOpen: false,
     flapOpen: false,
     walkTo: null,
     inputLocked: false,
@@ -254,26 +254,24 @@ export function resetCafeState(): void {
 
 // ── Saving ───────────────────────────────────────────────────────────────────
 
-/** The season as the save format sees it. */
-function snapshot(): Season {
+/** The sitting as the save format sees it. */
+function snapshot(): Interview {
   const s = useCafeStore.getState();
   return {
     progress: s.progress,
     world: s.world,
     taken: s.taken,
-    visitors: s.visitors,
-    playerCell: s.charCell,
     unsent: s.unsent,
-    decided: s.decided,
+    answered: s.answered,
     pendingFollowupId: s.transferId,
   };
 }
 
 /**
- * Send the decisions the backend never heard.
+ * Send the answers the backend never heard.
  *
- * A season played through a dropped connection is a season the player is owed
- * coins for. The trace is the record and it survived; this is what turns it back
+ * An interview taken through a dropped connection is an interview the player is
+ * owed coins for. The trace is the record and it survived; this is what turns it back
  * into a score. Called when the door opens, which is the moment a connection is
  * most likely to be back.
  *
@@ -284,7 +282,7 @@ export async function retryUnsent(): Promise<void> {
   const queued = useCafeStore.getState().unsent;
   if (queued.length === 0) return;
 
-  const stuck: Season["unsent"] = [];
+  const stuck: Interview["unsent"] = [];
   for (const item of queued) {
     const result = await submitDecision(
       item.activityId,
@@ -303,21 +301,21 @@ export async function retryUnsent(): Promise<void> {
 }
 
 /**
- * Save, on the schedule ADR-006 §11.2 sets out. Objectives completing, world
- * writes and wandering around are cheap and frequent and coalesce into one
- * write; a committed beat and leaving the building are immediate, because a
- * decision that vanishes is the worst bug this building can have.
+ * Save, on the schedule ADR-006 §11.2 sets out. World writes and wandering
+ * around are cheap and frequent and coalesce into one write; a committed beat
+ * and leaving the building are immediate, because an answer that vanishes is
+ * the worst bug this building can have.
  *
  * The coalescing lives one layer down now, with the thing that owns the
  * revision — two debounces in a row would only mean the room's idea of "soon"
  * and the network's could drift apart.
  */
 export function saveNow(): void {
-  saveSeasonNow(snapshot());
+  saveInterviewNow(snapshot());
 }
 
 export function saveSoon(): void {
-  saveSeason(snapshot());
+  saveInterview(snapshot());
 }
 
 /**
@@ -327,7 +325,7 @@ export function saveSoon(): void {
  * going away, and the only thing a browser reliably runs then is `sendBeacon`.
  */
 export function flushNow(): void {
-  flushSeason(snapshot());
+  flushInterview(snapshot());
 }
 
 /**
@@ -342,7 +340,6 @@ export function openHotspot(id: string): void {
   audio.play("ui_open");
   s.setOpenHotspot(id);
   s.announce(`${spot.title}. ${hotspotBody(id, s.world)}`);
-  noteEvent({ kind: "inspected", id });
 }
 
 export function closeHotspot(): void {
@@ -351,100 +348,78 @@ export function closeHotspot(): void {
 }
 
 /**
- * The letter propped against the pass-through hatch, where the rota usually is
- * (PRD §13). It only exists once the ninth week has closed, and reading it is
- * the last thing there is to do in the building.
+ * Her decision. Only exists once the ninth question has closed, and it is the
+ * last thing there is to do in the building.
  */
-export function openReport(): void {
+export function openOffer(): void {
   audio.play("ui_open");
-  useCafeStore.setState({ reportOpen: true, inputLocked: true });
-  useCafeStore
-    .getState()
-    .announce(
-      "An envelope propped against the hatch, in Priya's handwriting. The year at the corner.",
-    );
+  useCafeStore.setState({ offerOpen: true, inputLocked: true });
+  useCafeStore.getState().announce("Priya puts the notepad down and turns it over.");
 }
 
-export function closeReport(): void {
+export function closeOffer(): void {
   audio.play("ui_close");
-  useCafeStore.setState({ reportOpen: false, inputLocked: false });
+  useCafeStore.setState({ offerOpen: false, inputLocked: false });
 }
 
-// ── The season ───────────────────────────────────────────────────────────────
+// ── The interview ────────────────────────────────────────────────────────────
 
-const cellOf = (id: string) =>
-  STNS.find((s) => s.id === id)?.cell ?? SPOTS.find((h) => h.id === id)?.cell ?? null;
-
-/** Everyone in the room: whoever lives here, plus whoever this week brought in. */
+/** Everyone in the room. Nobody arrives mid-interview; it is a conversation. */
 export function presentCast(): CastId[] {
-  const s = useCafeStore.getState();
-  return [...new Set([...castFor(s.world), ...s.visitors])];
+  return castFor(useCafeStore.getState().world);
 }
 
 /**
- * Tell the runner something happened. Most of what the room reports is not an
- * objective — the ticker says "moved" every time the player changes cell — so
- * the runner returns the same Progress when nothing landed and this returns
- * early on identity.
- */
-export function noteEvent(event: RoomEvent): void {
-  const s = useCafeStore.getState();
-  const step = advance(s.progress, event, cellOf);
-  if (step.next === s.progress) return;
-
-  useCafeStore.setState({ progress: step.next });
-
-  saveSoon();
-
-  if (step.missionClosed) {
-    // The season moves on. Nothing is on a timer: the next mission's first
-    // objective is simply available, and the player is free until they go to it.
-    useCafeStore.setState({ visitors: [] });
-    writeWorld(step.missionClosed.closeWorldState);
-    s.announce(`That's week ${step.missionClosed.week} done.`);
-  }
-
-  // Whatever is live now says its piece, if it has one.
-  const opened = currentObjective(useCafeStore.getState().progress);
-  if (opened?.cue) s.announce(opened.cue);
-}
-
-// ── The decision ─────────────────────────────────────────────────────────────
-
-let missionStartedAt = Date.now();
-
-/**
- * Put the due beat on screen. Called when a `decide` objective goes live.
+ * Sit down.
  *
- * If nothing is authored for this mission the beat is skipped rather than the
- * chain being stuck: a season with only some of its content written should still
- * be walkable, and a mission you cannot leave is worse than one you cannot
- * finish properly.
+ * Deliberate rather than automatic: walking into a room and being asked a
+ * question is an ambush, and a player who wants to look at the café first should
+ * be allowed to. Idempotent, because both the station prompt and the always-on
+ * button come through here.
+ */
+export function beginInterview(): void {
+  const s = useCafeStore.getState();
+  if (s.interviewing) return;
+  if (isOver(s.progress)) {
+    openOffer();
+    return;
+  }
+  audio.play("ui_open");
+  useCafeStore.setState({ interviewing: true, progress: advance(s.progress) });
+  s.announce("Priya sits down opposite you with a notepad she does not open.");
+  saveSoon();
+}
+
+let questionStartedAt = Date.now();
+
+/**
+ * Put the due beat on screen.
+ *
+ * If nothing is authored for this question the beat is skipped rather than the
+ * interview being stuck: a question you cannot leave is worse than one that is
+ * missing.
  */
 export async function openDialogue(beat: Beat): Promise<void> {
   const s = useCafeStore.getState();
-  const mission = currentMission(s.progress);
-  if (!mission) return;
-  if (beat === "seed") missionStartedAt = Date.now();
+  const activityId = activityAt(s.progress.index);
+  if (!activityId) return;
+  if (beat === "seed") questionStartedAt = Date.now();
 
   // The third beat was asked for the moment the second one committed, and has
   // been generating behind that consequence ever since. Collecting it here is
   // usually instant; when it is not, `awaitTransfer` gives up at four seconds
   // and the bank answers instead. There is deliberately nothing on screen that
   // marks the difference — no spinner, and no wait the player can attribute.
-  const generated = beat === "transfer" ? await awaitTransfer(mission.activityId) : null;
+  const generated = beat === "transfer" ? await awaitTransfer(activityId) : null;
 
-  const next = openBeat(
-    mission.activityId,
-    beat,
-    s.taken,
-    mission,
-    presentCast(),
-    s.world,
-    generated,
-  );
+  // `[INTERVIEWER]` and not `presentCast()`: who else happens to be in the café
+  // does not get to conduct the interview. The fallback bank names a speaker per
+  // beat — Nadia for one, Ray for another — and openBeat honours that name only
+  // when the person is present, so passing the room's real population had Marcus
+  // asking question four from the chair he was sitting in.
+  const next = openBeat(activityId, beat, s.taken, INTERVIEWER, [INTERVIEWER], s.world, generated);
   if (!next) {
-    noteEvent({ kind: "decided", beat });
+    step(beat);
     return;
   }
   useCafeStore.setState({
@@ -465,9 +440,9 @@ export async function openDialogue(beat: Beat): Promise<void> {
  */
 export function chooseOption(optionId: string): void {
   const s = useCafeStore.getState();
-  const mission = currentMission(s.progress);
+  const activityId = activityAt(s.progress.index);
   const open = s.dialogue;
-  if (!mission || !open) return;
+  if (!activityId || !open) return;
 
   const taken: DecisionSoFar = { ...s.taken, [open.beat]: optionId };
   audio.play("ui_confirm");
@@ -476,11 +451,11 @@ export function chooseOption(optionId: string): void {
     // The generated beat's consequence lives on the server: shipping all three
     // with the options would be shipping three hints at which option is which.
     useCafeStore.setState({ taken, dialogue: null });
-    void settleTransfer(mission.activityId, s.transferId, optionId, taken);
+    void settleTransfer(activityId, s.transferId, optionId, taken);
     return;
   }
 
-  const outcome = resolve(mission.activityId, open.beat, s.taken, optionId);
+  const outcome = resolve(activityId, open.beat, s.taken, optionId);
   useCafeStore.setState({ taken, dialogue: null, consequence: outcome?.consequence ?? null });
   if (outcome?.consequence) s.announce(outcome.consequence);
   if (outcome?.world) writeWorld(outcome.world);
@@ -493,7 +468,7 @@ export function chooseOption(optionId: string): void {
     // inside, and it is the whole reason the question can be personalised
     // without the conversation stopping to wait for it (ADR-006 §7.4).
     requestTransfer({
-      activityId: mission.activityId,
+      activityId,
       track: trackOrDefault(),
       buildingId: BUILDING_ID,
       path: [taken.seed ?? "", optionId],
@@ -503,15 +478,15 @@ export function chooseOption(optionId: string): void {
   }
 
   // A beat with nothing authored behind it would otherwise leave the room
-  // locked with no panel to dismiss — the mission moves on instead.
+  // locked with no panel to dismiss — the interview moves on instead.
   if (!outcome?.consequence) closeConsequence();
 }
 
 /**
  * Commit the third beat and play what came back.
  *
- * If the server cannot be reached the mission still closes: the room moves on
- * the trace and never on the score, and a decision the player has made is not
+ * If the server cannot be reached the question still closes: the interview moves
+ * on the trace and never on the score, and an answer the player has given is not
  * something a dropped connection gets to take back.
  */
 async function settleTransfer(
@@ -534,64 +509,82 @@ async function settleTransfer(
 }
 
 /**
- * Dismiss the consequence and let the chain move on. Kept separate from taking
- * the option so the room gets its four to six seconds before the tracker line
- * changes under the player.
+ * Dismiss the consequence and let her ask the next one. Kept separate from
+ * taking the option so the room gets its four to six seconds before the
+ * question changes under the player.
  */
 export function closeConsequence(): void {
   const s = useCafeStore.getState();
   const beat = s.dialogue?.beat ?? lastBeatTaken(s.taken);
   useCafeStore.setState({ consequence: null, inputLocked: false });
-  if (!beat) return;
+  if (beat) step(beat);
+}
 
-  // Read the mission before advancing: noteEvent below can close this mission
-  // and move the season on, and then we would be submitting the next week's
-  // activity id with this week's path.
-  const activityId = currentMission(s.progress)?.activityId ?? "";
+/**
+ * Move the interview on by one beat.
+ *
+ * The first two beats just advance. The third closes the question: it goes into
+ * the record, it is submitted for scoring, and `taken` is cleared before the
+ * next question can put anything in it. Reading the activity id BEFORE
+ * advancing matters — a beat later and we would be submitting the next
+ * question's id with this question's path.
+ */
+function step(beat: Beat): void {
+  const s = useCafeStore.getState();
+  const activityId = activityAt(s.progress.index) ?? "";
+  const competency = QUESTIONS[s.progress.index] ?? "";
   const taken = s.taken;
   const transferId = s.transferId;
+  const next = advance(s.progress);
 
-  noteEvent({ kind: "decided", beat });
+  if (beat !== "transfer") {
+    useCafeStore.setState({ progress: next });
+    saveSoon();
+    return;
+  }
 
-  if (beat !== "transfer") return;
   forgetTransfer(activityId);
+  const durationSec = (Date.now() - questionStartedAt) / 1000;
 
-  const durationSec = (Date.now() - missionStartedAt) / 1000;
-  // The week goes into the record before `taken` is cleared. This is the only
-  // memory the building keeps of what you decided, and the only thing that reads
-  // it is the letter by the pass-through nine weeks later (PRD §13.2).
+  // The question goes into the record before `taken` is cleared. This is the
+  // only memory the building keeps of what you answered, and the only thing
+  // that reads it is her decision at the end.
   useCafeStore.setState({
+    progress: next,
     taken: {},
     transferId: null,
-    decided: [
-      ...useCafeStore.getState().decided.filter((d) => d.activityId !== activityId),
+    answered: [
+      ...s.answered.filter((a) => a.activityId !== activityId),
       {
         activityId,
+        competency,
         seed: taken.seed ?? null,
         follow: taken.follow ?? null,
         transfer: taken.transfer ?? null,
       },
     ],
   });
+  saveNow();
+
   const followup = transferId && taken.transfer ? { id: transferId, choice: taken.transfer } : null;
 
   void submitDecision(activityId, taken, durationSec, followup).then((result) => {
     if (!result) {
-      // The room has already moved. The score can catch up on the next visit —
-      // the trace is the record, and it is the thing that was persisted.
+      // The interview has already moved. The score can catch up on the next
+      // visit — the trace is the record, and it is the thing that was persisted.
       const q = useCafeStore.getState().unsent;
       useCafeStore.setState({ unsent: [...q, { activityId, taken, durationSec, followup }] });
       return;
     }
-    // Coins are computed server-side and credited once. The HUD renders the new
-    // balance without comment — the number differs at 5 and at 25, the fanfare
-    // never does (ADR-005 §11.1).
-    // `silent: true` is the whole point: the coin tick and any badge still
-    // happen, because those are the platform's, but nothing congratulates the
-    // player. A burst that fires on `passed` and not otherwise IS a verdict, and
-    // this building does not deliver verdicts.
+    // Coins are computed server-side and credited once. `silent: true` is the
+    // whole point: the coin tick and any badge still happen, because those are
+    // the platform's, but nothing congratulates the player. A burst that fires
+    // on `passed` and not otherwise IS a verdict, and this building does not
+    // deliver verdicts (ADR-005 §11.1).
     events.emit("activity_completed", { response: result, silent: true });
   });
+
+  if (isOver(next)) openOffer();
 }
 
 function lastBeatTaken(taken: DecisionSoFar): Beat | null {
@@ -599,17 +592,6 @@ function lastBeatTaken(taken: DecisionSoFar): Beat | null {
   if (taken.follow) return "follow";
   if (taken.seed) return "seed";
   return null;
-}
-
-/**
- * Somebody arrives for a `wait_for`. They join the room first and the objective
- * closes second, so the beat reads as a person coming through the door rather
- * than as a tracker line ticking over on its own.
- */
-export function arrive(id: CastId): void {
-  const s = useCafeStore.getState();
-  if (!s.visitors.includes(id)) useCafeStore.setState({ visitors: [...s.visitors, id] });
-  noteEvent({ kind: "arrived", id });
 }
 
 /**
@@ -654,7 +636,6 @@ export function speakTo(id: CastId): void {
   audio.play("ui_open");
   s.setSpeaking(id, line);
   s.announce(`${member.name}. ${line}`);
-  noteEvent({ kind: "spoke_to", id });
 }
 
 export function stopSpeaking(): void {

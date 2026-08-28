@@ -11,7 +11,6 @@
 // the room is empty on the night the mission says it is closed.
 import type { Cell } from "@/lib/pathfinding";
 import { EXIT } from "./room";
-import { MISSIONS } from "./missions";
 import type { World, WorldValue } from "./world";
 
 /**
@@ -75,23 +74,13 @@ const BY_REGULARS: Record<WorldValue<"regulars">, number> = {
 
 /**
  * The week-8 night beat is the only closed-café mission in the season, and it is
- * closed: chairs up, machine cooling, nobody to perform for. An ambient customer
- * wandering through it would take the one moment in the building where you are
- * alone and make it not that.
- */
-export function roomIsClosed(missionOrder: number): boolean {
-  return MISSIONS.find((m) => m.order === missionOrder)?.week === 8;
-}
-
-/**
  * How many customers are in the room at once.
  *
  * Reduced motion drops the loop to a third (ADR-005 §14.5) rather than to zero:
  * an empty café is a different room, not a calmer one, so what goes is the
  * movement budget and not the population.
  */
-export function crowdSize(world: World, missionOrder: number, reduced: boolean): number {
-  if (roomIsClosed(missionOrder)) return 0;
+export function crowdSize(world: World, reduced: boolean): number {
   const n = BY_REGULARS[world.regulars];
   return reduced ? Math.max(1, Math.ceil(n / 3)) : n;
 }

@@ -43,11 +43,11 @@ import {
   makeRoomGrid,
   type GateId,
 } from "./room";
-import { noteEvent, presentCast, toggleFlap, useCafeStore } from "./cafeStore";
+import { presentCast, toggleFlap, useCafeStore } from "./cafeStore";
 import { createTeardown } from "./teardown";
 import { CAST, castNear } from "./cast";
 import { createCast } from "./castView";
-import { FADE_S, lightForMission, mixLight, type Light } from "./light";
+import { interviewLight, type Light } from "./light";
 import { createCustomers } from "./customersView";
 import { createSchedule } from "./ambient";
 import { createPigeon } from "./pigeon";
@@ -276,42 +276,20 @@ export function CafeCanvas({
       let lastW = 0;
       let lastH = 0;
 
-      // ── The season's light ──────────────────────────────────────────────────
-      // `shown` is what is on the screen this frame, `into` is the week we are
-      // heading for, and `fade` runs 0→1 over FADE_S. The week is read off the
-      // runner rather than off `world.season`, because the light is a property
-      // of when you are, not of anything you decided (PRD §3.4).
-      let shown: Light = lightForMission(useCafeStore.getState().progress.missionOrder);
-      let from: Light = shown;
-      let into: Light = shown;
-      let fade = 1;
-      let litOrder = useCafeStore.getState().progress.missionOrder;
+      // ── The light ───────────────────────────────────────────────────────────
+      // One light for the sitting. It used to cross-fade between nine weeks as
+      // the season moved under the player; an interview happens in one morning,
+      // so it is set once and the fade machinery goes with the season.
+      const shown: Light = interviewLight();
+      grade.tint = shown.tint;
+      grade.alpha = shown.grade;
+      glow.alpha = shown.glow;
 
       const tick = (ticker: { deltaMS: number }) => {
         if (destroyed) return;
         const dt = ticker.deltaMS / 1000;
         elapsed += dt;
         const locked = useCafeStore.getState().inputLocked;
-
-        // Between weeks the screen does not cut away — the light shifts under
-        // the player while they are still standing in the room. Announced on
-        // arrival rather than on departure, so what is said matches what is lit.
-        const order = useCafeStore.getState().progress.missionOrder;
-        if (order !== litOrder) {
-          litOrder = order;
-          from = shown;
-          into = lightForMission(order);
-          fade = reduced ? 1 : 0;
-          if (reduced) store.announce(into.says);
-        }
-        if (fade < 1) {
-          fade = Math.min(1, fade + dt / FADE_S);
-          if (fade >= 1) store.announce(into.says);
-        }
-        shown = fade >= 1 ? into : mixLight(from, into, fade);
-        grade.tint = shown.tint;
-        grade.alpha = shown.grade;
-        glow.alpha = shown.glow;
 
         // A station button asking the room to walk somewhere. Polled rather than
         // subscribed: the ticker is already reading this store every frame, and a
@@ -419,7 +397,6 @@ export function CafeCanvas({
           store.setNearHotspot(hotspotNear(curCell)?.id ?? null);
           // The runner decides whether arriving here was an objective. Most of
           // the time it is not, and it says so by not moving.
-          noteEvent({ kind: "moved", cell: curCell });
         }
 
         // Every frame, not just when the player moves: the cast move too, and
@@ -438,7 +415,6 @@ export function CafeCanvas({
 
         for (const beat of beats.tick(dt, {
           world: roomWorld,
-          missionOrder: order,
           seated: customers.countInside(),
           atMachine,
         })) {
@@ -485,7 +461,7 @@ export function CafeCanvas({
         // does with it is a cell-distance question, and a cell changes ~30× less
         // often than a position does.
         cast.update(dt, curCell, presentNow());
-        customers.update(dt, useCafeStore.getState().world, order, ringBell);
+        customers.update(dt, useCafeStore.getState().world, ringBell);
 
         // The flap swing. Linear over FLAP_SWING_S so it reads as a hinge rather
         // than a spring; reduced motion snapped it already, above.

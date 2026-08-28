@@ -14,15 +14,13 @@ import { CafeCanvas } from "./CafeCanvas";
 import { armBeacon, hydrateSession, setSessionTrack } from "@/framework/session/sync";
 import { trackOrDefault } from "@/framework/city/track";
 
-/** How long the bell takes to go after a `wait_for` opens. */
-const ARRIVAL_MS = 2200;
-/** The beat in which whoever is asking finishes what they were doing first. */
+/** The beat in which she finishes writing before she looks up and asks. */
 const BEAT_MS = 900;
 import {
-  arrive,
+  beginInterview,
   closeHotspot,
   openDialogue,
-  openReport,
+  openOffer,
   flushNow,
   openHotspot,
   resetCafeState,
@@ -33,23 +31,33 @@ import {
   useCafeStore,
 } from "./cafeStore";
 import { GATES, HOTSPOTS, zoneAt } from "./room";
-import { atAnchors, castById, castFor, guideWithCast, type CastId } from "./cast";
+import { atAnchors, castById, castFor, guideWithCast } from "./cast";
 import { hotspotBody } from "./world";
-import { Tracker } from "./Tracker";
 import { Dialogue } from "./Dialogue";
-import { currentObjective, seasonIsOver, type Progress } from "./missionRunner";
+import { InterviewPanel } from "./InterviewPanel";
+import { Offer } from "./Offer";
+import { isOver, type InterviewProgress } from "./interview";
 import { BUILDING_ID } from "./session";
-import { Report } from "./Report";
-import type { Beat } from "./missions";
-import { HOTSPOTS as ALL_SPOTS, STATIONS as ALL_STATIONS } from "./room";
+import { STATIONS } from "./room";
 
-/**
- * The envelope is at the pass-through, where the rota usually is, and only after
- * the ninth week has closed (PRD §13). It replaces the hatch's own panel rather
- * than sitting beside it: there is one thing propped there and it is the letter.
- */
-function letterIsAt(hotspotId: string | null, progress: Progress): boolean {
-  return hotspotId === "ht_pass" && seasonIsOver(progress);
+/** Where she takes the interview. Not behind the counter — you do not work here yet. */
+const INTERVIEW_STATION = "st_tables";
+/** Close enough to the table to be sitting at it. */
+const SIT_RADIUS = 1;
+
+function atTable(x: number, y: number): boolean {
+  const cell = STATIONS.find((p) => p.id === INTERVIEW_STATION)?.cell;
+  return !!cell && Math.abs(cell.x - x) <= SIT_RADIUS && Math.abs(cell.y - y) <= SIT_RADIUS;
+}
+
+/** Standing at the table, with an interview still to have. */
+function sittingDown(
+  x: number,
+  y: number,
+  interviewing: boolean,
+  progress: InterviewProgress,
+): boolean {
+  return atTable(x, y) && !interviewing && !isOver(progress);
 }
 
 export default function CafeInterior({ manifest, onExit }: InteriorProps) {
@@ -66,7 +74,9 @@ export default function CafeInterior({ manifest, onExit }: InteriorProps) {
   const announcement = useCafeStore((s) => s.announcement);
   const world = useCafeStore((s) => s.world);
   const progress = useCafeStore((s) => s.progress);
-  const visitors = useCafeStore((s) => s.visitors);
+  const interviewing = useCafeStore((s) => s.interviewing);
+  const dialogue = useCafeStore((s) => s.dialogue);
+  const consequence = useCafeStore((s) => s.consequence);
 
   // Every visit starts at the door with the flap down, which keeps the store and
   // the canvas's own gate set in step (the canvas boots with no gates open).
@@ -75,9 +85,9 @@ export default function CafeInterior({ manifest, onExit }: InteriorProps) {
   // city asks it at the gate now (ADR-006 §11.1) — one choice for the whole
   // city, and the room is already the right room by the time the door opens.
   //
-  // The season is pulled down first. It is the one await on this path, and it
+  // The sitting is pulled down first. It is the one await on this path, and it
   // happens behind the door-opening line the room already shows, so a player who
-  // left mid-week on another device walks back in standing where they left it.
+  // walked out on question six on another device sits back down on question six.
   const [seasonIn, setSeasonIn] = useState(false);
   useEffect(() => {
     let live = true;
@@ -86,9 +96,9 @@ export default function CafeInterior({ manifest, onExit }: InteriorProps) {
       if (!live) return;
       resetCafeState();
       setSeasonIn(true);
-      // Weeks decided while the backend was unreachable are owed a score and
-      // the coins that come with it. The door opening is when a connection is
-      // most likely to be back.
+      // Questions answered while the backend was unreachable are owed a score
+      // and the coins that come with it. The door opening is when a connection
+      // is most likely to be back.
       void retryUnsent();
     });
     return () => {
@@ -96,22 +106,13 @@ export default function CafeInterior({ manifest, onExit }: InteriorProps) {
     };
   }, []);
 
-  const objective = currentObjective(progress);
-
-  // A `wait_for` completes on arrival, and arrival is on a short timer rather
-  // than on anything the player does. It is the one objective kind they cannot
-  // make happen, so it must never be a place to get stuck (PRD §18.4).
-  const waitingFor = objective?.kind === "wait_for" ? (objective.target as CastId) : null;
-  useEffect(() => {
-    if (!waitingFor) return;
-    const t = window.setTimeout(() => arrive(waitingFor), ARRIVAL_MS);
-    return () => window.clearTimeout(t);
-  }, [waitingFor]);
-
-  // A `decide` objective going live is the question arriving. The pause before
-  // it is the room finishing what it was doing — never a spinner, and never
-  // anything that marks out which beat came from a model (PRD §11.2).
-  const dueBeat = objective?.kind === "decide" ? (objective.target as Beat) : null;
+  // The next beat arriving is her asking. The pause before it is her finishing
+  // what she was writing — never a spinner, and never anything that marks out
+  // which of the three came from a model (PRD §11.2).
+  //
+  // Nothing is on screen and nothing is pending: that is the gap between
+  // committing one answer and being asked the next, and it closes itself.
+  const dueBeat = interviewing && !dialogue && !consequence ? progress.beat : null;
   useEffect(() => {
     if (!dueBeat) return;
     const t = window.setTimeout(() => void openDialogue(dueBeat), BEAT_MS);
@@ -123,31 +124,19 @@ export default function CafeInterior({ manifest, onExit }: InteriorProps) {
   const openSpot = openHotspotId ? (HOTSPOTS.find((h) => h.id === openHotspotId) ?? null) : null;
   const person = nearCastId ? castById(nearCastId) : null;
   const speaking = speakingToId ? castById(speakingToId) : null;
+  const atTheTable = atTable(charCell.x, charCell.y);
 
   // The list is rebuilt from where people are standing, so walking to Priya
   // means walking to Priya rather than to the spot she left. Anchors are the
   // fallback for the frame or two before the canvas has reported in.
-  // Derived from the store's own fields rather than from presentCast(), which
-  // reads getState() and so would not re-render this list when Nadia walks in.
-  const present = [...new Set([...castFor(world), ...visitors])];
-  const guide = guideWithCast(atAnchors(present));
-  // The list's first entry is wherever the mission is waiting (PRD §15). It is
-  // also how a seasonal place like the sample bag becomes reachable at all —
-  // those are kept out of the standing list on purpose.
-  const waitingAt = objective
-    ? (ALL_STATIONS.find((p) => p.id === objective.target) ??
-      ALL_SPOTS.find((h) => h.id === objective.target))
-    : undefined;
-  const nav = waitingAt
-    ? [
-        {
-          id: waitingAt.id,
-          label: "label" in waitingAt ? waitingAt.label : waitingAt.guideLabel,
-          cell: waitingAt.cell,
-        },
-        ...guide.filter((p) => p.id !== waitingAt.id),
-      ]
-    : guide;
+  const guide = guideWithCast(atAnchors(castFor(world)));
+  // The tables come first while there is still an interview to sit down for —
+  // it is the one place in the room the player actually has to reach.
+  const table = STATIONS.find((p) => p.id === INTERVIEW_STATION);
+  const nav =
+    table && !interviewing && !isOver(progress)
+      ? [table, ...guide.filter((p) => p.id !== table.id)]
+      : guide;
 
   /**
    * Leaving flushes the season first. "Leaving the building" and "closing the
@@ -178,10 +167,10 @@ export default function CafeInterior({ manifest, onExit }: InteriorProps) {
       leaveNow();
     } else if (s.nearGateId) {
       toggleFlap();
+    } else if (sittingDown(s.charCell.x, s.charCell.y, s.interviewing, s.progress)) {
+      beginInterview();
     } else if (s.nearCastId) {
       speakTo(s.nearCastId);
-    } else if (letterIsAt(s.nearHotspotId, s.progress)) {
-      openReport();
     } else if (s.nearHotspotId) {
       openHotspot(s.nearHotspotId);
     }
@@ -205,11 +194,11 @@ export default function CafeInterior({ manifest, onExit }: InteriorProps) {
 
   // The beacon token is minted while the player is still in the room. Minting it
   // on the way out would put a round trip on the one path that must not have one,
-  // and it expires in five minutes, so a long season re-arms as it goes.
+  // and it expires in five minutes, so a long interview re-arms as it goes.
   useEffect(() => {
     if (!seasonIn) return;
     void armBeacon(BUILDING_ID);
-  }, [seasonIn, progress.missionOrder]);
+  }, [seasonIn, progress.index]);
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -239,10 +228,10 @@ export default function CafeInterior({ manifest, onExit }: InteriorProps) {
       ? flapOpen
         ? gate.closePrompt
         : gate.openPrompt
-      : person
-        ? person.name
-        : letterIsAt(nearHotspotId, progress)
-          ? "read the letter"
+      : atTheTable && !interviewing && !isOver(progress)
+        ? "sit down for the interview"
+        : person
+          ? person.name
           : (hotspot?.prompt ?? null);
 
   return (
@@ -256,9 +245,9 @@ export default function CafeInterior({ manifest, onExit }: InteriorProps) {
           has already given the city back by the time this fires. */}
       <CafeCanvas onReady={() => setReady(true)} onError={onExit} />
 
-      {ready && seasonIn && <Tracker />}
+      {ready && seasonIn && interviewing && !isOver(progress) && <InterviewPanel />}
       <Dialogue />
-      <Report />
+      <Offer />
 
       {(!ready || !seasonIn) && (
         <div className="absolute inset-0 grid place-items-center bg-ink">
@@ -284,6 +273,20 @@ export default function CafeInterior({ manifest, onExit }: InteriorProps) {
         Back to the street
         <span className="rounded bg-line/50 px-1.5 py-0.5 text-xs text-muted">Esc</span>
       </button>
+
+      {/* The interview is the one thing there is to do here, so it is never more
+          than one click away. Walking to the table is the nicer way in — she is
+          sitting there — and this is the way in that cannot be missed. It is why
+          the flow has no dead end for a player who never finds the tile: she
+          comes over to wherever they are standing. */}
+      {ready && seasonIn && !interviewing && !isOver(progress) && !openSpot && !speaking && (
+        <button
+          onClick={beginInterview}
+          className="pointer-events-auto absolute right-5 top-20 z-10 flex items-center gap-2 rounded-full border border-gold/60 bg-surface/90 px-4 py-2 text-sm text-text shadow-lg backdrop-blur hover:brightness-110"
+        >
+          <span className="font-semibold text-gold">Sit down for the interview</span>
+        </button>
+      )}
 
       {prompt && !openSpot && !speaking && (
         <div className="pointer-events-none absolute bottom-10 left-1/2 z-10 -translate-x-1/2 animate-slide-up">

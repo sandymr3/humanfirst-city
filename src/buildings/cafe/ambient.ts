@@ -15,14 +15,12 @@
 // actually gets out of its way, which is a scheduling property and cannot be
 // expressed as six independent intervals.
 import { marcusIsIn, type World } from "./world";
-import { roomIsClosed } from "./customers";
 
 export type BeatId = "steam" | "grinder" | "cup" | "wipe" | "page" | "pigeon";
 
 /** What the room looks like right now, as much of it as a beat can care about. */
 export interface RoomNow {
   world: World;
-  missionOrder: number;
   /** How many ambient customers are sitting down. */
   seated: number;
   /** Somebody is working the espresso machine. */
@@ -55,13 +53,13 @@ export const BEATS: readonly AmbientBeat[] = [
     every: [8, 20],
     // Only while somebody is at the machine — steam off an unattended group head
     // is a room that runs itself.
-    when: (n) => n.atMachine && !roomIsClosed(n.missionOrder),
+    when: (n) => n.atMachine,
     decorative: true,
   },
   {
     id: "grinder",
     every: [30, 60],
-    when: (n) => !roomIsClosed(n.missionOrder),
+    when: () => true,
     decorative: false,
   },
   {
@@ -76,7 +74,7 @@ export const BEATS: readonly AmbientBeat[] = [
     every: [40, 90],
     // Priya is the anchor and is in the room in every world state, so this is
     // only ever gated on the café being open.
-    when: (n) => !roomIsClosed(n.missionOrder),
+    when: () => true,
     decorative: true,
   },
   {
@@ -85,7 +83,7 @@ export const BEATS: readonly AmbientBeat[] = [
     // Marcus, and only while he is still coming in. His chair going quiet is
     // the building's most important non-verbal beat and the ambient layer must
     // not paper over it.
-    when: (n) => marcusIsIn(n.world) && !roomIsClosed(n.missionOrder),
+    when: (n) => marcusIsIn(n.world),
     decorative: true,
   },
   {
