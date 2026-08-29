@@ -14,9 +14,9 @@
 // beat before a hard line". That only works if everything else in the room
 // actually gets out of its way, which is a scheduling property and cannot be
 // expressed as six independent intervals.
-import { marcusIsIn, type World } from "./world";
+import type { World } from "./world";
 
-export type BeatId = "steam" | "grinder" | "cup" | "wipe" | "page" | "pigeon";
+export type BeatId = "steam" | "grinder" | "cup" | "wipe" | "typing" | "pigeon";
 
 /** What the room looks like right now, as much of it as a beat can care about. */
 export interface RoomNow {
@@ -78,12 +78,14 @@ export const BEATS: readonly AmbientBeat[] = [
     decorative: true,
   },
   {
-    id: "page",
+    id: "typing",
     every: [45, 120],
-    // Marcus, and only while he is still coming in. His chair going quiet is
-    // the building's most important non-verbal beat and the ambient layer must
-    // not paper over it.
-    when: (n) => marcusIsIn(n.world),
+    // Owen, getting a line down between questions. This used to be Marcus
+    // turning a page, gated on him still coming in — his chair going quiet was
+    // the season's most important non-verbal beat. There is no season and no
+    // Marcus; the one person in the room who is doing something with his hands
+    // is the man with the laptop.
+    when: () => true,
     decorative: true,
   },
   {

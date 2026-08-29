@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { findPath, type Cell } from "@/lib/pathfinding";
-import { GATES, GUIDE, ROOM_H, ROOM_W, SPAWN, makeRoomGrid, type GateId } from "./room";
+import { FURNITURE, GATES, GUIDE, ROOM_H, ROOM_W, SPAWN, makeRoomGrid, type GateId } from "./room";
 import {
   CAST,
   OPENING_CAST,
@@ -12,7 +12,6 @@ import {
   facingFrom,
   guideWithCast,
 } from "./cast";
-import { OPENING_WORLD, WORLD_KEYS } from "./world";
 
 const ALL_OPEN: ReadonlySet<GateId> = new Set(GATES.map((g) => g.id));
 const open = makeRoomGrid(ALL_OPEN);
@@ -89,6 +88,27 @@ describe("the Café cast", () => {
     }
   });
 
+  it("gives everyone seated a patch of floor to be spoken to from", () => {
+    // The bug this catches is silent and total: the guided-navigation list routes
+    // you to the cell it is handed, a chair is blocked, so a chip aimed at
+    // somebody's own seat finds no path and announces that there is no way
+    // through. For the one person in this room worth walking to, that is the
+    // whole interview unreachable without a mouse.
+    for (const m of CAST) {
+      if (!m.seated) continue;
+      expect(m.approach, `${m.id} is seated with nowhere to be spoken to from`).toBeTruthy();
+      const a = m.approach!;
+      expect(open.isWalkable(a.x, a.y), `${m.id}'s approach ${at(a)} is blocked`).toBe(true);
+      expect(findPath(open, SPAWN, a).length, `${m.id}'s approach is unreachable`).toBeGreaterThan(
+        0,
+      );
+      expect(
+        manhattan(a, m.anchor),
+        `${m.id}'s approach ${at(a)} is out of speaking range of ${at(m.anchor)}`,
+      ).toBeLessThanOrEqual(m.talkRadius);
+    }
+  });
+
   it("gives everyone a distinct id, name and place to be", () => {
     expect(new Set(CAST.map((m) => m.id)).size).toBe(CAST.length);
     expect(new Set(CAST.map((m) => m.name)).size).toBe(CAST.length);
@@ -109,15 +129,36 @@ describe("the Café cast", () => {
     }
   });
 
-  it("opens the season with Priya and Marcus, and Priya is never absent", () => {
-    // Priya is the anchor: every mission whose host is missing falls back to her,
-    // so a room without her is a room where a beat has no speaker.
+  it("puts two people in the room: the barista and the interviewer", () => {
+    // Priya is the anchor — anything without a host falls back to her, so a room
+    // without her is a room where a line has no speaker. Owen is the reason the
+    // player walked in. Nobody else is in the room to be walked past.
     expect(OPENING_CAST).toContain("priya");
-    expect(OPENING_CAST).toContain("marcus");
+    expect(OPENING_CAST).toContain("owen");
     for (const id of OPENING_CAST) {
       expect(castById(id), `${id} is in the opening cast but not in CAST`).toBeTruthy();
     }
-    expect(castPresent(OPENING_CAST).map((m) => m.id)).toEqual(["priya", "marcus"]);
+    expect(castPresent(OPENING_CAST).map((m) => m.id)).toEqual(["priya", "owen"]);
+  });
+
+  it("keeps the same two people in every world state", () => {
+    // castFor() used to read the season — Marcus while the regulars held, Tomas
+    // on Level B — and the room filled and emptied around a set of weeks that no
+    // longer exist. It takes no arguments now, and this is the test that fails
+    // if a world state ever starts putting strangers back in the room.
+    expect(castFor()).toEqual(["priya", "owen"]);
+    expect(castFor()).not.toBe(OPENING_CAST); // a copy, not the frozen list
+  });
+
+  it("seats the interviewer at the table the laptop is on", () => {
+    // The laptop is an overlay on (8,6) and Owen has to be at that table for it
+    // to be his. One cell either side: him at (7,6), the window seat at (9,6).
+    const owen = castById("owen")!;
+    expect(owen.seated).toBe(true);
+    expect(manhattan(owen.anchor, { x: 8, y: 6 })).toBe(1);
+    const laptop = FURNITURE.find((f) => f.kind === "laptop");
+    expect(laptop, "the interview table has no laptop on it").toBeTruthy();
+    expect(laptop!.cell).toEqual({ x: 8, y: 6 });
   });
 });
 
@@ -181,13 +222,22 @@ describe("the guided-navigation list with people in it", () => {
     const list = guideWithCast(atAnchors(OPENING_CAST));
     const labels = list.map((p) => p.label);
     expect(labels).toContain("Priya, head barista");
-    expect(labels).toContain("Marcus, the regular");
+    expect(labels).toContain("Owen, the area manager");
   });
 
   it("keeps the places, and keeps them first", () => {
     const list = guideWithCast(atAnchors(OPENING_CAST));
     expect(list.slice(0, GUIDE.length).map((p) => p.id)).toEqual(GUIDE.map((p) => p.id));
     expect(list).toHaveLength(GUIDE.length + OPENING_CAST.length);
+  });
+
+  it("walks you to every entry, including the ones sitting on furniture", () => {
+    // The places in GUIDE are covered by room.test.ts; this is the half of the
+    // list that is generated from people, which that test never sees.
+    for (const p of guideWithCast(atAnchors(CAST.map((m) => m.id)))) {
+      expect(open.isWalkable(p.cell.x, p.cell.y), `${p.id} at ${at(p.cell)} is blocked`).toBe(true);
+      expect(findPath(open, SPAWN, p.cell).length, `${p.id} unreachable`).toBeGreaterThan(0);
+    }
   });
 
   it("sends you to where somebody actually is, not where they started", () => {
@@ -220,34 +270,5 @@ describe("which way someone turns to look at you", () => {
 
   it("faces the camera when there is nowhere to turn", () => {
     expect(facingFrom(here, here)).toBe("S");
-  });
-});
-
-describe("who is in the room", () => {
-  it("keeps Priya in it whatever the world says", () => {
-    // An acceptance criterion, not a convention: she is the anchor every beat
-    // falls back to, so a world state without her is a beat with no speaker.
-    for (const regulars of WORLD_KEYS.regulars) {
-      expect(castFor({ ...OPENING_WORLD, regulars })).toContain("priya");
-    }
-  });
-
-  it("empties Marcus's chair exactly when the regulars thin out", () => {
-    expect(castFor({ ...OPENING_WORLD, regulars: "full" })).toContain("marcus");
-    expect(castFor({ ...OPENING_WORLD, regulars: "steady" })).toContain("marcus");
-    expect(castFor({ ...OPENING_WORLD, regulars: "returning" })).toContain("marcus");
-    expect(castFor({ ...OPENING_WORLD, regulars: "thin" })).not.toContain("marcus");
-  });
-
-  it("opens the season with exactly the opening cast", () => {
-    expect(castFor(OPENING_WORLD).sort()).toEqual([...OPENING_CAST].sort());
-  });
-
-  it("drops him from the guided-nav list when he is not there", () => {
-    // Otherwise the list offers to walk you to an empty chair.
-    const thin = { ...OPENING_WORLD, regulars: "thin" as const };
-    const labels = guideWithCast(atAnchors(castFor(thin))).map((p) => p.label);
-    expect(labels.some((l) => l.startsWith("Marcus"))).toBe(false);
-    expect(labels.some((l) => l.startsWith("Priya"))).toBe(true);
   });
 });

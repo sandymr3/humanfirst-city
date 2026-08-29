@@ -39,7 +39,6 @@ import {
   SPAWN,
   exitNear,
   gateNear,
-  hotspotNear,
   makeRoomGrid,
   type GateId,
 } from "./room";
@@ -51,7 +50,7 @@ import { interviewLight, type Light } from "./light";
 import { createCustomers } from "./customersView";
 import { createSchedule } from "./ambient";
 import { createPigeon } from "./pigeon";
-import { marcusIsIn } from "./world";
+import { INTERVIEWER } from "./interview";
 
 const WALK_SPEED = 175; // px/sec — the city's pace, so indoors feels like outdoors
 const STEP_S = 0.18; // seconds per walk-cycle frame
@@ -394,7 +393,6 @@ export function CafeCanvas({
           store.setCharCell(curCell);
           store.setNearExit(exitNear(curCell));
           store.setNearGate(gateNear(curCell)?.id ?? null);
-          store.setNearHotspot(hotspotNear(curCell)?.id ?? null);
           // The runner decides whether arriving here was an objective. Most of
           // the time it is not, and it says so by not moving.
         }
@@ -434,8 +432,8 @@ export function CafeCanvas({
             case "wipe":
               cast.nudge("priya");
               break;
-            case "page":
-              if (marcusIsIn(roomWorld)) cast.nudge("marcus");
+            case "typing":
+              cast.nudge(INTERVIEWER);
               break;
             case "pigeon":
               pigeon.land();
@@ -508,7 +506,6 @@ export function CafeCanvas({
 
       store.setNearExit(exitNear(curCell));
       store.setNearGate(gateNear(curCell)?.id ?? null);
-      store.setNearHotspot(hotspotNear(curCell)?.id ?? null);
       store.setNearCast(castNear(curCell, cast.positions())?.id ?? null);
       audio.preload(["step_hard_1", "step_hard_2"]);
       // What time of year you have walked back into. A returning player mid-season

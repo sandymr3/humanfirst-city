@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { AFTER_LIGHT, MAX_GRADE, OPEN_LIGHT, cooled, lightForWeek, mixLight } from "./light";
+import { lightForWeek, mixLight } from "./light";
 
 describe("the cut between weeks", () => {
   it("ends exactly on the light it was going to", () => {

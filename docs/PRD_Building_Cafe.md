@@ -12,6 +12,37 @@ _Content source: `Playroom Scenarios.xlsx` → sheet **`CAFE New`** (the `CAFE` 
 
 ## 0. Repo reality — what ships today, and what this version adds
 
+### 0.0 Since v2.0 — the Café is an interview, not a season
+
+> **Read this before §8 and §5.** The nine-week season this document specifies
+> was built and then taken out again. What the Café is today is **one job
+> interview**, and the rest of the document is the design history behind the
+> content it asks.
+>
+> - **The nine competencies survived; the season did not.** The same nine
+>   scenarios are asked in one sitting as nine interview questions — seed,
+>   authored follow-up, AI transfer beat, exactly as §9.6 specifies — and the
+>   sitting ends with an offer rather than with a week 18. There are no
+>   missions, no objective chains and no mission tracker.
+> - **The interviewer is Owen, the area manager** (`cast.ts`, `INTERVIEWER`).
+>   Not Priya: the person assessing you cannot also be the person pulling your
+>   shot. He is seated at the four-top with a laptop, and **speaking to him is
+>   what starts the interview** — there is no station and no button.
+> - **The room is two people.** `castFor()` returns Priya and Owen in every
+>   world state, plus one ambient customer. Marcus, Tomas, Nadia, Ray and
+>   Ellery are still written in §5 and still in `CAST`, waiting for the stages
+>   after the interview; they are not in the room.
+> - **The five hotspots are gone**, and with them the twelve-chip guided-nav
+>   list. `GUIDE` has one destination — the interview table — plus whoever is in
+>   the room. §7's interactable list and the `ht_*` ids in §0.1 and §8 are
+>   history.
+> - **The city asks for it.** One objective line in the HUD naming the Café,
+>   and a gold marker on the building, cleared once the first question has been
+>   answered (`src/framework/city/firstMission.ts`). Not a quest system.
+>
+> §0.1 and §0.2 below are the repo as it stood at v2.0 and are kept as the
+> record of what this document was written against.
+
 ### 0.1 What exists
 
 `src/buildings/cafe/` is a **walkable 2.5D isometric room**, and it is the house standard every other interior is read against.

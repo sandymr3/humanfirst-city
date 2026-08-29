@@ -3,7 +3,7 @@
 // The Café used to run a season of nine missions: a tracker in the corner, a
 // chain of objectives per mission, someone arriving through the door, a walk
 // across the room to report where you landed. It has one job now, and this is
-// it — you sit down with the hiring manager and she asks you nine questions.
+// it — you sit down with the area manager and he asks you nine questions.
 //
 // Each question is the same three beats it always was: the authored scenario,
 // the authored follow-up that branches on what you chose, and the third one
@@ -25,22 +25,29 @@ export type Beat = "seed" | "follow" | "transfer";
 export const QUESTIONS = ["C1", "C2", "C3", "C4", "C5", "C6", "C7", "C8", "C9"] as const;
 
 /**
- * Priya asks all nine.
+ * Owen asks all nine.
  *
- * She is the Café's anchor — present in every world state by construction — and
- * her voice was already written for this: short sentences, understatement,
- * questions she already knows the answer to, asked as a courtesy. The backend
- * holds the same persona card, so the generated third beat comes back sounding
- * like the same person who asked the first two.
+ * Priya asked them while the interview was the only thing that had been built —
+ * she is the Café's anchor and she was already in the room — but the person
+ * interviewing you cannot also be the person pulling your shot. Owen is the area
+ * manager: he does not work in this café, he is here for the morning with a
+ * laptop on the four-top, and that is the whole reason he reads as an assessor
+ * rather than as a colleague being odd with you.
+ *
+ * **The backend has to hold the matching persona card.** `FollowupService.Issue`
+ * resolves the speaker id the client sends against `followups/cafe.json`, and an
+ * id it does not know falls back to the speaker of the fallback beat — silently.
+ * Change this constant without adding the card and the generated third beat
+ * comes back in Nadia's voice.
  */
-export const INTERVIEWER = "priya" as const;
+export const INTERVIEWER = "owen" as const;
 
 export interface InterviewProgress {
-  /** 0…8 while she is still asking. 9 once she has made her decision. */
+  /** 0…8 while he is still asking. 9 once he has made his decision. */
   index: number;
   /**
    * Which beat of the current question is on screen, or null in the gap between
-   * committing one and her asking the next.
+   * committing one and him asking the next.
    */
   beat: Beat | null;
 }
@@ -73,12 +80,12 @@ export function activityAt(index: number, track: Track = trackOrDefault()): stri
   return competency ? activityIdFor(competency, track) : null;
 }
 
-/** She has asked all nine and has nothing left to ask. */
+/** He has asked all nine and has nothing left to ask. */
 export function isOver(p: InterviewProgress): boolean {
   return p.index >= QUESTIONS.length;
 }
 
-/** Which question she is on, 1-based, for the one ordinal the panel shows. */
+/** Which question he is on, 1-based, for the one ordinal the panel shows. */
 export function ordinal(p: InterviewProgress): number {
   return Math.min(p.index + 1, QUESTIONS.length);
 }
@@ -86,13 +93,13 @@ export function ordinal(p: InterviewProgress): number {
 /**
  * The beat that is due next.
  *
- * `null` in, and she opens the current question. A committed beat in, and she
+ * `null` in, and he opens the current question. A committed beat in, and he
  * moves to the next one — or, after the third, straight to the next question.
  * Returning the whole progress rather than mutating means the caller can persist
  * it before anything is rendered, which is what makes a closed tab resumable.
  *
- * `beat` is therefore null in exactly two places: before she has started, and
- * after she has finished. Everywhere else there is a question on screen.
+ * `beat` is therefore null in exactly two places: before he has started, and
+ * after he has finished. Everywhere else there is a question on screen.
  */
 export function advance(p: InterviewProgress): InterviewProgress {
   if (isOver(p)) return p;
@@ -101,7 +108,7 @@ export function advance(p: InterviewProgress): InterviewProgress {
   const next = BEATS[BEATS.indexOf(p.beat) + 1];
   if (next) return { ...p, beat: next };
 
-  // Straight into the next question rather than through a null gap. She does not
+  // Straight into the next question rather than through a null gap. He does not
   // pause between them, and a gap here would be a state the room could sit in
   // with nothing on screen and nothing to press.
   const index = p.index + 1;

@@ -11,7 +11,7 @@
 // the room is empty on the night the mission says it is closed.
 import type { Cell } from "@/lib/pathfinding";
 import { EXIT } from "./room";
-import type { World, WorldValue } from "./world";
+import type { World } from "./world";
 
 /**
  * One customer's life, in order. `away` is the resting state — a customer who
@@ -47,8 +47,8 @@ export const QUEUE: readonly Cell[] = [
 /**
  * Where they sit. Walkable cells beside the three tables, never a chair cell —
  * chairs block, and a customer routed onto one would be pathfinding into
- * furniture. (9,6) is left alone because it is Marcus's, and (7,6) because it is
- * where Ellery stands in week 12.
+ * furniture. The four-top's two chairs are not in here at all: (7,6) is where
+ * the interview happens and (9,6) is Marcus's.
  */
 export const SEATS: readonly Cell[] = [
   { x: 1, y: 4 },
@@ -64,25 +64,19 @@ export const SIT_S: readonly [number, number] = [26, 70];
 /** Seconds between one bell and the next, before density is applied. */
 export const BELL_S: readonly [number, number] = [25, 45];
 
-/** How many bodies the room carries at once, by who still comes in (PRD §12). */
-const BY_REGULARS: Record<WorldValue<"regulars">, number> = {
-  full: 3,
-  returning: 3,
-  steady: 2,
-  thin: 1,
-};
-
 /**
- * The week-8 night beat is the only closed-café mission in the season, and it is
  * How many customers are in the room at once.
  *
- * Reduced motion drops the loop to a third (ADR-005 §14.5) rather than to zero:
- * an empty café is a different room, not a calmer one, so what goes is the
- * movement budget and not the population.
+ * One. It used to scale with `world.regulars` — three when the café was full,
+ * one when it had thinned out — because that number was a consequence you had
+ * earned. Nothing writes `regulars` any more, and three strangers milling about
+ * during an interview is noise rather than life.
+ *
+ * Reduced motion keeps the one and slows it, rather than emptying the room:
+ * an empty café is a different room, not a calmer one (ADR-005 §14.5).
  */
-export function crowdSize(world: World, reduced: boolean): number {
-  const n = BY_REGULARS[world.regulars];
-  return reduced ? Math.max(1, Math.ceil(n / 3)) : n;
+export function crowdSize(): number {
+  return 1;
 }
 
 /**

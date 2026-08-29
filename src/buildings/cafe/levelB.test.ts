@@ -7,8 +7,7 @@ import {
   trackOrDefault,
 } from "@/framework/city/track";
 import { QUESTIONS, activityAt } from "./interview";
-import { castFor } from "./cast";
-import { OPENING_WORLD, openingWorldFor, passThroughBody } from "./world";
+import { openingWorldFor } from "./world";
 import { cooled, lightForWeek } from "./light";
 
 beforeEach(() => {
@@ -68,32 +67,9 @@ describe("the eighteen registry rows", () => {
 });
 
 describe("the Level B room", () => {
-  it("puts Tomas on the floor from week one", () => {
-    // The staffing problem is in the room from the start rather than arriving in
-    // week 14, and that is most of what makes the same nine weeks read heavier.
-    expect(castFor(OPENING_WORLD, "SCB")).toContain("tomas");
-    expect(castFor(OPENING_WORLD, "SCA")).not.toContain("tomas");
-  });
-
-  it("keeps Priya unremovable on both tracks", () => {
-    for (const track of ["SCA", "SCB"] as const) {
-      for (const regulars of ["full", "steady", "thin", "returning"] as const) {
-        expect(castFor({ ...OPENING_WORLD, regulars }, track), track).toContain("priya");
-      }
-    }
-  });
-
   it("has the rival's awning already up across the road", () => {
     expect(openingWorldFor("SCB").rival).toBe("open");
     expect(openingWorldFor("SCA").rival).toBe("none");
-  });
-
-  it("pins the supplier's letter and the corrected rota by the hatch", () => {
-    const pro = passThroughBody(OPENING_WORLD, "SCB");
-    const hard = passThroughBody(OPENING_WORLD, "SCA");
-    expect(pro).toContain("supplier");
-    expect(pro).toContain("rota");
-    expect(hard).not.toContain("supplier");
   });
 
   it("runs a stop cooler without going dark", () => {

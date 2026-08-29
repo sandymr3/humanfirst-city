@@ -404,6 +404,14 @@ function drawProp(kind: PropKind): Graphics {
       g.rect(-6, -28, 12, 6).fill(shade(P.glass, 0.9));
       return g;
 
+    case "laptop":
+      // Screen up, lid angled away from the player so the room can see the back
+      // of it and not what is on it — what he is typing is not the player's.
+      g.poly([-11, -2, 0, 3, 11, -2, 0, -7]).fill(shade(P.steel, 0.92));
+      g.poly([-10, -6, 0, -1, 0, -13, -10, -18]).fill(shade(P.steel, 1.02));
+      g.poly([0, -1, 10, -6, 10, -18, 0, -13]).fill(shade(P.steel, 0.8));
+      return g;
+
     case "pendant": {
       // Hangs from above the counter: flex, shade, and the bulb's glow.
       g.rect(-1, -128, 2, 46).fill(shade(P.woodDark, 0.7));

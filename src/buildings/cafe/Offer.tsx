@@ -1,4 +1,4 @@
-// What she decided.
+// What he decided.
 //
 // The end of the sitting, and the only screen in the building that is allowed to
 // talk about how it went — the blueprint puts the tier "only in the end-of-journey
@@ -6,7 +6,7 @@
 // the server and there is no endpoint that hands a learner their own tiers back,
 // so this says what happened and stops, rather than inventing a verdict.
 //
-// What it can say honestly is what she asked and what you told her, in order.
+// What it can say honestly is what he asked and what you told him, in order.
 // That trail is the record, and it is the thing the player actually wants to see.
 import { castById } from "./cast";
 import { INTERVIEWER, QUESTIONS } from "./interview";
@@ -25,7 +25,7 @@ export function Offer() {
       <Modal onClose={closeOffer} width="md">
         <h2 className="font-display text-xl font-semibold text-gold">The job is yours</h2>
         <p className="mt-3 text-sm leading-relaxed text-text">
-          <span className="font-semibold text-gold">{interviewer?.name ?? "Priya"}: </span>“That’s
+          <span className="font-semibold text-gold">{interviewer?.name ?? "Owen"}: </span>“That’s
           the nine. You start on the floor with the customers — everyone does, including me. Come
           back Monday and we’ll see how you get on.”
         </p>
@@ -34,7 +34,7 @@ export function Offer() {
           them this way.
         </p>
 
-        <h3 className="mt-6 text-xs uppercase tracking-widest text-muted">What she asked you</h3>
+        <h3 className="mt-6 text-xs uppercase tracking-widest text-muted">What he asked you</h3>
         <ol className="mt-3 space-y-2.5">
           {answered.map((a, i) => {
             const tree = treeFor(a.activityId);

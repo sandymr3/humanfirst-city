@@ -139,7 +139,7 @@ export function createCustomers(
   /** Send somebody in, if the room has room for them. */
   function admit(world: World, onBell: () => void): void {
     const inside = bodies.filter((b) => b.phase !== "away");
-    if (inside.length >= crowdSize(world, reduced)) return;
+    if (inside.length >= crowdSize()) return;
     const next = bodies.find((b) => b.phase === "away");
     if (!next) return;
 
@@ -212,7 +212,7 @@ export function createCustomers(
       // The room closing under them — the night beat, or the regulars thinning
       // out mid-visit. They finish their drink on the way to the door rather
       // than blinking out of existence.
-      const cap = crowdSize(world, reduced);
+      const cap = crowdSize();
       const inside = bodies.filter((b) => b.phase !== "away");
       if (inside.length > cap) {
         for (const b of inside.slice(cap)) {

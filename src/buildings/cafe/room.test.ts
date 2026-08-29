@@ -5,7 +5,6 @@ import {
   FURNITURE,
   GATES,
   GUIDE,
-  HOTSPOTS,
   NO_GATES_OPEN,
   ROOM_H,
   ROOM_W,
@@ -13,7 +12,6 @@ import {
   STAFF_CELLS,
   STATIONS,
   ZONES,
-  hotspotNear,
   makeRoomGrid,
   zoneAt,
   type GateId,
@@ -127,25 +125,6 @@ describe("the Café room", () => {
     }
   });
 
-  it("puts every hotspot somewhere you can stand, and can reach", () => {
-    for (const h of HOTSPOTS) {
-      expect(inBounds(h.cell), `hotspot ${h.id} at ${at(h.cell)} is outside the room`).toBe(true);
-      expect(open.isWalkable(h.cell.x, h.cell.y), `hotspot ${h.id} stands on a blocked cell`).toBe(
-        true,
-      );
-      expect(findPath(open, SPAWN, h.cell).length, `hotspot ${h.id} unreachable`).toBeGreaterThan(
-        0,
-      );
-      expect(hotspotNear(h.cell)?.id, `hotspotNear misses ${h.id} at its own cell`).toBe(h.id);
-    }
-  });
-
-  it("gates the pass-through hotspot behind the flap, like the zone it sits in", () => {
-    const pass = HOTSPOTS.find((h) => h.id === "ht_pass");
-    expect(pass, "the pass-through hotspot should exist").toBeTruthy();
-    expect(findPath(closed, SPAWN, pass!.cell).length, "reachable with the flap down").toBe(0);
-  });
-
   it("encloses the room — the whole border is solid except the door", () => {
     for (let x = 0; x < ROOM_W; x++) {
       for (const y of [0, ROOM_H - 1]) {
@@ -173,34 +152,13 @@ describe("the Café room", () => {
 });
 
 describe("the guided-navigation list", () => {
-  it("can send you to every station and every standing hotspot", () => {
-    const ids = new Set(GUIDE.map((p) => p.id));
-    for (const s of STATIONS) expect(ids.has(s.id), `${s.id} is not in the guide`).toBe(true);
-    for (const h of HOTSPOTS.filter((x) => !x.seasonal)) {
-      expect(ids.has(h.id), `${h.id} is not in the guide`).toBe(true);
-    }
-  });
-
-  it("keeps the seasonal ones out until the week that needs them", () => {
-    // A button reading "the sample bag" in week one is a promise about week
-    // sixteen. The runner fronts the live objective's target instead.
-    const ids = new Set(GUIDE.map((p) => p.id));
-    for (const h of HOTSPOTS.filter((x) => x.seasonal)) {
-      expect(ids.has(h.id), `${h.id} is in the standing guide`).toBe(false);
-    }
-    expect(
-      HOTSPOTS.some((h) => h.seasonal),
-      "nothing is seasonal any more",
-    ).toBe(true);
-  });
-
-  it("carries the two places the season sends you that are not stations", () => {
-    // The noticeboard and the pass-through are hotspots, and the season sends
-    // you to both by name. Left out of this list they are mouse-only, and a
-    // player navigating by keyboard cannot finish either of those weeks.
-    const ids = GUIDE.map((p) => p.id);
-    expect(ids).toContain("ht_board");
-    expect(ids).toContain("ht_pass");
+  it("sends you to the interview table and nowhere else", () => {
+    // It used to send you to the noticeboard and the pass-through by name,
+    // because the season did. Neither week exists any more, and a list of
+    // places with nothing at them is the clutter this change is removing. What
+    // survives is the one destination a keyboard-only player must still have.
+    expect(GUIDE.map((p) => p.id)).toEqual(["st_tables"]);
+    expect(GUIDE[0].cell).toEqual({ x: 8, y: 5 });
   });
 
   it("lists each place exactly once", () => {
