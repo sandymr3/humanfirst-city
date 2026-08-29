@@ -9,7 +9,7 @@ const ACTIVITY_IDS = (["SCA", "SCB"] as const).flatMap((track) =>
   QUESTIONS.map((c) => activityIdFor(c, track)),
 );
 import { OPENING_WORLD, WORLD_KEYS, isLegal, isWorldKey, type WorldKey } from "./world";
-import { CAST, type CastId } from "./cast";
+import { CAST } from "./cast";
 
 const words = (s: string) => s.trim().split(/\s+/).length;
 const castIds = new Set(CAST.map((m) => m.id as string));

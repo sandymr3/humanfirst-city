@@ -4,12 +4,9 @@ import {
   WORLD_KEYS,
   announcementFor,
   applyPatch,
-  chalkboardBody,
   changedKeys,
-  fourTopBody,
   isLegal,
   isWorldKey,
-  marcusIsIn,
   type WorldKey,
 } from "./world";
 
@@ -118,49 +115,6 @@ describe("what the room says when something changes", () => {
         const said = announcementFor(k, v as never);
         if (said) expect(verdicts.test(said), `${k}=${v}: "${said}"`).toBe(false);
       }
-    }
-  });
-});
-
-describe("what the room looks like", () => {
-  it("writes a different board for every value the board can take", () => {
-    const seen = new Set<string>();
-    for (const v of WORLD_KEYS.chalkboard) {
-      const body = chalkboardBody({ ...OPENING_WORLD, chalkboard: v });
-      expect(body.trim(), `chalkboard=${v} has no text`).toBeTruthy();
-      expect(seen.has(body), `chalkboard=${v} repeats another state's text`).toBe(false);
-      seen.add(body);
-    }
-    expect(seen.size).toBe(WORLD_KEYS.chalkboard.length);
-  });
-
-  it("writes a different four-top for every value of regulars", () => {
-    const seen = new Set<string>();
-    for (const v of WORLD_KEYS.regulars) {
-      const body = fourTopBody({ ...OPENING_WORLD, regulars: v });
-      expect(body.trim(), `regulars=${v} has no text`).toBeTruthy();
-      seen.add(body);
-    }
-    expect(seen.size).toBe(WORLD_KEYS.regulars.length);
-  });
-
-  it("empties Marcus's chair only when the regulars have thinned", () => {
-    expect(marcusIsIn({ ...OPENING_WORLD, regulars: "full" })).toBe(true);
-    expect(marcusIsIn({ ...OPENING_WORLD, regulars: "steady" })).toBe(true);
-    expect(marcusIsIn({ ...OPENING_WORLD, regulars: "returning" })).toBe(true);
-    expect(marcusIsIn({ ...OPENING_WORLD, regulars: "thin" })).toBe(false);
-  });
-
-  it("never passes judgement in prose either", () => {
-    const verdicts =
-      /\b(well done|good (call|job|choice)|mistake|you should have|the better|the right (call|choice)|wisely|unfortunately|sadly)\b/i;
-    for (const v of WORLD_KEYS.chalkboard) {
-      const body = chalkboardBody({ ...OPENING_WORLD, chalkboard: v });
-      expect(verdicts.test(body), `chalkboard=${v}: "${body}"`).toBe(false);
-    }
-    for (const v of WORLD_KEYS.regulars) {
-      const body = fourTopBody({ ...OPENING_WORLD, regulars: v });
-      expect(verdicts.test(body), `regulars=${v}: "${body}"`).toBe(false);
     }
   });
 });

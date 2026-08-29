@@ -8,17 +8,15 @@
 // renderer. castView.ts does the drawing.
 //
 // Characters are drawn with the city's own procedural rig (world/characterArt.ts
-// §bakePersonTextures), which takes a palette, so six people cost six palettes
-// and no art. The palettes are pulled toward the room's own colours rather than
-// the city's, because these are people who work here.
+// §bakePersonTextures), which takes a palette, so seven people cost seven
+// palettes and no art. The palettes are pulled toward the room's own colours
+// rather than the city's, because these are people who work here.
 import type { Cell } from "@/lib/pathfinding";
 import type { Cardinal } from "@/world/assets";
 import type { PersonPalette } from "@/world/characterArt";
 import { GUIDE, type GuidePlace } from "./room";
-import { marcusIsIn, type World } from "./world";
-import { trackOrDefault, type Track } from "@/framework/city/track";
 
-export type CastId = "priya" | "tomas" | "marcus" | "nadia" | "ray" | "ellery";
+export type CastId = "priya" | "owen" | "tomas" | "marcus" | "nadia" | "ray" | "ellery";
 
 export interface CastMember {
   id: CastId;
@@ -39,6 +37,16 @@ export interface CastMember {
    */
   seated: boolean;
   /**
+   * Where you stand to talk to them, when that is not their own cell.
+   *
+   * **Required for anyone seated.** A seated person is on furniture, furniture
+   * is blocked, and the guided-navigation list routes you to the cell it is
+   * given: aimed at the chair itself it finds no path, says "there's no way
+   * through to there", and leaves a keyboard-only player unable to reach the
+   * one person in the room worth reaching.
+   */
+  approach?: Cell;
+  /**
    * How close you have to be before they look up, in cells. The counter is a
    * cell deep, so anything under 2 means the staff never acknowledge a customer.
    */
@@ -58,9 +66,10 @@ export interface CastMember {
 }
 
 /**
- * Six people, four of whom are never in the room at the same time (ADR-005 §15
- * caps skinned meshes, and the fiction caps them harder — this is a café with
- * four staff, not a crowd).
+ * Seven people, two of whom are in the room (ADR-005 §15 caps skinned meshes,
+ * and the fiction caps them harder — this is a café with four staff, not a
+ * crowd). `castFor` decides which; the rest are written and waiting for the
+ * stages of the career that come after the interview.
  */
 export const CAST: readonly CastMember[] = [
   {
@@ -114,6 +123,7 @@ export const CAST: readonly CastMember[] = [
     // A coat he never takes off, and the most static silhouette in the room.
     palette: { shirt: 0x5c3a28, legs: 0x3a3134, skin: 0x8d5a3b, hair: 0xd8d2c8 },
     anchor: { x: 9, y: 6 }, // T3's chair, the four-top by the window
+    approach: { x: 9, y: 7 }, // the floor in front of his table
     patrol: [],
     seated: true,
     // He looks up when you are at the table, not when you cross the room. Being
@@ -159,13 +169,34 @@ export const CAST: readonly CastMember[] = [
     ],
   },
   {
+    id: "owen",
+    name: "Owen",
+    role: "the area manager",
+    // Office clothes in a café: he is the one person here who does not work in
+    // this room, and he should read that way before he says anything.
+    palette: { shirt: 0xdfe3e8, legs: 0x2f3a4a, skin: 0xe8c9a6, hair: 0x2a2320 },
+    anchor: { x: 7, y: 6 }, // the room side of the four-top, laptop open on it
+    approach: { x: 7, y: 7 }, // the empty floor you cross the room to stand on
+    patrol: [],
+    seated: true,
+    noticesAt: 3,
+    talkRadius: 1,
+    // He is between interviews, not making conversation. Nothing here comments
+    // on the player — that rule does not relax just because he is the assessor.
+    ambientLines: [
+      "Take a seat whenever you're ready.",
+      "Nine of these, and then I'll tell you what I think.",
+      "The wifi in here is terrible. Doesn't matter, this is all offline.",
+    ],
+  },
+  {
     id: "ellery",
     name: "Ellery",
     role: "the office buyer",
     // Cooler than anything else in the room, on purpose — she is the one person
     // here lit slightly wrong for a café.
     palette: { shirt: 0x9fb7bd, legs: 0x33415e, skin: 0xf5e0c4, hair: 0x3b2d23 },
-    anchor: { x: 7, y: 6 }, // the far side of T3 — Marcus's table, which she takes
+    anchor: { x: 9, y: 5 }, // standing over T3 — Marcus's table, which she takes
     patrol: [],
     seated: false,
     noticesAt: 2,
@@ -179,34 +210,27 @@ export const CAST: readonly CastMember[] = [
 ];
 
 /**
- * Who is in the room before the season has decided anything. Week one of Level A
- * is Priya, Marcus and the customers; everyone else arrives with the mission
- * that needs them.
- */
-export const OPENING_CAST: readonly CastId[] = ["priya", "marcus"];
-
-/**
- * Who is in the room for a given world state.
+ * Who is in the room. Two people, on both tracks, whatever the world says.
  *
- * Marcus is bound to `regulars` — that is the whole point of him. He is in his
- * chair every morning until the morning he isn't, and week 18 lands only because
- * the chair has been full for seventeen weeks first.
+ * The café used to fill up and empty out because the season needed it to: Marcus
+ * was here so that a later week could take his chair away, Tomas so that Level B
+ * opened with the staffing problem already on the floor, Nadia and Ray and Ellery
+ * so that the weeks that were about them had somebody to be about. None of those
+ * weeks exists any more, and a room full of people you cannot do anything with
+ * reads as clutter rather than as life. They stay in `CAST` because the stages
+ * after the interview will want them; they are simply not in the room today.
  *
  * **Priya is unremovable**, and that is an acceptance criterion rather than a
- * convention: she is the anchor every mission falls back to when its host is
- * absent, so a world state that took her out would be a world state where a beat
- * has nobody to speak it.
+ * convention: a café with nobody behind the counter is not a café, and she is the
+ * speaker anything without a host falls back to.
  *
- * **Tomas is on the floor from week one on Level B** (PRD §14). He is the
- * staffing problem, and on that track the staffing problem is in the room from
- * the start rather than arriving in week 14 — which is most of what makes the
- * same nine weeks read heavier.
+ * **Owen is unremovable too, and for a blunter reason** — he is why you came in.
  */
-export function castFor(world: World, track: Track = trackOrDefault()): CastId[] {
-  const here: CastId[] = ["priya"];
-  if (track === "SCB") here.push("tomas");
-  if (marcusIsIn(world)) here.push("marcus");
-  return here;
+export const OPENING_CAST: readonly CastId[] = ["priya", "owen"];
+
+/** Who is in the room for a given world state: `OPENING_CAST`, always. */
+export function castFor(): CastId[] {
+  return [...OPENING_CAST];
 }
 
 export function castById(id: CastId): CastMember | null {
@@ -263,7 +287,8 @@ export function guideWithCast(present: readonly CastAt[]): GuidePlace[] {
     ...present.map(({ member, cell }) => ({
       id: member.id,
       label: `${member.name}, ${member.role}`,
-      cell,
+      // Their own cell if you can stand on it, otherwise the floor beside them.
+      cell: member.approach ?? cell,
     })),
   ];
 }

@@ -34,9 +34,9 @@ describe("the beat table", () => {
     expect(BEATS.map((b) => b.id).sort()).toEqual([
       "cup",
       "grinder",
-      "page",
       "pigeon",
       "steam",
+      "typing",
       "wipe",
     ]);
   });
@@ -47,7 +47,7 @@ describe("the beat table", () => {
       grinder: [30, 60],
       cup: [12, 30],
       wipe: [40, 90],
-      page: [45, 120],
+      typing: [45, 120],
       pigeon: [90, 180],
     };
     for (const beat of BEATS) {
@@ -73,13 +73,13 @@ describe("when a beat means nothing, it does not fire", () => {
     expect(fired).not.toContain("cup");
   });
 
-  it("never turns Marcus's page once Marcus has stopped coming in", () => {
-    // His chair going quiet is the building's most important non-verbal beat
-    // (PRD §15) and the ambient layer must not paper over it.
+  it("keeps the interviewer typing whatever the world says", () => {
+    // This was Marcus turning a page, and it went quiet with him — the season's
+    // loudest silence. Owen is in the room in every world state, so the beat is
+    // gated on nothing, and a world that used to switch it off must not.
     const thin: World = { ...OPENING_WORLD, regulars: "thin" };
-    const fired = run(pinned(), 400, now({ world: thin }));
-    expect(fired).not.toContain("page");
-    expect(run(pinned(), 400, now())).toContain("page");
+    expect(run(pinned(), 400, now({ world: thin }))).toContain("typing");
+    expect(run(pinned(), 400, now())).toContain("typing");
   });
 
   it("comes back when the room does, rather than discharging what it owed", () => {

@@ -8,9 +8,9 @@
 // named at the bottom of the file so the gap is written down rather than
 // implied.
 import { describe, it, expect } from "vitest";
-import { GUIDE, HOTSPOTS, ZONES } from "./room";
+import { GUIDE, ZONES } from "./room";
 import { CAST, guideWithCast, atAnchors } from "./cast";
-import { WORLD_KEYS, announcementFor, hotspotBody, OPENING_WORLD, type WorldKey } from "./world";
+import { WORLD_KEYS, announcementFor, type WorldKey } from "./world";
 import { lightForWeek, MAX_GRADE } from "./light";
 
 describe("guided navigation", () => {
@@ -27,9 +27,13 @@ describe("guided navigation", () => {
     }
   });
 
-  it("carries the six stations and the four standing hotspots", () => {
-    expect(GUIDE.filter((g) => g.id.startsWith("st_"))).toHaveLength(6);
-    expect(GUIDE.filter((g) => g.id.startsWith("ht_"))).toHaveLength(4);
+  it("carries the one place there is to go, and no leftovers", () => {
+    // Six stations and four hotspots used to be in here, which is a to-do list
+    // read aloud. There is one thing to do in this room now, so there is one
+    // destination — and nothing prefixed ht_, because those places are gone
+    // rather than merely dropped from the list.
+    expect(GUIDE.map((g) => g.id)).toEqual(["st_tables"]);
+    expect(GUIDE.filter((g) => g.id.startsWith("ht_"))).toHaveLength(0);
   });
 
   it("introduces the cast by name and role", () => {
@@ -42,17 +46,6 @@ describe("guided navigation", () => {
       expect(entry, `${member.id} is not reachable from the list`).toBeTruthy();
       expect(entry!.label).toContain(member.name);
       expect(entry!.label).toContain(member.role);
-    }
-  });
-
-  it("keeps the seasonal places out of the standing list", () => {
-    // A button reading "the sample bag" in week one is a promise about week
-    // sixteen.
-    for (const hotspot of HOTSPOTS.filter((h) => h.seasonal)) {
-      expect(
-        GUIDE.some((g) => g.id === hotspot.id),
-        hotspot.id,
-      ).toBe(false);
     }
   });
 });

@@ -5,7 +5,6 @@ import {
   ORDER_AT,
   QUEUE,
   SEATS,
-  crowdSize,
   everyRouteCell,
   goalFor,
   nextBell,
@@ -16,7 +15,7 @@ import {
 } from "./customers";
 import { FURNITURE, NO_GATES_OPEN, makeRoomGrid } from "./room";
 import { CAST } from "./cast";
-import { OPENING_WORLD, WORLD_KEYS, type World } from "./world";
+import { OPENING_WORLD, type World } from "./world";
 import { findPath } from "@/lib/pathfinding";
 
 const grid = makeRoomGrid(NO_GATES_OPEN);
@@ -127,41 +126,6 @@ describe("the loop itself", () => {
     expect(staysIn(0, 0)).toBe(false);
     expect(staysIn(0.99, 4)).toBe(false);
     expect(staysIn(0.1, 4)).toBe(true);
-  });
-});
-
-describe("how many of them there are", () => {
-  it("scales with who still comes in", () => {
-    const full = crowdSize(worldWith("full"), false);
-    const steady = crowdSize(worldWith("steady"), false);
-    const thin = crowdSize(worldWith("thin"), false);
-    expect(full).toBeGreaterThan(steady);
-    expect(steady).toBeGreaterThan(thin);
-    expect(thin).toBeGreaterThanOrEqual(1);
-  });
-
-  it("has a size for every legal value of regulars", () => {
-    for (const value of WORLD_KEYS.regulars) {
-      expect(crowdSize(worldWith(value), false), value).toBeGreaterThan(0);
-    }
-  });
-
-  it("thins the loop under reduced motion without emptying the room", () => {
-    // §14.5 drops the customer loop to a third. An empty café is a different
-    // room rather than a calmer one, so the floor is one.
-    for (const value of WORLD_KEYS.regulars) {
-      const world = worldWith(value);
-      const n = crowdSize(world, false);
-      const r = crowdSize(world, true);
-      expect(r, value).toBeLessThanOrEqual(n);
-      expect(r, value).toBeGreaterThanOrEqual(1);
-    }
-  });
-
-  it("stays under the four-animated-characters budget with the cast in the room", () => {
-    // PRD §16: ≤ 4 animated characters on screen. The cast is at most three at
-    // once by §8.1's table, and the player is one of them.
-    expect(crowdSize(worldWith("full"), false) + 3 + 1).toBeLessThanOrEqual(8);
   });
 });
 

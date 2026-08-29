@@ -28,7 +28,7 @@ import { trackOrDefault } from "@/framework/city/track";
 const LEGACY_KEY = "city.cafe.season";
 
 export interface InterviewBlob {
-  /** 0…8 while she is asking, 9 once she has decided. */
+  /** 0…8 while he is asking, 9 once he has decided. */
   questionIndex: number;
   /** The beat on screen, or null between questions. */
   beat: Beat | null;

@@ -34,6 +34,7 @@ import {
   type CityBuilding,
   type CityProp,
 } from "./cityMap";
+import { isObjectiveVenue } from "@/framework/city/firstMission";
 import {
   loadCityAssets,
   tex,
@@ -168,13 +169,19 @@ export function CityCanvas({
       const smokeStacks: Array<{ x: number; y: number }> = [];
       const steamVents: Array<{ x: number; y: number }> = [];
       const markers: Graphics[] = [];
+      /** Parallel to `markers` — which venue each one is sitting on. */
+      const markerVenues: string[] = [];
+      const objectiveMarkers = new Set<Graphics>();
       const windowLights: Sprite[] = [];
       const venueNodes = new Map<string, Container>();
       for (const v of VENUES) {
         const parts = makeBuilding(v, windowTex);
         actors.addChild(parts.root);
         venueNodes.set(v.id, parts.root);
-        if (v.interactable) markers.push(parts.marker);
+        if (v.interactable) {
+          markers.push(parts.marker);
+          markerVenues.push(v.id);
+        }
         windowLights.push(...parts.lights);
         if (v.id === "race_car" || v.id === "custom") {
           const bounds = parts.root.getLocalBounds();
@@ -190,6 +197,25 @@ export function CityCanvas({
           });
         }
       }
+
+      /**
+       * Which marker the city is currently pointing at.
+       *
+       * The one the objective names pulses wider and gold, so "go to the Café"
+       * has somewhere to land visually. Every other marker keeps the common
+       * pulse — the point is that one of them is different, not that this one is
+       * loud. Re-derived rather than fixed at build time, because the objective
+       * clears while the player is inside the building it named.
+       */
+      function markObjective() {
+        objectiveMarkers.clear();
+        markers.forEach((m, i) => {
+          if (isObjectiveVenue(markerVenues[i])) objectiveMarkers.add(m);
+        });
+      }
+      markObjective();
+      let interiorWas = false;
+
       FILLERS.forEach((f) => {
         const visual = FILLER_VISUALS[f.visualIndex % FILLER_VISUALS.length];
         const t0 = f.footprintTiles[0];
@@ -385,7 +411,17 @@ export function CityCanvas({
         // A building interior owns the screen and runs its own Application while
         // it's mounted. Freeze here rather than pay for a world nobody can see —
         // the last frame stays on the canvas, fully occluded.
-        if (useWorldStore.getState().interiorOpen) return;
+        if (useWorldStore.getState().interiorOpen) {
+          interiorWas = true;
+          return;
+        }
+        // Coming back out of a building is the one moment the objective can have
+        // changed, so it is the only place worth re-reading it. Once a frame
+        // would be a session read every frame for a line that changes once.
+        if (interiorWas) {
+          interiorWas = false;
+          markObjective();
+        }
 
         const dt = ticker.deltaMS / 1000;
         elapsed += dt;
@@ -509,7 +545,11 @@ export function CityCanvas({
               phase.nightness * (0.55 + 0.12 * Math.sin(elapsed * 3 + i * 1.7));
           }
           for (let i = 0; i < markers.length; i++) {
-            markers[i].scale.set(1 + 0.12 * Math.sin(elapsed * 2.2 + i));
+            const wanted = objectiveMarkers.has(markers[i]);
+            markers[i].scale.set(
+              (wanted ? 1.35 : 1) + (wanted ? 0.22 : 0.12) * Math.sin(elapsed * 2.2 + i),
+            );
+            markers[i].tint = wanted ? 0xffc65c : 0xffffff;
           }
           for (let i = 0; i < clouds.length; i++) {
             const s = clouds[i];

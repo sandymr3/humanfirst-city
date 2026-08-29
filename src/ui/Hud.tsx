@@ -4,6 +4,7 @@ import { signOutUser } from "@/framework/auth/firebase";
 import { useEconomyStore } from "@/framework/economy/economyStore";
 import { events } from "@/framework/events";
 import { useWorldStore } from "@/world/worldStore";
+import { currentObjective } from "@/framework/city/firstMission";
 import { useCountUp } from "./useCountUp";
 import { audio } from "@/framework/audio/audioManager";
 import { Icon } from "./Icon";
@@ -19,6 +20,12 @@ export function Hud() {
   const [soundOn, setSoundOn] = useState(audio.isEnabled());
   // A panel is open (inputLocked) while the result modal covers the screen.
   const panelOpen = useWorldStore((s) => s.inputLocked);
+  // `currentObjective()` reads the session mirror rather than React state, so
+  // nothing re-renders this on its own. Nothing has to: the objective only
+  // changes inside the Café, CityScreen unmounts the HUD while an interior is
+  // open, and coming back out to the street mounts it again — which is the only
+  // place the line is ever on screen anyway.
+  const [objective] = useState(() => currentObjective());
   const initial = (user?.displayName || user?.email || "?").charAt(0).toUpperCase();
 
   // "+N" floater on real earnings (server's coinsEarned, not a client guess).
@@ -60,6 +67,19 @@ export function Hud() {
           {user?.displayName || user?.email || "Player"}
         </span>
       </div>
+
+      {/* The one thing the city asks of you, under the chip that says who you
+          are. One line, no counter, no progress bar — it names a place and then
+          it is gone. It is hidden while a panel is up, because a panel is
+          already the thing you are doing. */}
+      {objective && !panelOpen && (
+        <div className="pointer-events-none absolute left-4 top-16 max-w-[min(22rem,60vw)]">
+          <div className="rounded-2xl border border-gold/40 bg-surface/85 px-4 py-2.5 backdrop-blur">
+            <p className="text-[11px] uppercase tracking-widest text-muted">First thing</p>
+            <p className="mt-0.5 text-sm leading-relaxed text-text">{objective.line}</p>
+          </div>
+        </div>
+      )}
 
       {/* Top-right: coins + logout */}
       <div className="pointer-events-auto absolute right-4 top-4 flex items-center gap-2">

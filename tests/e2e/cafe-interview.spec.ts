@@ -53,6 +53,20 @@ test.describe("the Café interview (dev world bypass)", () => {
     await expect(page.getByText("WASD")).toBeVisible({ timeout: 60_000 });
   }
 
+  /**
+   * Cross the room to Owen and sit down.
+   *
+   * By the GO TO chip rather than by steering, because that is the path a player
+   * without a mouse takes and it is the one that used to be broken: his chair is
+   * blocked furniture, and a chip aimed at it found no route at all.
+   */
+  async function sitDownWithOwen(page: Page) {
+    await page.getByRole("button", { name: /Owen, the area manager/i }).click();
+    const prompt = page.getByRole("button", { name: /sit down with Owen/i });
+    await expect(prompt).toBeVisible({ timeout: 30_000 });
+    await prompt.click();
+  }
+
   /** The level question, asked once at the gate. */
   async function answerTheGate(page: Page) {
     const gate = page.getByRole("dialog", { name: /Entering CEO City/i });
@@ -85,11 +99,23 @@ test.describe("the Café interview (dev world bypass)", () => {
 
     await bootCity(page);
     await answerTheGate(page);
+
+    // The city asks for one thing, and it says where.
+    await expect(page.getByText(/Owen is expecting you at ten/i)).toBeVisible({ timeout: 30_000 });
+    await page.screenshot({ path: "test-results/cafe-00-objective.png" });
+
     await enterTheCafe(page);
     await page.screenshot({ path: "test-results/cafe-01-room.png", fullPage: false });
 
-    // Sitting down is the one thing there is to do in here.
-    await page.getByRole("button", { name: /Sit down for the interview/i }).click();
+    // One destination in the room, and it is a person's table. This is the
+    // assertion the emptying is for: five hotspots and a twelve-chip GO TO list
+    // used to be here, and every one of them read as a job to do.
+    const goTo = page.getByRole("navigation", { name: /Places in the café/i });
+    await expect(goTo.getByRole("button")).toHaveCount(3); // the table, Priya, Owen
+    await expect(goTo.getByRole("button", { name: /the interview table/i })).toBeVisible();
+
+    // Sitting down with Owen is the one thing there is to do in here.
+    await sitDownWithOwen(page);
 
     const decision = page.getByRole("dialog", { name: "A decision" });
     await expect(decision).toBeVisible({ timeout: 30_000 });
@@ -112,7 +138,7 @@ test.describe("the Café interview (dev world bypass)", () => {
       await back.click();
     }
 
-    // She makes her decision the moment the twenty-seventh commits.
+    // He makes his decision the moment the twenty-seventh commits.
     const offer = page.getByRole("heading", { name: /The job is yours/i });
     await expect(offer).toBeVisible({ timeout: 30_000 });
     await page.screenshot({ path: "test-results/cafe-03-offer.png" });
@@ -134,7 +160,7 @@ test.describe("the Café interview (dev world bypass)", () => {
     await answerTheGate(page);
     await enterTheCafe(page);
 
-    await page.getByRole("button", { name: /Sit down for the interview/i }).click();
+    await sitDownWithOwen(page);
     const decision = page.getByRole("dialog", { name: "A decision" });
     await expect(decision).toBeVisible({ timeout: 30_000 });
 
@@ -151,9 +177,37 @@ test.describe("the Café interview (dev world bypass)", () => {
     await page.getByText("Back to the street").click();
     await expect(page.getByText("WASD")).toBeVisible({ timeout: 30_000 });
     await enterTheCafe(page);
-    await page.getByRole("button", { name: /Sit down for the interview/i }).click();
+    await sitDownWithOwen(page);
 
     await expect(page.getByText(/Question 2 of 9/)).toBeVisible({ timeout: 30_000 });
+    expect(problems, `the page complained:\n${problems.join("\n")}`).toEqual([]);
+  });
+
+  test("the city stops asking once the interview has been sat", async ({ page }) => {
+    const problems = collectProblems(page);
+    await bootCity(page);
+    await answerTheGate(page);
+    await expect(page.getByText(/Owen is expecting you at ten/i)).toBeVisible({ timeout: 30_000 });
+
+    await enterTheCafe(page);
+    await sitDownWithOwen(page);
+    const decision = page.getByRole("dialog", { name: "A decision" });
+
+    // One whole question — the objective is "go and attend the interview", and
+    // by the time the first one has closed they have done that.
+    for (let i = 0; i < 3; i++) {
+      await expect(decision).toBeVisible({ timeout: 30_000 });
+      await decision.getByRole("button").first().click();
+      const back = decision.getByRole("button", { name: "Back to the room" });
+      await expect(back).toBeVisible({ timeout: 30_000 });
+      await back.click();
+    }
+
+    await page.getByText("Back to the street").click();
+    await expect(page.getByText("WASD")).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByText(/Owen is expecting you at ten/i)).toHaveCount(0);
+    await page.screenshot({ path: "test-results/cafe-04-objective-cleared.png" });
+
     expect(problems, `the page complained:\n${problems.join("\n")}`).toEqual([]);
   });
 });

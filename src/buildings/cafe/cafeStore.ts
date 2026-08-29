@@ -9,7 +9,7 @@ import { create } from "zustand";
 import type { Cell } from "@/lib/pathfinding";
 import { audio } from "@/framework/audio/audioManager";
 import { events } from "@/framework/events";
-import { GATES, HOTSPOTS, SPAWN, zoneAt, type GateId, type ZoneId } from "./room";
+import { GATES, SPAWN, zoneAt, type GateId, type ZoneId } from "./room";
 import { castById, castFor, type CastId } from "./cast";
 import {
   INTERVIEWER,
@@ -50,7 +50,6 @@ import {
   announcementFor,
   applyPatch,
   changedKeys,
-  hotspotBody,
   type World,
   type WorldPatch,
 } from "./world";
@@ -68,12 +67,8 @@ interface CafeState {
   nearExit: boolean;
   /** The gate you are close enough to work, if any. */
   nearGateId: GateId | null;
-  /** The hotspot you are close enough to read, if any. */
-  nearHotspotId: string | null;
   /** The person you are close enough to speak to, if any. */
   nearCastId: CastId | null;
-  /** The hotspot whose panel is open, if any. */
-  openHotspotId: string | null;
   /** Who you are mid-conversation with, if anyone. */
   speakingToId: CastId | null;
   /** What they just said. Held here so the DOM and the live region agree. */
@@ -89,9 +84,9 @@ interface CafeState {
    * submitted trace, and nothing here decides a proficiency.
    */
   world: World;
-  /** Which question she is on, and which of its three beats. */
+  /** Which question he is on, and which of its three beats. */
   progress: InterviewProgress;
-  /** She has started. False while the player is still crossing the room. */
+  /** He has started. False while the player is still crossing the room. */
   interviewing: boolean;
   /** The beat on screen, if one is. */
   dialogue: DialogueState | null;
@@ -110,7 +105,7 @@ interface CafeState {
    * behaviour depends on what you answered four questions ago.
    */
   answered: Answered[];
-  /** Her decision is on screen. Only ever after the ninth question. */
+  /** His decision is on screen. Only ever after the ninth question. */
   offerOpen: boolean;
   /**
    * The server's handle for the third beat currently on screen, or null when it
@@ -126,9 +121,7 @@ interface CafeState {
   setCharCell: (cell: Cell) => void;
   setNearExit: (near: boolean) => void;
   setNearGate: (id: GateId | null) => void;
-  setNearHotspot: (id: string | null) => void;
   setNearCast: (id: CastId | null) => void;
-  setOpenHotspot: (id: string | null) => void;
   setSpeaking: (id: CastId | null, line: string) => void;
   setFlapOpen: (open: boolean) => void;
   setWalkTo: (cell: Cell | null) => void;
@@ -141,9 +134,7 @@ export const useCafeStore = create<CafeState>((set) => ({
   zoneId: zoneAt(SPAWN).id,
   nearExit: false,
   nearGateId: null,
-  nearHotspotId: null,
   nearCastId: null,
-  openHotspotId: null,
   speakingToId: null,
   spokenLine: "",
   world: { ...OPENING_WORLD },
@@ -169,15 +160,7 @@ export const useCafeStore = create<CafeState>((set) => ({
     }),
   setNearExit: (nearExit) => set((s) => (s.nearExit === nearExit ? s : { nearExit })),
   setNearGate: (nearGateId) => set((s) => (s.nearGateId === nearGateId ? s : { nearGateId })),
-  setNearHotspot: (nearHotspotId) =>
-    set((s) => (s.nearHotspotId === nearHotspotId ? s : { nearHotspotId })),
   setNearCast: (nearCastId) => set((s) => (s.nearCastId === nearCastId ? s : { nearCastId })),
-  setOpenHotspot: (openHotspotId) =>
-    set((s) =>
-      s.openHotspotId === openHotspotId
-        ? s
-        : { openHotspotId, inputLocked: openHotspotId !== null },
-    ),
   setSpeaking: (speakingToId, spokenLine) =>
     set({ speakingToId, spokenLine, inputLocked: speakingToId !== null }),
   setWalkTo: (walkTo) => set({ walkTo }),
@@ -227,9 +210,7 @@ export function resetCafeState(): void {
     zoneId: zoneAt(SPAWN).id,
     nearExit: false,
     nearGateId: null,
-    nearHotspotId: null,
     nearCastId: null,
-    openHotspotId: null,
     speakingToId: null,
     spokenLine: "",
     world: sitting.world,
@@ -329,32 +310,13 @@ export function flushNow(): void {
 }
 
 /**
- * Open a hotspot's panel. Locks the room's input while it is up, exactly as the
- * world does behind its own panels, so a click on the modal cannot also order
- * the player to walk somewhere.
- */
-export function openHotspot(id: string): void {
-  const s = useCafeStore.getState();
-  const spot = HOTSPOTS.find((h) => h.id === id);
-  if (!spot) return;
-  audio.play("ui_open");
-  s.setOpenHotspot(id);
-  s.announce(`${spot.title}. ${hotspotBody(id, s.world)}`);
-}
-
-export function closeHotspot(): void {
-  audio.play("ui_close");
-  useCafeStore.getState().setOpenHotspot(null);
-}
-
-/**
- * Her decision. Only exists once the ninth question has closed, and it is the
+ * His decision. Only exists once the ninth question has closed, and it is the
  * last thing there is to do in the building.
  */
 export function openOffer(): void {
   audio.play("ui_open");
   useCafeStore.setState({ offerOpen: true, inputLocked: true });
-  useCafeStore.getState().announce("Priya puts the notepad down and turns it over.");
+  useCafeStore.getState().announce("Owen closes the laptop and turns it to face you.");
 }
 
 export function closeOffer(): void {
@@ -366,7 +328,7 @@ export function closeOffer(): void {
 
 /** Everyone in the room. Nobody arrives mid-interview; it is a conversation. */
 export function presentCast(): CastId[] {
-  return castFor(useCafeStore.getState().world);
+  return castFor();
 }
 
 /**
@@ -374,8 +336,8 @@ export function presentCast(): CastId[] {
  *
  * Deliberate rather than automatic: walking into a room and being asked a
  * question is an ambush, and a player who wants to look at the café first should
- * be allowed to. Idempotent, because both the station prompt and the always-on
- * button come through here.
+ * be allowed to. Idempotent, because speaking to Owen and re-opening a part-done
+ * interview both come through here.
  */
 export function beginInterview(): void {
   const s = useCafeStore.getState();
@@ -386,7 +348,7 @@ export function beginInterview(): void {
   }
   audio.play("ui_open");
   useCafeStore.setState({ interviewing: true, progress: advance(s.progress) });
-  s.announce("Priya sits down opposite you with a notepad she does not open.");
+  s.announce("You sit down opposite Owen. He turns the laptop a little and starts.");
   saveSoon();
 }
 
@@ -509,7 +471,7 @@ async function settleTransfer(
 }
 
 /**
- * Dismiss the consequence and let her ask the next one. Kept separate from
+ * Dismiss the consequence and let him ask the next one. Kept separate from
  * taking the option so the room gets its four to six seconds before the
  * question changes under the player.
  */
@@ -548,7 +510,7 @@ function step(beat: Beat): void {
 
   // The question goes into the record before `taken` is cleared. This is the
   // only memory the building keeps of what you answered, and the only thing
-  // that reads it is her decision at the end.
+  // that reads it is his decision at the end.
   useCafeStore.setState({
     progress: next,
     taken: {},
@@ -627,6 +589,14 @@ export function writeWorld(patch: WorldPatch): void {
 const spokenCount = new Map<CastId, number>();
 
 export function speakTo(id: CastId): void {
+  // Talking to the interviewer IS starting the interview. It is the one thing
+  // there is to do in this room, so it should not be a second step behind a
+  // line of small talk — and a person you walk up to is better signposting than
+  // a tile you have to find.
+  if (id === INTERVIEWER) {
+    beginInterview();
+    return;
+  }
   const member = castById(id);
   if (!member || member.ambientLines.length === 0) return;
   const n = spokenCount.get(id) ?? 0;

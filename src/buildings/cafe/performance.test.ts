@@ -12,18 +12,6 @@ import { CAST, castFor } from "./cast";
 import { SEATS, crowdSize } from "./customers";
 import { BEATS } from "./ambient";
 import { MAX_STEAM_PUFFS } from "./steam";
-import { WORLD_KEYS, OPENING_WORLD, type World } from "./world";
-
-/** Every world the season can actually be in, one key at a time. */
-function everyWorld(): World[] {
-  const out: World[] = [OPENING_WORLD];
-  for (const key of Object.keys(WORLD_KEYS) as (keyof World)[]) {
-    for (const value of WORLD_KEYS[key]) {
-      out.push({ ...OPENING_WORLD, [key]: value });
-    }
-  }
-  return out;
-}
 
 describe("sprites on screen", () => {
   it("stays under the 220 the budget allows", () => {
@@ -42,29 +30,15 @@ describe("sprites on screen", () => {
   it("has fewer props than it has cells, which is the shape of a room", () => {
     expect(FURNITURE.length).toBeLessThan(ROOM_W * ROOM_H);
   });
-});
 
-describe("animated characters", () => {
-  it("never has more than four of the named cast in the room at once", () => {
-    // §16 caps the cast at four and §8.1's mission table is what enforces it:
-    // the six exist, and four of them are never all present. Ambient customers
-    // are counted separately in §16's own sprite breakdown.
-    for (const track of ["SCA", "SCB"] as const) {
-      for (const world of everyWorld()) {
-        // The most the room can hold: whoever lives here, plus the one visitor
-        // the live mission brings in. No mission brings two.
-        const resident = castFor(world, track).length;
-        expect(resident + 1, `${track} / regulars=${world.regulars}`).toBeLessThanOrEqual(4);
-      }
-    }
-  });
-
-  it("keeps the ambient floor small enough that the room is still a café", () => {
-    for (const world of everyWorld()) {
-      expect(crowdSize(world, false), `regulars=${world.regulars}`).toBeLessThanOrEqual(
-        SEATS.length,
-      );
-    }
+  it("never has more than three people in the room at once", () => {
+    // Priya, Owen, and one customer coming and going. It used to be five, three
+    // of whom were there because a season needed them later, and a stranger you
+    // cannot talk to is something the player has to rule out before they can
+    // get on with what they came in for. This is a budget about clutter rather
+    // than about frame time, which is why it is a hard three and not a ceiling
+    // derived from §16.
+    expect(castFor().length + crowdSize()).toBeLessThanOrEqual(3);
   });
 });
 

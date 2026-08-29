@@ -72,6 +72,7 @@ export type PropKind =
   | "pastry_case"
   | "espresso_machine"
   | "till"
+  | "laptop"
   | "pendant";
 
 export interface Furniture {
@@ -150,6 +151,8 @@ export const FURNITURE: readonly Furniture[] = [
   f("counter", 5, 2),
   f("counter", 6, 2),
   over("till", 2, 2),
+  // Open on the four-top, facing Owen. The reason the table is a desk today.
+  over("laptop", 8, 6),
   over("pendant", 3, 2),
   f("dresser", 9, 2),
   f("dresser", 10, 2),
@@ -167,8 +170,10 @@ export const FURNITURE: readonly Furniture[] = [
   f("rug_oval", 7, 4, false),
   f("radiator", 10, 4),
 
-  // y5 / y6 — the dining floor. Table 3's chair sits at (9,6) rather than (7,5)
-  // so the (7,6) corner keeps a way out; room.test.ts locks that in.
+  // y5 / y6 — the dining floor. The four-top at (8,6) is the interview table:
+  // one chair either side of it, Owen on the room side at (7,6) and the window
+  // seat opposite at (9,6). Both are on y6 rather than y5 so the lane along the
+  // front of the tables stays open — room.test.ts walks it.
   f("table", 1, 5),
   f("chair", 2, 5),
   f("rug_persian", 4, 5, false),
@@ -176,6 +181,7 @@ export const FURNITURE: readonly Furniture[] = [
   f("table", 6, 5),
   f("chair", 1, 6),
   f("chair", 6, 6),
+  f("chair", 7, 6),
   f("table", 8, 6),
   f("chair", 9, 6),
 ];
@@ -268,77 +274,6 @@ export const STAFF_CELLS: readonly Cell[] = Array.from({ length: 6 }, (_, i) => 
   y: 1,
 }));
 
-// ── Hotspots ──────────────────────────────────────────────────────────────────
-
-export interface Hotspot {
-  id: string;
-  /** Prompt verb, in the room's own words. */
-  prompt: string;
-  /**
-   * How this place is named in the guided-navigation list — a place, not an
-   * action, so it sits beside the stations without changing voice. "the board",
-   * not "read the board".
-   */
-  guideLabel: string;
-  /** The walkable cell you stand on; the prompt fires within one cell of it. */
-  cell: Cell;
-  title: string;
-  /**
-   * Only there for the week that needs it. Seasonal hotspots stay out of the
-   * standing guided-nav list — a button reading "the sample bag" in week one is
-   * a promise about week sixteen — and the runner puts the live one at the front
-   * of the list while its objective is open.
-   */
-  seasonal?: boolean;
-}
-
-// What each of these *says* lives in world.ts, not here. All four are views onto
-// state now — the board is what you sell, the four-top is who still comes in, the
-// window is what is happening to you from outside, and the rota by the hatch is
-// how the team is doing — so their prose is derived rather than written down once
-// and left to go stale.
-
-export const HOTSPOTS: readonly Hotspot[] = [
-  {
-    id: "ht_chalkboard",
-    prompt: "read the board",
-    guideLabel: "the board",
-    cell: { x: 3, y: 3 },
-    title: "The chalkboard",
-  },
-  {
-    id: "ht_board",
-    prompt: "read the noticeboard",
-    guideLabel: "the noticeboard",
-    cell: { x: 1, y: 4 },
-    title: "The community board",
-  },
-  {
-    id: "ht_window",
-    prompt: "look out the window",
-    guideLabel: "the window",
-    cell: { x: 9, y: 1 },
-    title: "Market Street",
-  },
-  {
-    id: "ht_sample",
-    prompt: "open the sample bag",
-    guideLabel: "the sample bag",
-    // The end of the counter run, staff side: the delivery comes in through the
-    // flap and gets put down where there is room for it.
-    cell: { x: 6, y: 1 },
-    title: "The sample bag",
-    seasonal: true,
-  },
-  {
-    id: "ht_pass",
-    prompt: "check the pass-through",
-    guideLabel: "the pass-through",
-    cell: { x: 1, y: 1 },
-    title: "The pass-through",
-  },
-];
-
 // ── Proximity ─────────────────────────────────────────────────────────────────
 
 const manhattan = (a: Cell, b: Cell) => Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
@@ -353,11 +288,6 @@ export function gateNear(cell: Cell): Gate | null {
   return GATES.find((g) => manhattan(cell, g.cell) <= 1) ?? null;
 }
 
-/** The hotspot you are close enough to read, if any. */
-export function hotspotNear(cell: Cell): Hotspot | null {
-  return HOTSPOTS.find((h) => manhattan(cell, h.cell) <= 1) ?? null;
-}
-
 // ── Guided navigation (PRD §14.2) ─────────────────────────────────────────────
 
 export interface Station {
@@ -367,39 +297,30 @@ export interface Station {
   cell: Cell;
 }
 
+/**
+ * Somewhere worth being sent, without steering.
+ *
+ * There used to be six of these — the counter, the flap, the jukebox, the
+ * tables, the window, the door — because the season had you at each of them in
+ * turn. There is one thing to do in this room now, so there is one station, and
+ * it is the floor beside the table Owen has his laptop open on.
+ */
 export const STATIONS: readonly Station[] = [
-  { id: "st_counter", label: "the counter", cell: { x: 3, y: 3 } },
-  { id: "st_flap", label: "the counter flap", cell: { x: 4, y: 3 } },
-  { id: "st_jukebox", label: "the jukebox", cell: { x: 7, y: 3 } },
-  { id: "st_tables", label: "the tables", cell: { x: 3, y: 5 } },
-  { id: "st_window", label: "by the window", cell: { x: 9, y: 4 } },
-  { id: "st_door", label: "the door", cell: { x: 4, y: 8 } },
+  { id: "st_tables", label: "the interview table", cell: { x: 8, y: 5 } },
 ];
 
 /** Somewhere the player can be sent without steering. */
-export interface GuidePlace {
-  id: string;
-  /** The room's own words, never "object_04". */
-  label: string;
-  cell: Cell;
-}
+export type GuidePlace = Station;
 
 /**
- * The whole guided-navigation list: the six stations, then the four hotspots.
+ * The guided-navigation list: the stations, and then whoever is in the room
+ * (see `guideWithCast`).
  *
- * The hotspots are in it because they are destinations, not just things to read
- * — the season sends you to the noticeboard and to the pass-through by name, and
- * a place only a mouse can reach is a mission a keyboard player cannot finish.
- *
- * `the counter` and `the board` share a cell on purpose. One is where you stand
- * to work and one is the thing above it you stop to read; naming both is how the
- * list stays in the room's language rather than the grid's.
+ * It kept its markup through the emptying because a keyboard-only path across
+ * the room is not optional (ADR-005 §14) — it is the only way a player who
+ * cannot steer reaches Owen. It used to carry the five hotspots too, since the
+ * season sent you to the noticeboard and the pass-through by name; there is
+ * nothing at either any more, and a chip that leads nowhere is worse than no
+ * chip at all.
  */
-export const GUIDE: readonly GuidePlace[] = [
-  ...STATIONS,
-  ...HOTSPOTS.filter((h) => !h.seasonal).map((h) => ({
-    id: h.id,
-    label: h.guideLabel,
-    cell: h.cell,
-  })),
-];
+export const GUIDE: readonly GuidePlace[] = STATIONS;
