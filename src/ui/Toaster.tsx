@@ -20,9 +20,19 @@ export function Toaster() {
 
   useEffect(() => {
     const push = (message: string, kind: ToastItem["kind"]) => {
-      const id = nextToastId++;
-      setToasts((cur) => [...cur.slice(-2), { id, message, kind }]);
-      window.setTimeout(() => setToasts((cur) => cur.filter((t) => t.id !== id)), 3500);
+      // A repeated connectivity notice — several beat-commits retrying in the
+      // same second is the case this exists for — must read as one thing still
+      // true, not as three copies of itself stacking up. Skip the append (and
+      // its own dismiss timer) when an identical toast is already showing.
+      let id: number | null = null;
+      setToasts((cur) => {
+        if (cur.some((t) => t.message === message && t.kind === kind)) return cur;
+        id = nextToastId++;
+        return [...cur.slice(-2), { id, message, kind }];
+      });
+      if (id !== null) {
+        window.setTimeout(() => setToasts((cur) => cur.filter((t) => t.id !== id)), 3500);
+      }
     };
     const offToast = events.on("toast", ({ message, kind }) => {
       audio.play(kind === "error" ? "ui_error" : "ui_confirm");

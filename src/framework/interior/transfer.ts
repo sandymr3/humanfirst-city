@@ -109,22 +109,30 @@ export function resetTransfers(): void {
 }
 
 async function fetchWithin(req: TransferRequest): Promise<TransferBeat | null> {
+  // The loser of the race below used to keep running after the deadline
+  // resolved — nothing ever told `fetch` to stop, so a slow (not dead) backend
+  // could still be retrying, and toasting, for an activity the room had already
+  // moved on from. Abort it the moment the deadline fires instead.
+  const controller = new AbortController();
   let timer: number | undefined;
   const deadline = new Promise<null>((resolve) => {
-    timer = window.setTimeout(() => resolve(null), DEADLINE_MS);
+    timer = window.setTimeout(() => {
+      controller.abort();
+      resolve(null);
+    }, DEADLINE_MS);
   });
 
   try {
-    const beat = await Promise.race([call(req), deadline]);
+    const beat = await Promise.race([call(req, controller.signal), deadline]);
     return beat;
   } finally {
     if (timer !== undefined) window.clearTimeout(timer);
   }
 }
 
-async function call(req: TransferRequest): Promise<TransferBeat | null> {
+async function call(req: TransferRequest, signal: AbortSignal): Promise<TransferBeat | null> {
   try {
-    const res = await api.aiFollowup(req);
+    const res = await api.aiFollowup(req, signal);
     return {
       followupId: res.followupId,
       speakerId: res.speaker.id,
