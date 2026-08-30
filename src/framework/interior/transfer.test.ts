@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { awaitTransfer, commitTransfer, requestTransfer, resetTransfers } from "./transfer";
 import { api, ApiError } from "@/framework/api";
+import { events } from "@/framework/events";
 
 const REQ = {
   activityId: "C1-SCA-01",
@@ -22,7 +23,10 @@ const BEAT = {
 };
 
 beforeEach(() => resetTransfers());
-afterEach(() => vi.restoreAllMocks());
+afterEach(() => {
+  vi.restoreAllMocks();
+  vi.unstubAllGlobals();
+});
 
 describe("asking for the third beat", () => {
   it("hands back what the server wrote", async () => {
@@ -97,5 +101,42 @@ describe("committing a choice", () => {
   it("answers null rather than throwing when the commit cannot land", async () => {
     vi.spyOn(api, "commitFollowup").mockRejectedValue(new Error("offline"));
     await expect(commitTransfer("fu_1", "o_2")).resolves.toBeNull();
+  });
+});
+
+// Every test above mocks api.aiFollowup/api.commitFollowup directly, which
+// bypasses ApiClient.perform() entirely — including its retry loop and the
+// "Reconnecting…" toast on each attempt. That's exactly the boundary a
+// production incident lived on, so this drives the real api singleton against
+// a stubbed fetch instead.
+describe("under a real, hard backend failure", () => {
+  it("falls back to the bank within its own retry budget, and never tells the player", async () => {
+    const serverError = { error: { code: "SERVER_ERROR", message: "down" } };
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => ({
+        ok: false,
+        status: 500,
+        text: async () => JSON.stringify(serverError),
+      })),
+    );
+    const toasts: string[] = [];
+    const offToast = events.on("toast", ({ message }) => toasts.push(message));
+
+    vi.useFakeTimers();
+    requestTransfer(REQ);
+    const pending = awaitTransfer(REQ.activityId);
+    // The retry backoff (500 ms + 1000 ms) is well inside the 4 s deadline. If
+    // this needed the full 4100 ms to resolve — the figure the "gives up at
+    // four seconds" test above advances by — it would mean the retries are no
+    // longer exhausting on their own and this is resolving via the deadline
+    // timer instead, which is a different (and slower) code path than the one
+    // under test here.
+    await vi.advanceTimersByTimeAsync(2000);
+    await expect(pending).resolves.toBeNull();
+    vi.useRealTimers();
+
+    offToast();
+    expect(toasts).toEqual([]);
   });
 });
