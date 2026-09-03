@@ -11,7 +11,8 @@
 // at the speed of the player rather than the network. `hydrate` is the one await,
 // and it happens behind the door-opening line the interior already shows.
 import { api } from "@/framework/api";
-import { appConfig } from "@/framework/config/appConfig";
+import { appConfig, isConfigured } from "@/framework/config/appConfig";
+import { auth } from "@/framework/auth/firebase";
 import { loadJson, saveJson } from "@/lib/persist";
 
 /** Debounce for the writes that are allowed to wait. ADR-006 §11.2. */
@@ -29,7 +30,29 @@ interface Mirror {
 const isMirror = (v: unknown): v is Mirror =>
   typeof v === "object" && v !== null && typeof (v as Mirror).rev === "number";
 
-const key = (buildingId: string) => `city.${buildingId}.session`;
+/**
+ * The uid this tab is currently playing as, or a stable fallback.
+ *
+ * Every session key below — the in-memory cache and the localStorage mirror
+ * alike — is scoped by this. Without it, this whole module has exactly one
+ * `city.cafe.session` entry, full stop: a second account signed into the same
+ * browser reads the first account's blob on its very first hydrate, and
+ * `hydrateSession`'s own "ours is newer, push it" branch then writes that blob
+ * onto the second account's server row as if it were theirs. `auth()` throws
+ * when Firebase has no key (dev, tests) rather than returning an anonymous
+ * client, which is why this is wrapped rather than read directly.
+ */
+function currentUid(): string {
+  if (!isConfigured()) return "anon";
+  try {
+    return auth().currentUser?.uid ?? "anon";
+  } catch {
+    return "anon";
+  }
+}
+
+const key = (buildingId: string) => `city.${currentUid()}.${buildingId}.session`;
+const liveKey = (buildingId: string) => `${currentUid()}:${buildingId}`;
 
 interface Live {
   rev: number;
@@ -43,7 +66,8 @@ interface Live {
 const live = new Map<string, Live>();
 
 function state(buildingId: string): Live {
-  let s = live.get(buildingId);
+  const lk = liveKey(buildingId);
+  let s = live.get(lk);
   if (!s) {
     const m = loadJson<Mirror>(key(buildingId), isMirror);
     s = {
@@ -53,7 +77,7 @@ function state(buildingId: string): Live {
       pending: null,
       token: null,
     };
-    live.set(buildingId, s);
+    live.set(lk, s);
   }
   return s;
 }
