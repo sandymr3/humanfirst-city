@@ -8,7 +8,7 @@
 // named at the bottom of the file so the gap is written down rather than
 // implied.
 import { describe, it, expect } from "vitest";
-import { GUIDE, ZONES } from "./room";
+import { GUIDE, guideFor, ZONES } from "./room";
 import { CAST, guideWithCast, atAnchors } from "./cast";
 import { WORLD_KEYS, announcementFor, type WorldKey } from "./world";
 import { lightForWeek, MAX_GRADE } from "./light";
@@ -27,13 +27,22 @@ describe("guided navigation", () => {
     }
   });
 
-  it("carries the one place there is to go, and no leftovers", () => {
+  it("carries the places there are to go, and no leftovers", () => {
     // Six stations and four hotspots used to be in here, which is a to-do list
-    // read aloud. There is one thing to do in this room now, so there is one
-    // destination — and nothing prefixed ht_, because those places are gone
-    // rather than merely dropped from the list.
-    expect(GUIDE.map((g) => g.id)).toEqual(["st_tables"]);
+    // read aloud. The career works at three places and leaves by a fourth, so
+    // that is what the list carries — and still nothing prefixed ht_, because
+    // those places are gone rather than merely dropped from the list.
+    expect(GUIDE.map((g) => g.id)).toEqual(["st_counter", "st_pass", "st_tables", "st_door"]);
     expect(GUIDE.filter((g) => g.id.startsWith("ht_"))).toHaveLength(0);
+  });
+
+  it("offers a posting only the places it may stand", () => {
+    // The keyboard path and the flap have to agree. A chip that sends a
+    // candidate behind a counter they cannot pass is a dead end read aloud,
+    // which is worse for the player who depends on the list than for the one
+    // who can see the room.
+    expect(guideFor("candidate").map((g) => g.id)).toEqual(["st_tables", "st_door"]);
+    expect(guideFor("ceo").map((g) => g.id)).toEqual(GUIDE.map((g) => g.id));
   });
 
   it("introduces the cast by name and role", () => {

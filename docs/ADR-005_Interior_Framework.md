@@ -734,6 +734,8 @@ The choice is changeable from settings, with a plain warning that the two tracks
 
 ## 11. The silent-tier contract
 
+> **v2.1 · amended by [ADR-007 §12](ADR-007_The_Career_Journey.md), for the Café only.** Everything below is unchanged and still binds. ADR-007 adds one exception with a boundary: **feedback is permitted where there are no options to pattern-match against, and forbidden everywhere else.** A branching scenario shows three options, so feedback there teaches which was intended — §11.1's table stands over every scenario in every building, untouched. A free-text question shows nothing to correlate against, so the Café's interview and its two performance reviews may give the learner real feedback and a band. The band labels may not use the tier vocabulary, `n/3` is still forbidden, and the `qa` stages get their own narrower content allowlist rather than a hole punched in §11.5's shared check.
+
 > **The design principle, stated as a rule:** choices must read as plausible peers. There is no throwaway "obviously wrong" option. Differentiation lives in the consequence, not in the choice text. The learner discovers quality through outcome. The tier is scored silently at the backend and is **never** surfaced mid-play. It appears once, in the end-of-journey report.
 
 This section is normative. It is the part of this ADR that is easiest to violate by accident and most damaging when violated, because a learner who can spot the "right" answer stops making real decisions and starts pattern-matching — and the assessment stops measuring anything.

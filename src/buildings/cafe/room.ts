@@ -300,14 +300,49 @@ export interface Station {
 /**
  * Somewhere worth being sent, without steering.
  *
- * There used to be six of these — the counter, the flap, the jukebox, the
- * tables, the window, the door — because the season had you at each of them in
- * turn. There is one thing to do in this room now, so there is one station, and
- * it is the floor beside the table Owen has his laptop open on.
+ * There were six of these under the season, then one under the interview, and
+ * four now — because the career works at three places and leaves by a fourth,
+ * and a chip that leads nowhere is worse than no chip at all. The jukebox and
+ * the window are not back: nothing in the journey sends anybody to either, and
+ * re-adding them would undo the thing the emptying got right.
+ *
+ * `st_tables` is the four-top Owen has his laptop open on. It is where you are
+ * interviewed, where you are reviewed, and — once the whole thing is yours —
+ * where you sit on the other side of it.
  */
 export const STATIONS: readonly Station[] = [
-  { id: "st_tables", label: "the interview table", cell: { x: 8, y: 5 } },
+  { id: "st_counter", label: "the counter", cell: { x: 3, y: 3 } },
+  // (2,1), not (2,2): the counter run is furniture and the staff zone is the
+  // row behind it. This is inside the sealed zone, so it is reachable only once
+  // the flap is yours — which is the point of it being where a branch manager
+  // works.
+  { id: "st_pass", label: "the pass-through", cell: { x: 2, y: 1 } },
+  { id: "st_tables", label: "the table", cell: { x: 8, y: 5 } },
+  { id: "st_door", label: "the door", cell: { x: 4, y: 8 } },
 ];
+
+/**
+ * Which stations a posting may be sent to.
+ *
+ * This is the guided-navigation half of the promotion beat. A candidate has no
+ * business behind the counter and an employee has no business at the pass, so
+ * the chips that would send them there are not offered — the same rule the flap
+ * enforces physically, applied to the keyboard-only path so the two do not
+ * disagree. A player who cannot steer must meet the same room as one who can
+ * (ADR-005 §14.2).
+ */
+const STATIONS_BY_ROLE: Readonly<Record<string, readonly string[]>> = {
+  candidate: ["st_tables", "st_door"],
+  employee: ["st_counter", "st_tables", "st_door"],
+  branch_manager: ["st_counter", "st_pass", "st_tables", "st_door"],
+  ceo: ["st_counter", "st_pass", "st_tables", "st_door"],
+};
+
+/** The stations open to a posting, in room order. */
+export function stationsFor(role: string): Station[] {
+  const allowed = STATIONS_BY_ROLE[role] ?? STATIONS_BY_ROLE.candidate;
+  return STATIONS.filter((s) => allowed.includes(s.id));
+}
 
 /** Somewhere the player can be sent without steering. */
 export type GuidePlace = Station;
@@ -316,11 +351,14 @@ export type GuidePlace = Station;
  * The guided-navigation list: the stations, and then whoever is in the room
  * (see `guideWithCast`).
  *
- * It kept its markup through the emptying because a keyboard-only path across
- * the room is not optional (ADR-005 §14) — it is the only way a player who
- * cannot steer reaches Owen. It used to carry the five hotspots too, since the
- * season sent you to the noticeboard and the pass-through by name; there is
- * nothing at either any more, and a chip that leads nowhere is worse than no
- * chip at all.
+ * A keyboard-only path across the room is not optional (ADR-005 §14) — it is
+ * the only way a player who cannot steer reaches anybody. `GUIDE` is every
+ * station; `guideFor(role)` is the ones a given posting may actually walk to,
+ * and that is what the interior should render.
  */
 export const GUIDE: readonly GuidePlace[] = STATIONS;
+
+/** The guided-navigation list for one posting. */
+export function guideFor(role: string): GuidePlace[] {
+  return stationsFor(role);
+}

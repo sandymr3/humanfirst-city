@@ -2,9 +2,9 @@
 
 > **This document supersedes `cafe.md` and `cafedev.md`.** `cafe.md` was this document's predecessor; `cafedev.md` was the engineering plan, and its unique content — the projection and camera decisions, the counter flap's contract, the room invariants and the Pixi-`Application` investigation — is folded into §20. There is one Café PRD from v2.0 onwards.
 
-_The City · Building 01 · Market Street · **v2.0** · 2026-08-04 · **Status: Draft for sign-off** · Owner: TBD (one dev, per CODEOWNERS) · City venue id: `cafe`_
+_The City · Building 01 · Market Street · **v3.0** · 2026-09-02 · **Status: Draft for sign-off** · Owner: TBD (one dev, per CODEOWNERS) · City venue id: `cafe`_
 
-_Inherits [ADR-005 v2.0 — Interior Framework](ADR-005_Interior_Framework.md) for the interior pattern, the silent-tier contract, accessibility and budgets, and [ADR-006](ADR-006_Missions_AI_Followups_and_Session_State.md) for the mission spine, the three-beat decision and session state. Backend endpoints are specified in [PRD_Backend_Missions.md](PRD_Backend_Missions.md); §19 below carries the Café's concrete payloads. Read those first. This document specifies **only what is true of this building**._
+_Inherits [ADR-005 v2.0 — Interior Framework](ADR-005_Interior_Framework.md) for the interior pattern, the silent-tier contract, accessibility and budgets, and [ADR-006](ADR-006_Missions_AI_Followups_and_Session_State.md) for the mission spine, the three-beat decision and session state. **[ADR-007](ADR-007_The_Career_Journey.md) supersedes ADR-006 §6 for this building** and is the current spine — read §0.0 first. Backend endpoints are specified in [PRD_Backend_Missions.md](PRD_Backend_Missions.md); §19 below carries the Café's concrete payloads. Read those first. This document specifies **only what is true of this building**._
 _Parent: [PRD_City_Frontend.md](PRD_City_Frontend.md) · Siblings: [MAISON](PRD_Building_MAISON.md) · [MERIDIAN](PRD_Building_MERIDIAN.md)_
 _Content source: `Playroom Scenarios.xlsx` → sheet **`CAFE New`** (the `CAFE` and `CAFE old` sheets are superseded)._
 
@@ -12,7 +12,44 @@ _Content source: `Playroom Scenarios.xlsx` → sheet **`CAFE New`** (the `CAFE` 
 
 ## 0. Repo reality — what ships today, and what this version adds
 
-### 0.0 Since v2.0 — the Café is an interview, not a season
+### 0.0 Since v3.0 — the Café is a career, not an interview
+
+> **Read this before anything else in this document.** The Café has now been
+> three things: a nine-week season, then one job interview, and now **one
+> career**. [ADR-007](ADR-007_The_Career_Journey.md) is the decision; this
+> section is the summary, and §0.0.1 below is kept as the record of the shape
+> it replaced.
+>
+> - **You are hired, promoted twice, and you leave.** Eleven stages: an
+>   interview, three levels of work with four scenarios each, two performance
+>   reviews, three accept/retry/exit gates, a succession choice and an exit.
+>   ADR-006's strictly-linear nine-mission spine is superseded here — the flow
+>   branches and it loops — **for this building only**. Every other building
+>   keeps it.
+> - **Three of the eleven stages are typed.** The interview and both reviews
+>   are free-text questions scored 1–5 each and answered with real feedback.
+>   This reverses `PRD_Backend_Missions §5.5`'s *"the player never types
+>   anything"*, which is rewritten rather than quietly broken.
+> - **One room, three postings.** Not three rooms. You work the counter as an
+>   employee, the pass as a branch manager, the four-top as CEO — and the
+>   counter flap, which has been closed to you for the whole first act, opens
+>   when you are promoted. That is the promotion beat.
+> - **Twenty-six units, nine registry rows.** The journey accumulates an
+>   evidence ledger and settles it into the nine `C{1..9}-SCA-01` activities
+>   the Café already owns. No new levels, no renamed ids, no other building
+>   touched.
+> - **Revenue moves on every decision and is shown only at stage boundaries.**
+>   A delta visible after one choice is a tier readout.
+> - **Attempts are append-only**, which is what makes "where they started and
+>   how they are progressing" answerable at all.
+>
+> **What §9 is now.** The eighteen authored trees are not all dead: C2, C3, C4
+> and C9 on the `SCA` track become the four L3 CEO scenarios more or less
+> verbatim, and their tier maps carry over. The rest are source material for
+> the new L1 and L2 scenes rather than shipping content. §9's exemplars and
+> authoring rules stand; its inventory does not.
+
+### 0.0.1 Since v2.0 — the Café was an interview, not a season _(superseded by §0.0)_
 
 > **Read this before §8 and §5.** The nine-week season this document specifies
 > was built and then taken out again. What the Café is today is **one job

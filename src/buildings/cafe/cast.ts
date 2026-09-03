@@ -210,15 +210,7 @@ export const CAST: readonly CastMember[] = [
 ];
 
 /**
- * Who is in the room. Two people, on both tracks, whatever the world says.
- *
- * The café used to fill up and empty out because the season needed it to: Marcus
- * was here so that a later week could take his chair away, Tomas so that Level B
- * opened with the staffing problem already on the floor, Nadia and Ray and Ellery
- * so that the weeks that were about them had somebody to be about. None of those
- * weeks exists any more, and a room full of people you cannot do anything with
- * reads as clutter rather than as life. They stay in `CAST` because the stages
- * after the interview will want them; they are simply not in the room today.
+ * Who is in the room when you walk in.
  *
  * **Priya is unremovable**, and that is an acceptance criterion rather than a
  * convention: a café with nobody behind the counter is not a café, and she is the
@@ -228,9 +220,38 @@ export const CAST: readonly CastMember[] = [
  */
 export const OPENING_CAST: readonly CastId[] = ["priya", "owen"];
 
-/** Who is in the room for a given world state: `OPENING_CAST`, always. */
-export function castFor(): CastId[] {
-  return [...OPENING_CAST];
+/**
+ * Who is in the room, for a posting.
+ *
+ * The five who were benched when the season was taken out are back, and they
+ * arrive with the stages that give them something to do. That was always the
+ * intent — the note left on `CAST` said they were staying "because the stages
+ * after the interview will want them" — and the rule is the same one that
+ * emptied the room in the first place: **somebody you cannot do anything with
+ * reads as clutter rather than as life.**
+ *
+ * So they arrive by posting, not all at once:
+ *
+ *   - **candidate** — Priya and Owen. You are here for one conversation.
+ *   - **employee** — the regulars arrive, because working the counter means
+ *     serving them: Marcus in his chair, Nadia on her way through.
+ *   - **branch_manager** — Tomas, because the pass is his and the team is now
+ *     the job.
+ *   - **ceo** — Ray and Ellery, the two people who turn up when the business is
+ *     yours to negotiate with. Owen stops coming; there is nobody left to
+ *     review you.
+ */
+export function castFor(role: string = "candidate"): CastId[] {
+  switch (role) {
+    case "employee":
+      return ["priya", "owen", "marcus", "nadia"];
+    case "branch_manager":
+      return ["priya", "owen", "tomas", "marcus"];
+    case "ceo":
+      return ["priya", "tomas", "marcus", "ray", "ellery"];
+    default:
+      return [...OPENING_CAST];
+  }
 }
 
 export function castById(id: CastId): CastMember | null {
@@ -281,9 +302,12 @@ export function castNear(cell: Cell, present: readonly CastAt[]): CastMember | n
  * whoever is in the room, by name and role (ADR-005 §14.2). Cast entries walk
  * you to the cell beside them rather than onto them.
  */
-export function guideWithCast(present: readonly CastAt[]): GuidePlace[] {
+export function guideWithCast(
+  present: readonly CastAt[],
+  places: readonly GuidePlace[] = GUIDE,
+): GuidePlace[] {
   return [
-    ...GUIDE,
+    ...places,
     ...present.map(({ member, cell }) => ({
       id: member.id,
       label: `${member.name}, ${member.role}`,

@@ -11,10 +11,11 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "check:mirror": "node scripts/check_journey_mirror.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "e2e": "playwright test",
-    "ci": "npm run typecheck && npm run lint && npm run format:check && npm run test && npm run build"
+    "ci": "npm run typecheck && npm run lint && npm run format:check && npm run check:mirror && npm run test && npm run build"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.101.4",
