@@ -13,40 +13,48 @@ import { CafeCanvas } from "./CafeCanvas";
 import { armBeacon, hydrateSession, setSessionTrack } from "@/framework/session/sync";
 import { trackOrDefault } from "@/framework/city/track";
 import {
-  openDialogue,
-  flushNow,
-  resetCafeState,
-  retryUnsent,
+  resetRoomState,
   speakTo,
   stopSpeaking,
   toggleFlap,
-  useCafeStore,
-} from "./cafeStore";
-import { GATES, zoneAt } from "./room";
+  useRoomStore,
+  writeWorld,
+} from "./roomStore";
+import { GATES, guideFor, zoneAt } from "./room";
 import { atAnchors, castById, castFor, guideWithCast } from "./cast";
-import { Dialogue } from "./Dialogue";
-import { InterviewPanel } from "./InterviewPanel";
-import { Offer } from "./Offer";
-import { INTERVIEWER, isOver } from "./interview";
-import { BUILDING_ID } from "./session";
-
-/** The beat in which he finishes typing before he looks up and asks. */
-const BEAT_MS = 900;
+import { Decision } from "./Decision";
+import { StageChip } from "./StageChip";
+import { QA } from "./QA";
+import { Gate } from "./Gate";
+import { Report } from "./Report";
+import {
+  closeStage,
+  currentStage,
+  goToNextStage,
+  leave as flushJourneyNow,
+  retryUnsent,
+  stageIsDone,
+  useJourneyStore,
+} from "./journeyStore";
+import { BUILDING_ID, freshJourney, loadJourney } from "./journeySession";
 
 export default function CafeInterior({ manifest, onExit }: InteriorProps) {
   const [ready, setReady] = useState(false);
-  const charCell = useCafeStore((s) => s.charCell);
-  const nearExit = useCafeStore((s) => s.nearExit);
-  const nearGateId = useCafeStore((s) => s.nearGateId);
-  const nearCastId = useCafeStore((s) => s.nearCastId);
-  const speakingToId = useCafeStore((s) => s.speakingToId);
-  const spokenLine = useCafeStore((s) => s.spokenLine);
-  const flapOpen = useCafeStore((s) => s.flapOpen);
-  const announcement = useCafeStore((s) => s.announcement);
-  const progress = useCafeStore((s) => s.progress);
-  const interviewing = useCafeStore((s) => s.interviewing);
-  const dialogue = useCafeStore((s) => s.dialogue);
-  const consequence = useCafeStore((s) => s.consequence);
+  const charCell = useRoomStore((s) => s.charCell);
+  const nearExit = useRoomStore((s) => s.nearExit);
+  const nearGateId = useRoomStore((s) => s.nearGateId);
+  const nearCastId = useRoomStore((s) => s.nearCastId);
+  const speakingToId = useRoomStore((s) => s.speakingToId);
+  const spokenLine = useRoomStore((s) => s.spokenLine);
+  const flapOpen = useRoomStore((s) => s.flapOpen);
+  const announcement = useRoomStore((s) => s.announcement);
+
+  const role = useJourneyStore((s) => s.role);
+  const stageId = useJourneyStore((s) => s.stageId);
+  const index = useJourneyStore((s) => s.index);
+  const journeyWorld = useJourneyStore((s) => s.world);
+  const consequence = useJourneyStore((s) => s.consequence);
+  const [reportOpen, setReportOpen] = useState(false);
 
   // Every visit starts at the door with the flap down, which keeps the store and
   // the canvas's own gate set in step (the canvas boots with no gates open).
@@ -64,11 +72,15 @@ export default function CafeInterior({ manifest, onExit }: InteriorProps) {
     setSessionTrack(BUILDING_ID, trackOrDefault());
     void hydrateSession(BUILDING_ID).finally(() => {
       if (!live) return;
-      resetCafeState();
+      // The career is whatever was left behind; the room always restarts at the
+      // door with the flap down, because the canvas boots with no gates open.
+      const saved = loadJourney() ?? freshJourney();
+      useJourneyStore.setState({ ...saved, consequence: null, outcome: null, closing: false });
+      resetRoomState(saved.world);
       setSeasonIn(true);
-      // Questions answered while the backend was unreachable are owed a score
-      // and the coins that come with it. The door opening is when a connection
-      // is most likely to be back.
+      // Sittings that never reached the server are owed a score and the coins
+      // that come with it. The door opening is when a connection is most likely
+      // to be back.
       void retryUnsent();
     });
     return () => {
@@ -76,18 +88,43 @@ export default function CafeInterior({ manifest, onExit }: InteriorProps) {
     };
   }, []);
 
-  // The next beat arriving is him asking. The pause before it is him finishing
-  // what he was typing — never a spinner, and never anything that marks out
-  // which of the three came from a model (PRD §11.2).
-  //
-  // Nothing is on screen and nothing is pending: that is the gap between
-  // committing one answer and being asked the next, and it closes itself.
-  const dueBeat = interviewing && !dialogue && !consequence ? progress.beat : null;
+  // The room reflects the career: a decision writes world state into the
+  // journey, and the room is what draws it.
   useEffect(() => {
-    if (!dueBeat) return;
-    const t = window.setTimeout(() => void openDialogue(dueBeat), BEAT_MS);
-    return () => window.clearTimeout(t);
-  }, [dueBeat]);
+    if (!seasonIn) return;
+    writeWorld(journeyWorld);
+  }, [seasonIn, journeyWorld]);
+
+  /**
+   * A stage that has run out of things to ask closes itself.
+   *
+   * Deliberately automatic. A "finish" button implies something is being
+   * computed and invites the player to wonder what; they have already made every
+   * decision there was to make, and the grading, the revenue reveal and the
+   * per-competency settle are the server's business rather than theirs.
+   *
+   * Gates are excluded because a gate *is* the pause — it shows three roads and
+   * waits. The exit closes to bank the revenue, and then the report opens.
+   */
+  const stageKind = currentStage().kind;
+  const readyToClose = seasonIn && stageIsDone() && consequence === null;
+  useEffect(() => {
+    if (!readyToClose || stageKind === "gate") return;
+    let live = true;
+    void closeStage().then(() => {
+      if (!live) return;
+      if (stageKind === "exit") setReportOpen(true);
+      else goToNextStage();
+    });
+    return () => {
+      live = false;
+    };
+  }, [readyToClose, stageKind, stageId, index]);
+
+  /** The exit stage has nothing to ask, so it closes the moment you reach it. */
+  useEffect(() => {
+    if (seasonIn && stageKind === "exit" && !reportOpen) setReportOpen(true);
+  }, [seasonIn, stageKind, reportOpen]);
 
   const gate = nearGateId ? (GATES.find((g) => g.id === nearGateId) ?? null) : null;
   const person = nearCastId ? castById(nearCastId) : null;
@@ -99,7 +136,7 @@ export default function CafeInterior({ manifest, onExit }: InteriorProps) {
   // One destination and two people. It used to carry six stations and four
   // noticeboards, which read as a to-do list rather than as a way of crossing
   // the room without a mouse.
-  const nav = guideWithCast(atAnchors(castFor()));
+  const nav = guideWithCast(atAnchors(castFor(role)), guideFor(role));
 
   /**
    * Leaving flushes the season first. "Leaving the building" and "closing the
@@ -108,7 +145,7 @@ export default function CafeInterior({ manifest, onExit }: InteriorProps) {
    * else is going to run.
    */
   const leaveNow = useCallback(() => {
-    flushNow();
+    flushJourneyNow();
     onExit();
   }, [onExit]);
 
@@ -124,7 +161,7 @@ export default function CafeInterior({ manifest, onExit }: InteriorProps) {
    * button can share it.
    */
   const act = useCallback(() => {
-    const s = useCafeStore.getState();
+    const s = useRoomStore.getState();
     if (s.nearExit) {
       audio.play("ui_close");
       leaveNow();
@@ -136,7 +173,7 @@ export default function CafeInterior({ manifest, onExit }: InteriorProps) {
   }, [leaveNow]);
 
   useEffect(() => {
-    const flush = () => flushNow();
+    const flush = () => flushJourneyNow();
     window.addEventListener("pagehide", flush);
     const onHidden = () => {
       if (document.visibilityState === "hidden") flush();
@@ -157,19 +194,19 @@ export default function CafeInterior({ manifest, onExit }: InteriorProps) {
   useEffect(() => {
     if (!seasonIn) return;
     void armBeacon(BUILDING_ID);
-  }, [seasonIn, progress.index]);
+  }, [seasonIn, stageId]);
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") {
         // A panel closes first; only then does Escape mean "leave".
-        const s = useCafeStore.getState();
+        const s = useRoomStore.getState();
         if (s.speakingToId) stopSpeaking();
         else leave();
         return;
       }
       if (e.key !== "e" && e.key !== "E" && e.key !== "Enter") return;
-      if (useCafeStore.getState().inputLocked) return;
+      if (useRoomStore.getState().inputLocked) return;
       act();
     }
     function leave() {
@@ -187,11 +224,7 @@ export default function CafeInterior({ manifest, onExit }: InteriorProps) {
         ? gate.closePrompt
         : gate.openPrompt
       : person
-        ? person.id !== INTERVIEWER || interviewing
-          ? person.name
-          : isOver(progress)
-            ? `see what ${person.name} decided`
-            : `sit down with ${person.name}`
+        ? person.name
         : null;
 
   return (
@@ -205,9 +238,11 @@ export default function CafeInterior({ manifest, onExit }: InteriorProps) {
           has already given the city back by the time this fires. */}
       <CafeCanvas onReady={() => setReady(true)} onError={onExit} />
 
-      {ready && seasonIn && interviewing && !isOver(progress) && <InterviewPanel />}
-      <Dialogue />
-      <Offer />
+      {ready && seasonIn && <StageChip />}
+      {ready && seasonIn && <Decision />}
+      {ready && seasonIn && stageKind === "qa" && consequence === null && <QA />}
+      {ready && seasonIn && stageKind === "gate" && <Gate />}
+      {reportOpen && <Report onClose={leaveNow} />}
 
       {(!ready || !seasonIn) && (
         <div className="absolute inset-0 grid place-items-center bg-ink">
@@ -256,7 +291,7 @@ export default function CafeInterior({ manifest, onExit }: InteriorProps) {
         {nav.map((s) => (
           <button
             key={s.id}
-            onClick={() => useCafeStore.getState().setWalkTo(s.cell)}
+            onClick={() => useRoomStore.getState().setWalkTo(s.cell)}
             className="rounded-full border border-line/70 bg-surface/70 px-2.5 py-1 text-xs text-muted backdrop-blur hover:border-gold/60 hover:text-text"
           >
             {s.label}

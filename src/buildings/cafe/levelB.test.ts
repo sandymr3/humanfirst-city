@@ -6,7 +6,7 @@ import {
   setTrack,
   trackOrDefault,
 } from "@/framework/city/track";
-import { QUESTIONS, activityAt } from "./interview";
+import { COMPETENCIES, activityAt } from "./trees";
 import { openingWorldFor } from "./world";
 import { cooled, lightForWeek } from "./light";
 
@@ -46,15 +46,17 @@ describe("the eighteen registry rows", () => {
   });
 
   it("gives every competency a row on both tracks, all eighteen distinct", () => {
-    const ids = (["SCA", "SCB"] as const).flatMap((t) => QUESTIONS.map((c) => activityIdFor(c, t)));
+    const ids = (["SCA", "SCB"] as const).flatMap((t) =>
+      COMPETENCIES.map((c) => activityIdFor(c, t)),
+    );
     expect(ids).toHaveLength(18);
     expect(new Set(ids).size).toBe(18);
   });
 
   it("asks the nine in the blueprint's order, on whichever track was answered", () => {
     setTrack("SCB");
-    expect(QUESTIONS.map((_, i) => activityAt(i))).toEqual(
-      QUESTIONS.map((c) => activityIdFor(c, "SCB")),
+    expect(COMPETENCIES.map((_, i) => activityAt(i))).toEqual(
+      COMPETENCIES.map((c) => activityIdFor(c, "SCB")),
     );
     setTrack("SCA");
     expect(activityAt(0)).toBe("C1-SCA-01");

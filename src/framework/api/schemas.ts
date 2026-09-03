@@ -28,6 +28,19 @@ export const TranscriptResult = z.object({
   turns: z.array(z.object({ role: z.enum(["user", "ai"]), text: z.string() })),
 });
 
+// One competency's evidence from a career journey (ADR-007 §8.2).
+//
+// Unit ids and the letter taken at each — never a tier and never a score, for
+// the same reason TraceResult carries no tier. A two-beat CEO scene sends its
+// composed path as the choice: "a.c". Typed questions are named, not scored; the
+// server reads their marks from the attempt it wrote.
+export const JourneyResult = z.object({
+  buildingId: z.string(),
+  runId: z.string(),
+  units: z.array(z.object({ unitId: z.string(), choice: z.string() })),
+  qa: z.array(z.object({ unitId: z.string() })).optional(),
+});
+
 // The submit "result" is an object carrying exactly one kind.
 export const ResultPayload = z.union([
   z.object({ objective: ObjectiveResult }),
@@ -37,10 +50,11 @@ export const ResultPayload = z.union([
   z.object({ slots: SlotsResult }),
   z.object({ text: TextResult }),
   z.object({ transcript: TranscriptResult }),
+  z.object({ journey: JourneyResult }),
 ]);
 export type ResultPayload = z.infer<typeof ResultPayload>;
 export type ResultKind =
-  "objective" | "order" | "trace" | "metrics" | "slots" | "text" | "transcript";
+  "objective" | "order" | "trace" | "metrics" | "slots" | "text" | "transcript" | "journey";
 
 export const SubmitRequest = z.object({
   clientVersion: z.string(),
@@ -181,6 +195,54 @@ export const FollowupCommit = z.object({
   world: z.record(z.string()).optional().default({}),
 });
 export type FollowupCommit = z.infer<typeof FollowupCommit>;
+
+// ── The career journey (ADR-007) ──────────────────────────────────────────────
+
+/**
+ * What a stage close returns.
+ *
+ * No tier and no proficiency. `band` is a non-tier label by contract — the
+ * report owns the words Developing, Strong and Advanced, and spending them at a
+ * gate would teach the vocabulary a stage early. The 1–5 marks are raw scores a
+ * learner may see; they never become a proficiency.
+ *
+ * `revenue` arrives here and nowhere else. A per-decision delta would be a
+ * directional readout of the tier, and a continuous one, so the smallest thing
+ * that can safely be shown is the total over a stage's four decisions.
+ */
+export const JourneyStageResult = z.object({
+  runId: z.string(),
+  stageId: z.string(),
+  attemptNo: z.number().int().optional(),
+  bestAttemptNo: z.number().int().optional(),
+  rawScore: z.number().int().optional(),
+  questionScores: z
+    .array(z.object({ unitId: z.string(), score: z.number().int() }))
+    .optional()
+    .default([]),
+  band: z.string().optional().default(""),
+  feedback: z.string().optional().default(""),
+  graded: z.string().optional().default(""),
+  revenue: z.number().int(),
+  revenueDelta: z.number().int(),
+  roleReached: z.string(),
+  coinsBanked: z.number().int().optional().default(0),
+});
+export type JourneyStageResult = z.infer<typeof JourneyStageResult>;
+
+/**
+ * What happened after a choice, and the world write it earns.
+ *
+ * Deliberately the same shape as FollowupCommit and deliberately carrying no
+ * flag for whether it was written or served from the bank — a client that knew
+ * could tell the player, and a player who could tell would treat those beats
+ * differently.
+ */
+export const ConsequenceResult = z.object({
+  consequence: z.string(),
+  world: z.record(z.string()).optional().default({}),
+});
+export type ConsequenceResult = z.infer<typeof ConsequenceResult>;
 
 // ── Session state (ADR-006 §11) ───────────────────────────────────────────────
 

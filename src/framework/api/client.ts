@@ -14,6 +14,8 @@ import {
   ProfileResponse,
   FollowupPublic,
   FollowupCommit,
+  JourneyStageResult,
+  ConsequenceResult,
   StateEnvelope,
   BuildingStateEnvelope,
   StateAck,
@@ -26,6 +28,28 @@ import {
 } from "./schemas";
 
 /** What the client asks the server to write about the transfer beat. */
+/** What a stage close sends. `answers` for a typed stage, `units` for a scenario one. */
+export interface JourneyStageBody {
+  runId?: string;
+  stageId: string;
+  track?: string;
+  answers?: { unitId: string; text: string }[];
+  units?: { unitId: string; choice: string }[];
+}
+
+/**
+ * What a consequence request sends. Ids, a letter, and a closed-enum world map —
+ * and nothing a typed answer could travel in.
+ */
+export interface ConsequenceBody {
+  buildingId: string;
+  stageId?: string;
+  unitId: string;
+  choice: string;
+  speakerId?: string;
+  worldState?: Record<string, string>;
+}
+
 export interface FollowupParams {
   activityId: string;
   track: "SCA" | "SCB";
@@ -174,6 +198,43 @@ export class ApiClient {
       { optionId },
       { silent: true },
     );
+  }
+
+  // ── The career journey (ADR-007) ────────────────────────────────────────────
+
+  /**
+   * Close one journey stage: grade a typed sitting, append the attempt, and
+   * reveal the revenue that stage moved.
+   *
+   * Not silent. Unlike a generated beat, a stage close is a commitment the
+   * player made — losing one loses an interview they sat — so a failure here
+   * should surface and be retried rather than degrade quietly.
+   */
+  journeyStage(buildingId: string, body: JourneyStageBody) {
+    return this.request(
+      "POST",
+      `/api/v1/city/buildings/${buildingId}/journey/stage`,
+      JourneyStageResult,
+      body,
+    );
+  }
+
+  /**
+   * Ask what happened after an L1 or L2 choice.
+   *
+   * Silent and cancellable, exactly like `aiFollowup`: the caller races it
+   * against its own deadline and falls through to the authored line, and there
+   * must be no spinner or other tell that this beat is the generated one.
+   *
+   * Note what the body cannot carry: there is no free-text field, and there must
+   * never be one. That absence is what keeps the typed interview and the
+   * generator apart (ADR-007 §13).
+   */
+  aiConsequence(body: ConsequenceBody, signal?: AbortSignal) {
+    return this.request("POST", "/api/v1/ai/consequence", ConsequenceResult, body, {
+      silent: true,
+      signal,
+    });
   }
 
   // ── Session state (ADR-006 §11) ─────────────────────────────────────────────

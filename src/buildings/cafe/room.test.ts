@@ -152,13 +152,16 @@ describe("the Café room", () => {
 });
 
 describe("the guided-navigation list", () => {
-  it("sends you to the interview table and nowhere else", () => {
+  it("sends you to the places the career works at, and nowhere else", () => {
     // It used to send you to the noticeboard and the pass-through by name,
     // because the season did. Neither week exists any more, and a list of
     // places with nothing at them is the clutter this change is removing. What
     // survives is the one destination a keyboard-only player must still have.
-    expect(GUIDE.map((p) => p.id)).toEqual(["st_tables"]);
-    expect(GUIDE[0].cell).toEqual({ x: 8, y: 5 });
+    // Four places the career actually works at, and no more. The jukebox and the
+    // window are not back: nothing sends anybody to either, and a chip that
+    // leads nowhere is worse than no chip at all.
+    expect(GUIDE.map((p) => p.id)).toEqual(["st_counter", "st_pass", "st_tables", "st_door"]);
+    expect(GUIDE.find((p) => p.id === "st_tables")!.cell).toEqual({ x: 8, y: 5 });
   });
 
   it("lists each place exactly once", () => {

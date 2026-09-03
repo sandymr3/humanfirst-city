@@ -190,6 +190,8 @@ Buildings ship `missions.ts` and a `followups/` fallback bank, and nothing else 
 
 ## 6. The mission model
 
+> **v1.1 · superseded for the Café by [ADR-007 §6](ADR-007_The_Career_Journey.md); in force everywhere else.** The spine below is strictly linear — nine missions, order 1..9, one `currentMission`. The Café's career journey branches (accept / retry / exit) and loops (retry re-enters the stage it came from), which a linear runner cannot express, so that building runs a **stage graph** instead. What survives the swap and is still normative there: the `Objective` shape and its six kinds, the rule that a stage opening on a decision is a modal with a title, objectives completing on approach or act, nothing on a timer, and every rule in §6.3's tracker table. Only the _spine_ changed; the _grammar of a mission_ did not.
+
 ### 6.1 Shape
 
 ```ts

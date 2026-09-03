@@ -1,12 +1,11 @@
 import { describe, it, expect } from "vitest";
-import { TREES, tracePath, treeFor } from "./trees";
+import { TREES, tracePath, treeFor, COMPETENCIES } from "./trees";
 import { FOLLOWUPS } from "./followups";
-import { QUESTIONS } from "./interview";
 import { activityIdFor } from "@/framework/city/track";
 
 /** Both tracks. Everything in this file holds for eighteen rows or for none. */
 const ACTIVITY_IDS = (["SCA", "SCB"] as const).flatMap((track) =>
-  QUESTIONS.map((c) => activityIdFor(c, track)),
+  COMPETENCIES.map((c) => activityIdFor(c, track)),
 );
 import { OPENING_WORLD, WORLD_KEYS, isLegal, isWorldKey, type WorldKey } from "./world";
 import { CAST } from "./cast";

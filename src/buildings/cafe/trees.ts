@@ -18,7 +18,28 @@
 //   * no consequence tells the player whether they did well. The room reports
 //     what happened and stops there.
 import type { WorldPatch } from "./world";
+import { activityIdFor, trackOrDefault, type Track } from "@/framework/city/track";
 import { PRO_TREES } from "./treesPro";
+
+/**
+ * The nine competencies these trees are written against.
+ *
+ * This list lived in `interview.ts` while the Café was one sitting, and the
+ * sitting is gone. It belongs beside the trees: they are the thing that has one
+ * per competency, and the registry rows are addressed from it.
+ */
+export const COMPETENCIES = ["C1", "C2", "C3", "C4", "C5", "C6", "C7", "C8", "C9"] as const;
+
+/**
+ * The registry row for the nth competency, on a track. Null past the ninth.
+ *
+ * `activityIdFor` is the single place an id is assembled; this is just the
+ * ordering, and it is here because the ordering is the trees'.
+ */
+export function activityAt(index: number, track: Track = trackOrDefault()): string | null {
+  const competency = COMPETENCIES[index];
+  return competency ? activityIdFor(competency, track) : null;
+}
 
 export interface Choice {
   /** "a" | "b" | "c" — the letter that goes on the wire in the trace path. */

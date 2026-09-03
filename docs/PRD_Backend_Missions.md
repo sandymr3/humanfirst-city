@@ -503,7 +503,23 @@ Content, not code: `internal/registry/content/followups/{buildingId}.json`, load
 
 ### 5.5 Prompt-injection posture
 
-Small, because the surface is small: **the player never types anything.** The only player-influenced input is `worldState`, and every value is validated against a closed enum before it reaches the prompt (§4.4). The authored choice texts come from the server's own registry, not from the request. `speakerId` is validated against the building's cast. There is no free text anywhere in the path, and there must not be one added later without revisiting this section.
+> **Revised 2026-09-02 by [ADR-007 §13](ADR-007_The_Career_Journey.md).** This section used to rest on one sentence — _"the player never types anything"_ — and it closed by saying free text must not be added later without revisiting the section. The Café's career journey adds it, at three stages, so this is the revisit. The posture below is narrower than "there is no text"; it is **"no text reaches a generator"**, which is the property that was actually doing the work.
+
+**The generator path is unchanged, and still carries no free text.** The only player-influenced input to `POST /ai/followup` and `POST /ai/consequence` is `worldState`, and every value is validated against a closed enum before it reaches the prompt (§4.4). The authored choice texts come from the server's own registry, not from the request. `speakerId` is validated against the building's cast. **Neither request schema has a field a typed answer could occupy** — that is enforced by the schema, not by a convention, and it is what keeps the two paths apart.
+
+**The grading path accepts free text, and always has.** Rubric kind `ai` and the `Grader` interface (`internal/scoring/scoring.go:125-130`) have carried typed answers for `OPEN_TEXT_AI` activities since before the city existed. The Café's interview and its two performance reviews route through that, and add no new text-handling machinery.
+
+What binds, stated as rules:
+
+| Rule                                                                         | Enforced by                                                      |
+| ---------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| A typed answer is graded, and never forwarded to any generator               | the generator request schemas have no such field                 |
+| A typed answer is never rendered to another user                             | answers are per-user; they appear only in that user's own report |
+| Length is bounded                                                            | `AIRubric.MinWords` / `MaxWords`, which already exist            |
+| A grading failure never blocks a player                                      | the activity's mandatory `fallback` (`CONTRIBUTING.md:36`)       |
+| The grader's output is prose for the learner, not an instruction to anything | nothing downstream parses it                                     |
+
+**The rule for whoever comes next:** free text may enter the _grading_ path. It may not enter a _generation_ path, and adding a field that would let it is a contract change, not a refactor.
 
 ---
 
