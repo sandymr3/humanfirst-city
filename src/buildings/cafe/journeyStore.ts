@@ -23,6 +23,14 @@ import { events } from "@/framework/events";
 import { CLIENT_VERSION } from "@/framework/config/appConfig";
 import { activityIdFor, trackOrDefault } from "@/framework/city/track";
 import {
+  awaitTransfer,
+  commitTransfer,
+  forgetTransfer,
+  requestTransfer,
+  type TransferBeat,
+} from "@/framework/interior/transfer";
+import { castById } from "./cast";
+import {
   START_STAGE,
   evidenceByCompetency,
   gateRoads,
@@ -46,6 +54,7 @@ import {
   type Journey,
   type UnsentStage,
 } from "./journeySession";
+import { followupFor } from "./followups";
 import { applyPatch, type World, type WorldPatch } from "./world";
 import { treeFor } from "./trees";
 
@@ -67,6 +76,22 @@ export interface StageOutcome {
   coinsBanked: number;
 }
 
+/**
+ * The third beat on screen for a two-beat CEO scene, or null (ADR-007 §16).
+ *
+ * `followupId` is null for the authored fallback bank, and set for a beat the
+ * server actually generated — the one thing `chooseTransferBeat` needs to know
+ * which way to resolve an answer, and nothing else reads it.
+ */
+export interface TransferBeatVM {
+  activityId: string;
+  followupId: string | null;
+  /** Null for "the room" — no name prefix, matching how a scene renders one. */
+  speakerName: string | null;
+  prompt: string;
+  options: ReadonlyArray<{ id: string; text: string }>;
+}
+
 interface JourneyState extends Journey {
   /** The consequence sheet on screen, or null. */
   consequence: string | null;
@@ -74,6 +99,8 @@ interface JourneyState extends Journey {
   outcome: StageOutcome | null;
   /** True while a stage close is in flight, so a double-click cannot double-send. */
   closing: boolean;
+  /** The third beat on screen, once a two-beat scene's follow beat lands. */
+  transferBeat: TransferBeatVM | null;
 }
 
 const start = (): JourneyState => ({
@@ -81,6 +108,7 @@ const start = (): JourneyState => ({
   consequence: null,
   outcome: null,
   closing: false,
+  transferBeat: null,
 });
 
 export const useJourneyStore = create<JourneyState>(() => start());
@@ -252,7 +280,21 @@ export function chooseTreeBeat(beat: "seed" | "follow", letter: string): void {
   saveNow();
 }
 
-/** Commit one beat of a two-beat CEO scene. The wire sees the composed path. */
+/**
+ * Commit one beat of a two-beat CEO scene. The wire sees the composed path.
+ *
+ * The follow beat also fires the third beat's request (ADR-007 §16): the seed
+ * and follow measure judgment and consistency, and the third measures whether
+ * that reasoning survives a shape the player has not read before. Firing it
+ * here — rather than when the player reaches the screen — is what lets it be
+ * generated while the follow's own consequence is still on screen to read,
+ * exactly the race `framework/interior/transfer.ts` is built for.
+ *
+ * `taken` deliberately keeps `seed`/`follow` set rather than clearing them:
+ * that is what tells `advance` and the room there is a third beat still owed
+ * on this item before it is done, the same way `seed` alone tells it the
+ * follow-up is still owed.
+ */
 export function takeBeat(beat: "seed" | "follow", letter: string): void {
   const s = useJourneyStore.getState();
   const taken = { ...s.taken, [beat]: letter };
@@ -265,10 +307,102 @@ export function takeBeat(beat: "seed" | "follow", letter: string): void {
   if (item?.kind !== "tree" || !taken.seed || !taken.follow) return;
   const tree = item.tree;
   useJourneyStore.setState({
-    taken: {},
+    taken,
     decided: [...s.decided, { unitId: tree.unitId, choice: `${taken.seed}.${taken.follow}` }],
+    transferBeat: fallbackTransferBeat(tree.activityId),
   });
   saveNow();
+  requestThirdBeat(tree.activityId, taken.seed, taken.follow);
+}
+
+/** The authored bank's answer for this activity, ready with no round trip. */
+function fallbackTransferBeat(activityId: string): TransferBeatVM | null {
+  const bank = followupFor(activityId);
+  if (!bank) return null;
+  const speaker = bank.speakerId === "room" ? null : castById(bank.speakerId as never);
+  return {
+    activityId,
+    followupId: null,
+    speakerName: speaker?.name ?? null,
+    prompt: bank.prompt(useJourneyStore.getState().world),
+    options: bank.options.map((o) => ({ id: o.id, text: o.text })),
+  };
+}
+
+function generatedTransferBeat(activityId: string, beat: TransferBeat): TransferBeatVM {
+  return {
+    activityId,
+    followupId: beat.followupId,
+    speakerName: beat.speakerName,
+    prompt: beat.prompt,
+    options: beat.options,
+  };
+}
+
+/**
+ * Ask for the third beat, and swap it in if it lands before the player
+ * reaches the screen that shows it. Never awaited by the caller — the bank
+ * answer is already on screen the instant this returns, and it is a perfectly
+ * good question (ADR-006 §7).
+ */
+function requestThirdBeat(activityId: string, seed: string, follow: string): void {
+  requestTransfer({
+    activityId,
+    track: trackOrDefault(),
+    buildingId: "cafe",
+    path: [seed, follow],
+    speakerId: followupFor(activityId)?.speakerId,
+    worldState: { ...useJourneyStore.getState().world },
+  });
+  void awaitTransfer(activityId).then((beat) => {
+    if (!beat) return;
+    const cur = useJourneyStore.getState();
+    // A player who has already answered the bank's version, or moved off this
+    // beat entirely, must not have a generated one land under them.
+    if (cur.transferBeat?.activityId !== activityId || cur.taken.transfer) return;
+    useJourneyStore.setState({ transferBeat: generatedTransferBeat(activityId, beat) });
+  });
+}
+
+/**
+ * Answer the third beat. Its own consequence uses the same sheet as the two
+ * authored beats — there is no tell, on screen, that this one might have been
+ * written by a generator (ADR-006 §7).
+ *
+ * A commit that cannot be confirmed reads the same as an activity with no
+ * bank entry at all: nothing to show, straight through. The room moves on the
+ * decision and never on the score.
+ */
+export async function chooseTransferBeat(optionId: string): Promise<void> {
+  const s = useJourneyStore.getState();
+  const beat = s.transferBeat;
+  if (!beat) return;
+
+  useJourneyStore.setState((cur) => ({ taken: { ...cur.taken, transfer: optionId } }));
+  saveNow();
+
+  const written = beat.followupId
+    ? await commitTransfer(beat.followupId, optionId)
+    : resolveFallback(beat.activityId, optionId);
+  forgetTransfer(beat.activityId);
+
+  if (!written) {
+    advance();
+    return;
+  }
+  useJourneyStore.setState((cur) => ({
+    consequence: written.consequence,
+    world: written.world ? applyPatch(cur.world, written.world as WorldPatch) : cur.world,
+  }));
+  saveNow();
+}
+
+function resolveFallback(
+  activityId: string,
+  optionId: string,
+): { consequence: string; world?: WorldPatch } | null {
+  const option = followupFor(activityId)?.options.find((o) => o.id === optionId);
+  return option ? { consequence: option.consequence, world: option.world } : null;
 }
 
 /** Record a typed answer. Held until the stage closes; graded there, not here. */
@@ -285,18 +419,30 @@ export function answer(unitId: string, text: string): void {
 /**
  * Move on from whatever is on screen.
  *
- * A two-beat scene mid-tree is the exception: committing its seed leaves the
- * follow-up waiting on the same unit, so clearing the consequence there means
- * "ask me the second half", not "next scene".
+ * A two-beat scene mid-tree is the exception, twice over: committing its seed
+ * leaves the follow-up waiting on the same unit, so clearing the consequence
+ * there means "ask me the second half", not "next scene" — and committing the
+ * follow-up is the same shape one beat later, leaving the third beat waiting
+ * on the same unit when the activity has one to ask (ADR-007 §16).
  */
 export function advance(): void {
   const s = useJourneyStore.getState();
-  if (s.taken.seed) {
+  if (s.taken.seed && !s.taken.follow) {
     useJourneyStore.setState({ consequence: null });
     saveSoon();
     return;
   }
-  useJourneyStore.setState({ index: s.index + 1, consequence: null });
+  if (s.taken.seed && s.taken.follow && !s.taken.transfer && s.transferBeat) {
+    useJourneyStore.setState({ consequence: null });
+    saveSoon();
+    return;
+  }
+  useJourneyStore.setState({
+    index: s.index + 1,
+    consequence: null,
+    taken: {},
+    transferBeat: null,
+  });
   saveSoon();
 }
 
@@ -543,7 +689,13 @@ function roleOnEntering(stage: Stage | undefined, current: Role): Role {
 
 /** Reset to a career nobody has started. Used by tests and by a hard restart. */
 export function resetJourney(): void {
-  useJourneyStore.setState({ ...freshJourney(), consequence: null, outcome: null, closing: false });
+  useJourneyStore.setState({
+    ...freshJourney(),
+    consequence: null,
+    outcome: null,
+    closing: false,
+    transferBeat: null,
+  });
   saveNow();
 }
 

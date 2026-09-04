@@ -48,8 +48,11 @@ export interface JourneyBlob {
   role: Role;
   /** How far into the current stage's scenes or questions. */
   index: number;
-  /** A two-beat CEO scene in progress: the letters taken so far. */
-  taken: { seed?: string; follow?: string };
+  /**
+   * A two-beat CEO scene in progress: the letters taken so far, and the
+   * option id of the third beat (ADR-007 §16) once that one is answered too.
+   */
+  taken: { seed?: string; follow?: string; transfer?: string };
   /** Everything decided across the whole journey, for the per-competency submits. */
   decided: Decision[];
   /** Typed answers not yet sent, for the stage in progress. */
@@ -68,7 +71,7 @@ export interface Journey {
   stageId: string;
   role: Role;
   index: number;
-  taken: { seed?: string; follow?: string };
+  taken: { seed?: string; follow?: string; transfer?: string };
   decided: Decision[];
   answers: Answer[];
   qaDone: string[];
@@ -147,6 +150,16 @@ function toBlob(j: Journey): JourneyBlob {
   };
 }
 
+/**
+ * A tab closed between the follow beat and the third beat (ADR-007 §16)
+ * resumes past it: the tree unit's real decision is already in `decided`
+ * before the third beat is ever asked, so there is nothing to reconstruct on
+ * reload — only something safe to skip.
+ */
+function normalizeTaken(taken: Journey["taken"]): Journey["taken"] {
+  return taken.seed && taken.follow ? {} : taken;
+}
+
 function fromBlob(raw: unknown): Journey | null {
   if (!isBlob(raw)) return null;
   const b = raw;
@@ -155,7 +168,7 @@ function fromBlob(raw: unknown): Journey | null {
     stageId: b.stageId,
     role: b.role,
     index: Math.max(0, Math.floor(b.index)),
-    taken: typeof b.taken === "object" && b.taken !== null ? b.taken : {},
+    taken: normalizeTaken(typeof b.taken === "object" && b.taken !== null ? b.taken : {}),
     decided: (b.decided as unknown[]).filter(isDecision),
     answers: Array.isArray(b.answers) ? (b.answers as unknown[]).filter(isAnswer) : [],
     qaDone: Array.isArray(b.qaDone)
