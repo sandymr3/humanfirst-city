@@ -75,7 +75,13 @@ export default function CafeInterior({ manifest, onExit }: InteriorProps) {
       // The career is whatever was left behind; the room always restarts at the
       // door with the flap down, because the canvas boots with no gates open.
       const saved = loadJourney() ?? freshJourney();
-      useJourneyStore.setState({ ...saved, consequence: null, outcome: null, closing: false });
+      useJourneyStore.setState({
+        ...saved,
+        consequence: null,
+        outcome: null,
+        closing: false,
+        transferBeat: null,
+      });
       resetRoomState(saved.world);
       setSeasonIn(true);
       // Sittings that never reached the server are owed a score and the coins

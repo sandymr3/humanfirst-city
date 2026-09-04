@@ -26,6 +26,7 @@ import { castById } from "./cast";
 import {
   advance,
   choose,
+  chooseTransferBeat,
   chooseTreeBeat,
   currentItem,
   currentScene,
@@ -126,10 +127,46 @@ function NotAScene() {
 
 function TreeBeat() {
   const taken = useJourneyStore((s) => s.taken);
+  const transferBeat = useJourneyStore((s) => s.transferBeat);
   const item = currentItem();
   if (item?.kind !== "tree") return null;
   const tree = treeFor(item.tree.activityId);
   if (!tree) return null;
+
+  // The third beat: written for the path this player actually took, once the
+  // seed and follow-up have both landed (ADR-007 §16). Nothing here tells a
+  // player it might be generated rather than authored — same sheet, same
+  // shape, same absence of a spinner while it was still being written.
+  if (taken.seed && taken.follow && !taken.transfer) {
+    if (!transferBeat) return null;
+    const options = presentationOrder(
+      `${item.tree.unitId}:transfer`,
+      [],
+      transferBeat.options.map((o) => ({ id: o.id, text: o.text })),
+    );
+    return (
+      <Sheet>
+        <p className="text-sm leading-relaxed text-text">
+          {transferBeat.speakerName && (
+            <span className="font-semibold text-gold">{transferBeat.speakerName}: </span>
+          )}
+          {transferBeat.prompt}
+        </p>
+        <ul className="mt-5 space-y-2">
+          {options.map((o) => (
+            <li key={o.id}>
+              <button
+                onClick={() => void chooseTransferBeat(o.id)}
+                className="w-full rounded-xl border border-line/70 bg-surface-2/60 px-4 py-3 text-left text-sm leading-relaxed text-text transition hover:border-gold/60 hover:bg-surface-2"
+              >
+                {o.text}
+              </button>
+            </li>
+          ))}
+        </ul>
+      </Sheet>
+    );
+  }
 
   // The seed first, then the branch the seed opened. The follow-up is
   // branch-specific: what you are asked second depends on what you did first.
