@@ -81,6 +81,60 @@ describe("the write schedule", () => {
     await vi.advanceTimersByTimeAsync(900);
     expect(put).toHaveBeenCalledTimes(1);
   });
+
+  // The 409 storm. `rev` is only accurate between requests, so two pushes in
+  // flight together both read the same one, and the second is stale the moment
+  // the first lands. Production was running a ~40% conflict rate on this
+  // endpoint; every one of them was this, and the retry underneath hid it.
+  it("never sends a revision the previous write has already superseded", async () => {
+    let served = 0;
+    const seen: number[] = [];
+    const put = vi.spyOn(api, "putBuildingState").mockImplementation(async (_b, rev) => {
+      seen.push(rev);
+      // The server's rule, exactly: anything below the stored revision loses.
+      if (rev < served) return { ok: false as const, rev: served, blob: null, updatedAt: "" };
+      served += 1;
+      return { ok: true as const, rev: served, updatedAt: "" };
+    });
+
+    // A beat commits while the walk that preceded it is still on the wire.
+    writeSessionNow(CAFE, { step: 1 });
+    writeSessionNow(CAFE, { step: 2 });
+    writeSessionNow(CAFE, { step: 3 });
+    await vi.advanceTimersByTimeAsync(0);
+    await vi.waitFor(() => expect(put).toHaveBeenCalled());
+
+    // Every write carried a revision the server accepted: no conflicts, and so
+    // no retries either.
+    expect(seen).toEqual([...seen].sort((a, b) => a - b));
+    expect(put.mock.results.length).toBe(seen.length);
+    for (const rev of seen) expect(rev).toBeGreaterThanOrEqual(0);
+    const conflicts = await Promise.all(put.mock.results.map((r) => r.value));
+    expect(conflicts.filter((r) => !(r as { ok: boolean }).ok)).toHaveLength(0);
+  });
+
+  // Coalescing has to survive the in-flight guard: writes that pile up behind
+  // one request collapse into a single follow-up, because the blob is a whole
+  // snapshot and the newest one describes everything the older ones did.
+  it("collapses everything that piles up behind one request", async () => {
+    let release: (() => void) | null = null;
+    const first = new Promise<void>((r) => (release = r));
+    let call = 0;
+    const put = vi.spyOn(api, "putBuildingState").mockImplementation(async (_b, _rev, blob) => {
+      call += 1;
+      if (call === 1) await first;
+      return { ok: true as const, rev: call, updatedAt: "", blob } as never;
+    });
+
+    writeSessionNow(CAFE, { step: 1 }); // goes on the wire, and blocks there
+    writeSessionNow(CAFE, { step: 2 }); // both of these queue behind it,
+    writeSessionNow(CAFE, { step: 3 }); // and only the newest survives
+    expect(put).toHaveBeenCalledTimes(1);
+
+    release!();
+    await vi.waitFor(() => expect(put).toHaveBeenCalledTimes(2));
+    expect(put.mock.calls[1][2]).toEqual({ step: 3 });
+  });
 });
 
 describe("the way out", () => {

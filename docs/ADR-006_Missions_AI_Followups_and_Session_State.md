@@ -473,7 +473,7 @@ Served when: the model is unconfigured · the call errors · the call exceeds 4 
 - Cache key: `(activityId, track, seedChoice, followChoice, worldStateSignature)`. A pool of up to **4 accepted variants** per key; a request draws one at random and stores its own row in `ai_followups` (so the tier lookup is per-player and per-attempt, never shared).
 - Cold pools can be warmed offline by an admin job, which also gives the fresh-reader audit something to read before launch.
 - Rate limit: per user, per hour, sized to a full nine-mission season plus headroom for replays. Over the limit → fallback, silently.
-- **Model:** provider-agnostic behind a `FollowupGenerator` interface, beside the existing `scoring.Grader`. Recommended runtime model **Claude Haiku 4.5** (`claude-haiku-4-5-20251001`) — the latency budget in §7.4 is the binding constraint and Haiku meets it. The existing Gemini client stays as a configured alternative. Authoring the fallback bank and warming the cache offline is a job for a larger model.
+- **Model:** provider-agnostic behind a `FollowupGenerator` interface, beside the existing `scoring.Grader`. Runtime model **Gemini 2.5 Flash-Lite** (`gemini-2.5-flash-lite`), with thinking pinned off — the latency budget in §7.4 is the binding constraint and Flash-Lite meets it at ~1–2s measured. This is the same provider, key and quota as the rubric grader, so the platform carries one AI dependency rather than two. Authoring the fallback bank and warming the cache offline is a job for a larger model.
 
 ---
 

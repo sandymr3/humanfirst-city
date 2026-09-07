@@ -38,6 +38,21 @@ interface Live {
   pending: unknown;
   token: { value: string; mintedAt: number } | null;
   track?: "SCA" | "SCB";
+  /**
+   * The push currently on the wire, if any. `rev` is only correct between
+   * requests — it is read before a round trip and written after it — so two
+   * pushes overlapping is not a race that *might* conflict, it is one that
+   * always does: both read the same rev, the first bumps the server past it,
+   * and the second is stale by construction.
+   */
+  inflight: Promise<void> | null;
+  /**
+   * The newest blob waiting for that push to finish. One slot, not a queue:
+   * the blob is a whole-session snapshot rather than a delta, so a newer one
+   * supersedes an older one outright and sending both would be two requests
+   * to reach a state one request describes.
+   */
+  queued: { blob: unknown } | null;
 }
 
 const live = new Map<string, Live>();
@@ -52,6 +67,8 @@ function state(buildingId: string): Live {
       timer: null,
       pending: null,
       token: null,
+      inflight: null,
+      queued: null,
     };
     live.set(buildingId, s);
   }
@@ -192,7 +209,46 @@ export async function armBeacon(buildingId: string): Promise<void> {
   }
 }
 
-async function push(buildingId: string, blob: unknown): Promise<void> {
+/**
+ * Queue a write, and make sure exactly one is in flight at a time.
+ *
+ * Serialising is the whole point. The revision protocol is compare-and-set —
+ * the server rejects any write carrying a rev below the stored one — and
+ * `s.rev` is only accurate between requests. Firing a second push before the
+ * first has answered therefore sends a revision we already know is about to be
+ * superseded, and earns a 409 every single time. That is not a rare race: a
+ * beat committing (`writeSessionNow`) lands on top of the debounced write the
+ * same interaction just scheduled, so the common path is the colliding one.
+ *
+ * The retry inside `send` used to hide this — it adopts the server's rev and
+ * re-sends — which is why nothing was ever lost and why it went unnoticed. It
+ * cost two requests for every one that mattered, and left the resolution of a
+ * self-inflicted conflict to whichever push happened to retry last, which is
+ * how an older snapshot can land on top of a newer one.
+ */
+function push(buildingId: string, blob: unknown): Promise<void> {
+  const s = state(buildingId);
+  s.queued = { blob };
+  if (s.inflight) return s.inflight;
+  s.inflight = drain(buildingId);
+  return s.inflight;
+}
+
+/** Send queued snapshots until none is left, one at a time. */
+async function drain(buildingId: string): Promise<void> {
+  const s = state(buildingId);
+  try {
+    while (s.queued) {
+      const { blob } = s.queued;
+      s.queued = null;
+      await send(buildingId, blob);
+    }
+  } finally {
+    s.inflight = null;
+  }
+}
+
+async function send(buildingId: string, blob: unknown): Promise<void> {
   const s = state(buildingId);
   try {
     const res = await api.putBuildingState(buildingId, s.rev, blob, s.track);
@@ -201,9 +257,9 @@ async function push(buildingId: string, blob: unknown): Promise<void> {
       mirror(buildingId, blob, res.updatedAt || new Date().toISOString());
       return;
     }
-    // Somebody else wrote first — the other tab, or this player on their phone.
-    // Adopt their revision and re-send ours: the season we are holding is the
-    // one this player is actually looking at.
+    // A conflict that survives serialisation is a real one: the other tab, or
+    // this player on their phone. Adopt their revision and re-send ours — the
+    // season we are holding is the one this player is actually looking at.
     s.rev = res.rev;
     const retry = await api.putBuildingState(buildingId, s.rev, blob, s.track);
     if (retry.ok) {

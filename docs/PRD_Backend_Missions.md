@@ -436,16 +436,16 @@ type FollowupOption struct {
 
 New config keys beside the existing `GEMINI_API_KEY` / `AI_MODEL`:
 
-| Env                       | Default                     | Notes                                                                                                  |
-| ------------------------- | --------------------------- | ------------------------------------------------------------------------------------------------------ |
-| `FOLLOWUP_PROVIDER`       | `anthropic`                 | `anthropic` \| `gemini` \| `off`                                                                       |
-| `ANTHROPIC_API_KEY`       | _(empty)_                   | Empty ⇒ provider unavailable ⇒ fallback bank. The service is fully functional without it               |
-| `FOLLOWUP_MODEL`          | `claude-haiku-4-5-20251001` | Latency is the binding constraint ([ADR-006 §7.4](ADR-006_Missions_AI_Followups_and_Session_State.md)) |
-| `FOLLOWUP_TIMEOUT_MS`     | `4000`                      | Hard deadline; beyond it the fallback is served                                                        |
-| `FOLLOWUP_RATE_PER_HOUR`  | `40`                        | Per user                                                                                               |
-| `FOLLOWUP_CACHE_VARIANTS` | `4`                         | Accepted variants held per path signature                                                              |
+| Env                       | Default                 | Notes                                                                                                  |
+| ------------------------- | ----------------------- | ------------------------------------------------------------------------------------------------------ |
+| `FOLLOWUP_PROVIDER`       | `gemini`                | `gemini` \| `off`                                                                                      |
+| `FOLLOWUP_API_KEY`        | _(→ `GEMINI_API_KEY`)_  | Empty ⇒ provider unavailable ⇒ fallback bank. The service is fully functional without it               |
+| `FOLLOWUP_MODEL`          | `gemini-2.5-flash-lite` | Latency is the binding constraint ([ADR-006 §7.4](ADR-006_Missions_AI_Followups_and_Session_State.md)) |
+| `FOLLOWUP_TIMEOUT_MS`     | `4000`                  | Hard deadline; beyond it the fallback is served                                                        |
+| `FOLLOWUP_RATE_PER_HOUR`  | `40`                    | Per user                                                                                               |
+| `FOLLOWUP_CACHE_VARIANTS` | `4`                     | Accepted variants held per path signature                                                              |
 
-The existing Gemini grader keeps `GEMINI_API_KEY` and continues to serve `ai`-rubric grading. The two are independent: grading and generation can run on different providers.
+Grading and generation share one provider, one key and one dashboard: everything AI in this service is Gemini on Google AI Studio, dialled through `internal/services/gemini_client.go`. They remain independently _tunable_ — different models, and optionally different keys via `FOLLOWUP_API_KEY` — because grading can afford a larger model and a 30s budget while the beat cannot.
 
 ### 5.3 The validation gates
 
