@@ -25,6 +25,7 @@ import { presentationOrder } from "@/lib/decisionTree";
 import { castById } from "./cast";
 import {
   advance,
+  answerSceneBeat,
   choose,
   chooseTransferBeat,
   chooseTreeBeat,
@@ -38,6 +39,7 @@ import { treeFor } from "./trees";
 
 export function Decision() {
   const consequence = useJourneyStore((s) => s.consequence);
+  const sceneBeat = useJourneyStore((s) => s.sceneBeat);
   const scene = currentScene();
 
   const options = useMemo(() => {
@@ -63,27 +65,32 @@ export function Decision() {
     );
   }
 
+  // A generated question stands in the scene's place until it is answered. It
+  // uses the same sheet, the same prompt shape and the same option buttons as an
+  // authored decision, and carries no badge, no spinner and no "AI" anywhere: a
+  // player who could tell which questions were written would answer them
+  // differently, and the measurement would stop measuring.
+  if (sceneBeat) return <SceneBeat />;
+
   if (!scene) return <NotAScene />;
   const speaker = scene.speaker === "room" ? null : castById(scene.speaker as never);
 
   return (
-    <Sheet>
-      {scene.stage && <p className="mb-4 text-sm leading-relaxed text-muted">{scene.stage}</p>}
-
-      <p className="text-sm leading-relaxed text-text">
-        {speaker && <span className="font-semibold text-gold">{speaker.name}: </span>}
-        {speaker ? `\u201c${scene.prompt}\u201d` : scene.prompt}
-      </p>
-
-      <ul className="mt-5 space-y-2">
+    <Sheet
+      head={
+        <>
+          {scene.stage && <p className="mb-4 text-sm leading-relaxed text-muted">{scene.stage}</p>}
+          <p className="text-sm leading-relaxed text-text">
+            {speaker && <span className="font-semibold text-gold">{speaker.name}: </span>}
+            {speaker ? `\u201c${scene.prompt}\u201d` : scene.prompt}
+          </p>
+        </>
+      }
+    >
+      <ul className="space-y-2">
         {options.map((o) => (
           <li key={o.id}>
-            <button
-              onClick={() => void choose(o.id)}
-              className="w-full rounded-xl border border-line/70 bg-surface-2/60 px-4 py-3 text-left text-sm leading-relaxed text-text transition hover:border-gold/60 hover:bg-surface-2"
-            >
-              {o.text}
-            </button>
+            <ChoiceButton onClick={() => void choose(o.id)}>{o.text}</ChoiceButton>
           </li>
         ))}
       </ul>
@@ -95,18 +102,60 @@ export function Decision() {
  * The decision's own surface. Not the hotspot Modal: a decision is the room
  * talking to you, so it sits in the room rather than covering it, and it never
  * offers a way to dismiss it without answering.
+ *
+ * It is BOUNDED, which it was not. Anchored to the bottom with no ceiling, a
+ * long prompt and three long options grew the card straight off the top of the
+ * screen and the text was simply gone — no scrollbar, no way back to it. The
+ * generated questions made that routine rather than rare: an authored option is
+ * written to a length, a generated one is written to a rule.
+ *
+ * `head` is pinned while the rest scrolls, so the question you are answering
+ * stays on screen while you read past the bottom of the third option. Scrolling
+ * away from the thing you are deciding about is how you forget what it asked.
  */
-function Sheet({ children }: { children: React.ReactNode }) {
+function Sheet({ head, children }: { head?: React.ReactNode; children: React.ReactNode }) {
   return (
-    <div className="pointer-events-auto absolute inset-x-0 bottom-0 z-30 flex justify-center p-4">
+    <div className="pointer-events-auto absolute inset-x-0 bottom-0 z-30 flex justify-center px-4 pb-5 pt-4">
       <div
         role="dialog"
         aria-label="A decision"
-        className="animate-slide-up w-[min(38rem,100%)] rounded-2xl border border-line/70 bg-surface/95 p-6 shadow-2xl backdrop-blur"
+        className="animate-slide-up relative flex max-h-[min(72vh,34rem)] w-[min(38rem,100%)] flex-col overflow-hidden rounded-2xl border border-line/70 bg-gradient-to-b from-surface/95 to-surface-2/90 shadow-[0_28px_60px_-24px_rgb(0_0_0/0.9)] ring-1 ring-inset ring-white/[0.07] backdrop-blur-md"
       >
-        {children}
+        {head && <div className="shrink-0 border-b border-line/50 px-6 pb-4 pt-6">{head}</div>}
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 py-5">
+          {children}
+        </div>
+        {/* The room is dark and the card fades into it, so a cut-off option
+            would look like the end of the list rather than the edge of the box. */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-6 bg-gradient-to-t from-surface-2/90 to-transparent"
+        />
       </div>
     </div>
+  );
+}
+
+/**
+ * One thing you can choose. Five copies of this markup had already drifted apart
+ * by a class or two; they are one component now.
+ *
+ * The rail on the left lights on hover and on keyboard focus — the focus ring
+ * was missing entirely, which made the whole decision surface unusable without
+ * a mouse.
+ */
+function ChoiceButton({ onClick, children }: { onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button
+      onClick={onClick}
+      className="group relative w-full overflow-hidden rounded-xl border border-line/70 bg-surface-2/50 py-3 pl-5 pr-4 text-left text-sm leading-relaxed text-text transition-colors duration-200 hover:border-gold/50 hover:bg-surface-2 focus-visible:border-gold/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/40"
+    >
+      <span
+        aria-hidden
+        className="absolute inset-y-0 left-0 w-[3px] bg-transparent transition-colors duration-200 group-hover:bg-gold/70 group-focus-visible:bg-gold/70"
+      />
+      {children}
+    </button>
   );
 }
 
@@ -123,6 +172,50 @@ function NotAScene() {
   if (item?.kind === "tree") return <TreeBeat />;
   if (item?.kind === "pick") return <Successors />;
   return null;
+}
+
+/**
+ * One of the two or three questions a scenario scene generates from what this
+ * player actually chose.
+ *
+ * Options are run through presentationOrder like every other decision, so the
+ * server's shuffle and the client's ordering agree and position carries nothing.
+ */
+function SceneBeat() {
+  const beat = useJourneyStore((s) => s.sceneBeat);
+  const options = useMemo(
+    () =>
+      beat
+        ? presentationOrder(
+            `${beat.unitId}:${beat.followupId}`,
+            [],
+            beat.options.map((o) => ({ id: o.id, text: o.text })),
+          )
+        : [],
+    [beat],
+  );
+  if (!beat) return null;
+
+  return (
+    <Sheet
+      head={
+        <p className="text-sm leading-relaxed text-text">
+          {beat.speakerName && (
+            <span className="font-semibold text-gold">{beat.speakerName}: </span>
+          )}
+          {beat.prompt}
+        </p>
+      }
+    >
+      <ul className="space-y-2">
+        {options.map((o) => (
+          <li key={o.id}>
+            <ChoiceButton onClick={() => void answerSceneBeat(o.id)}>{o.text}</ChoiceButton>
+          </li>
+        ))}
+      </ul>
+    </Sheet>
+  );
 }
 
 function TreeBeat() {
@@ -145,22 +238,20 @@ function TreeBeat() {
       transferBeat.options.map((o) => ({ id: o.id, text: o.text })),
     );
     return (
-      <Sheet>
-        <p className="text-sm leading-relaxed text-text">
-          {transferBeat.speakerName && (
-            <span className="font-semibold text-gold">{transferBeat.speakerName}: </span>
-          )}
-          {transferBeat.prompt}
-        </p>
-        <ul className="mt-5 space-y-2">
+      <Sheet
+        head={
+          <p className="text-sm leading-relaxed text-text">
+            {transferBeat.speakerName && (
+              <span className="font-semibold text-gold">{transferBeat.speakerName}: </span>
+            )}
+            {transferBeat.prompt}
+          </p>
+        }
+      >
+        <ul className="space-y-2">
           {options.map((o) => (
             <li key={o.id}>
-              <button
-                onClick={() => void chooseTransferBeat(o.id)}
-                className="w-full rounded-xl border border-line/70 bg-surface-2/60 px-4 py-3 text-left text-sm leading-relaxed text-text transition hover:border-gold/60 hover:bg-surface-2"
-              >
-                {o.text}
-              </button>
+              <ChoiceButton onClick={() => void chooseTransferBeat(o.id)}>{o.text}</ChoiceButton>
             </li>
           ))}
         </ul>
@@ -189,12 +280,9 @@ function TreeBeat() {
       <ul className="mt-5 space-y-2">
         {options.map((o) => (
           <li key={o.id}>
-            <button
-              onClick={() => chooseTreeBeat(onSeed ? "seed" : "follow", o.id)}
-              className="w-full rounded-xl border border-line/70 bg-surface-2/60 px-4 py-3 text-left text-sm leading-relaxed text-text transition hover:border-gold/60 hover:bg-surface-2"
-            >
+            <ChoiceButton onClick={() => chooseTreeBeat(onSeed ? "seed" : "follow", o.id)}>
               {o.text}
-            </button>
+            </ChoiceButton>
           </li>
         ))}
       </ul>
@@ -226,18 +314,17 @@ function Successors() {
       <ul className="mt-5 space-y-2">
         {options.map((c) => (
           <li key={c.key}>
-            <button
+            <ChoiceButton
               onClick={() => {
                 pickSuccessor(c.key);
                 advance();
               }}
-              className="w-full rounded-xl border border-line/70 bg-surface-2/60 px-4 py-3 text-left transition hover:border-gold/60 hover:bg-surface-2"
             >
               <span className="block text-sm font-medium text-gold">{c.name}</span>
               <span className="mt-1 block text-sm leading-relaxed text-text">{c.profile}</span>
               <span className="mt-1 block text-xs leading-relaxed text-muted">{c.positive}</span>
               <span className="mt-0.5 block text-xs leading-relaxed text-muted">{c.watchOut}</span>
-            </button>
+            </ChoiceButton>
           </li>
         ))}
       </ul>

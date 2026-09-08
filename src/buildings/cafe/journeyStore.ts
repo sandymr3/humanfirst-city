@@ -92,6 +92,24 @@ export interface TransferBeatVM {
   options: ReadonlyArray<{ id: string; text: string }>;
 }
 
+/**
+ * A generated question on a scenario scene (L1/L2), and the scene it belongs to.
+ *
+ * Distinct from TransferBeatVM even though the shape rhymes: that one is the
+ * third beat of an authored decision tree, this one is any of the two or three a
+ * scenario scene asks, and they arrive by different routes. Keeping them apart
+ * means neither flow can quietly break the other.
+ */
+export interface SceneBeatVM {
+  unitId: string;
+  /** The authored letter this question follows — the server keys the chain on it. */
+  choice: string;
+  followupId: string;
+  speakerName: string | null;
+  prompt: string;
+  options: ReadonlyArray<{ id: string; text: string }>;
+}
+
 interface JourneyState extends Journey {
   /** The consequence sheet on screen, or null. */
   consequence: string | null;
@@ -101,6 +119,13 @@ interface JourneyState extends Journey {
   closing: boolean;
   /** The third beat on screen, once a two-beat scene's follow beat lands. */
   transferBeat: TransferBeatVM | null;
+  /**
+   * The next generated question for the scenario scene in front of the player,
+   * fetched while its consequence is still being read and shown when they move
+   * on from it. Null means the scene has nothing further to ask — which is also
+   * what every failure looks like, deliberately.
+   */
+  sceneBeat: SceneBeatVM | null;
 }
 
 const start = (): JourneyState => ({
@@ -109,6 +134,7 @@ const start = (): JourneyState => ({
   outcome: null,
   closing: false,
   transferBeat: null,
+  sceneBeat: null,
 });
 
 export const useJourneyStore = create<JourneyState>(() => start());
@@ -219,6 +245,12 @@ export async function choose(letter: string): Promise<void> {
   });
   saveNow();
 
+  // The generated question is asked for HERE rather than when the player
+  // reaches it, so it is written while the consequence is still on screen being
+  // read — the same race the two-beat scenes use for their third beat. By the
+  // time they click on, it has either landed or it never will.
+  void fetchSceneBeat(scene.unitId, letter, world);
+
   const written = await writeConsequence(scene, letter, world);
   if (written) {
     useJourneyStore.setState((cur) => ({
@@ -226,6 +258,76 @@ export async function choose(letter: string): Promise<void> {
       world: written.world ? applyPatch(cur.world, written.world as WorldPatch) : cur.world,
     }));
   }
+}
+
+/**
+ * Ask the server for the next generated question on this scene, and hold it.
+ *
+ * Never throws and never blocks. `done` — for a finished scene, an unreachable
+ * model, a spent budget, or a draft that could not clear its gates — all land
+ * here as "no question", and the scene simply ends on its authored consequence
+ * exactly as it did before these existed.
+ */
+async function fetchSceneBeat(unitId: string, choice: string, world: World): Promise<void> {
+  try {
+    const res = await api.journeyFollowup("cafe", {
+      stageId: currentStage().id,
+      unitId,
+      choice,
+      worldState: { ...world },
+    });
+    if (res.done || !res.question) return;
+    const q = res.question;
+    useJourneyStore.setState({
+      sceneBeat: {
+        unitId,
+        choice,
+        followupId: q.followupId,
+        speakerName: q.speaker.id === "room" ? null : q.speaker.name,
+        prompt: q.prompt,
+        options: q.options.map((o) => ({ id: o.id, text: o.text })),
+      },
+    });
+  } catch {
+    // No question. The scene ends where it would have anyway.
+  }
+}
+
+/**
+ * Answer a generated question.
+ *
+ * Committing is what releases its consequence — the three were never shipped up
+ * front, because a player who could read all three could infer the ranking. The
+ * next question is then asked for immediately, so it is being written while this
+ * one's consequence is on screen.
+ */
+export async function answerSceneBeat(optionId: string): Promise<void> {
+  const beat = useJourneyStore.getState().sceneBeat;
+  if (!beat) return;
+
+  // Clear it first: the question is answered, and leaving it on screen while the
+  // commit is in flight invites a second click on a different option.
+  useJourneyStore.setState({ sceneBeat: null });
+
+  let consequence = "";
+  let patch: WorldPatch | undefined;
+  try {
+    const res = await api.commitFollowup(beat.followupId, optionId);
+    consequence = res.consequence;
+    patch = res.world as WorldPatch | undefined;
+  } catch {
+    // The answer is recorded server-side or it is not; either way the room must
+    // keep moving, so fall through with nothing to show.
+  }
+
+  useJourneyStore.setState((cur) => ({
+    consequence,
+    world: patch ? applyPatch(cur.world, patch) : cur.world,
+  }));
+  saveNow();
+
+  const world = useJourneyStore.getState().world;
+  void fetchSceneBeat(beat.unitId, beat.choice, world);
 }
 
 /**
@@ -386,6 +488,19 @@ export async function chooseTransferBeat(optionId: string): Promise<void> {
     : resolveFallback(beat.activityId, optionId);
   forgetTransfer(beat.activityId);
 
+  // The CEO round's own generated questions, asked from the composed path the
+  // player actually took through the tree. Fired here for the same reason the
+  // one-beat scenes fire theirs at `choose`: it is written while the transfer
+  // beat's consequence is being read, so it costs no visible wait.
+  const item = currentItem();
+  if (item?.kind === "tree" && s.taken.seed && s.taken.follow) {
+    void fetchSceneBeat(
+      item.tree.unitId,
+      `${s.taken.seed}.${s.taken.follow}`,
+      useJourneyStore.getState().world,
+    );
+  }
+
   if (!written) {
     advance();
     return;
@@ -437,11 +552,19 @@ export function advance(): void {
     saveSoon();
     return;
   }
+  // A scenario scene with a generated question waiting is not finished: clearing
+  // the consequence here means "ask me the next one", not "next scene".
+  if (s.sceneBeat) {
+    useJourneyStore.setState({ consequence: null });
+    saveSoon();
+    return;
+  }
   useJourneyStore.setState({
     index: s.index + 1,
     consequence: null,
     taken: {},
     transferBeat: null,
+    sceneBeat: null,
   });
   saveSoon();
 }

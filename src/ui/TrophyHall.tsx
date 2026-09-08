@@ -3,6 +3,7 @@ import { api, ApiError } from "@/framework/api";
 import type { EarnedBadge, CompetencyProfile } from "@/framework/api/schemas";
 import { Icon, type IconName } from "./Icon";
 import { Modal } from "./Modal";
+import { Evaluation } from "./Evaluation";
 
 // Trophy Hall (PRD §9.4) — the first F2 surface that needs NO new backend work:
 // GET /api/v1/badges and GET /api/v1/profile are both live. Earned badges stand
@@ -83,6 +84,17 @@ export function TrophyHall({ onClose }: { onClose: () => void }) {
             <ProgressRow key={c.code} c={c} />
           ))}
         </div>
+      </section>
+
+      {/* The evaluation report. It sits here rather than in a building because
+          it is the one surface that pools every business you have worked in —
+          "am I getting better", not "was I good that day". */}
+      <section className="mt-8 border-t border-line pt-6">
+        <h3 className="font-display text-lg font-semibold text-text">Your assessment</h3>
+        <p className="mb-4 text-xs text-muted">
+          Read back from what you decided — where you started, and where you are now.
+        </p>
+        <Evaluation />
       </section>
     </Modal>
   );

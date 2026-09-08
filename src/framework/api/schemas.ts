@@ -238,11 +238,100 @@ export type JourneyStageResult = z.infer<typeof JourneyStageResult>;
  * could tell the player, and a player who could tell would treat those beats
  * differently.
  */
+/**
+ * The next generated question on a career scene, or word that the scene is done
+ * asking (ADR-007 §16, extended to L1/L2).
+ *
+ * `done: true` is deliberately ambiguous. It is what a finished scene returns,
+ * and equally what an unreachable model, a spent budget, and a draft that could
+ * not clear its gates return. There is no bank behind these, so "no question" IS
+ * the fallback — and a client that could tell the difference could tell the
+ * player, who would then know which scenes were worth answering carefully.
+ */
+export const JourneyFollowup = z.object({
+  done: z.boolean(),
+  question: FollowupPublic.optional(),
+});
+export type JourneyFollowup = z.infer<typeof JourneyFollowup>;
+
 export const ConsequenceResult = z.object({
   consequence: z.string(),
   world: z.record(z.string()).optional().default({}),
 });
 export type ConsequenceResult = z.infer<typeof ConsequenceResult>;
+
+// ── The evaluation report (ADR-007 §15) ───────────────────────────────────────
+
+/**
+ * One competency's whole story, and the series the graph plots.
+ *
+ * `baseline` and `latest` are the two numbers the brief asked for by name —
+ * where they started and where they are now — and `series` is every scored
+ * moment in between, in order. All 0..1.
+ *
+ * `class` is the DETERMINISTIC reading: natural (arrived with it), emerging
+ * (learning it here), developing (neither yet), insufficient (too little
+ * evidence to say). The model's own view arrives separately in the strength
+ * lists, and the two are allowed to disagree.
+ */
+export const CompetencyTrack = z.object({
+  code: z.string(),
+  name: z.string(),
+  samples: z.number(),
+  baseline: z.number(),
+  latest: z.number(),
+  mean: z.number(),
+  slope: z.number(),
+  series: z.array(z.number()),
+  class: z.enum(["natural", "emerging", "developing", "insufficient"]),
+});
+export type CompetencyTrack = z.infer<typeof CompetencyTrack>;
+
+export const Judgement = z.object({
+  competency: z.string(),
+  name: z.string(),
+  why: z.string(),
+});
+export type Judgement = z.infer<typeof Judgement>;
+
+export const BuildingReport = z.object({
+  buildingId: z.string(),
+  track: z.string().optional(),
+  status: z.string(),
+  roleReached: z.string(),
+  revenue: z.number(),
+  startedAt: z.string(),
+  endedAt: z.string().optional(),
+  stages: z.array(
+    z.object({
+      stageId: z.string(),
+      attemptNo: z.number(),
+      rawScore: z.number(),
+      band: z.string(),
+      createdAt: z.string(),
+    }),
+  ),
+  competencies: z.array(CompetencyTrack),
+  naturalStrengths: z.array(Judgement),
+  emergingSkills: z.array(Judgement),
+  summary: z.string(),
+  // "ai" or "computed". Operational honesty — never rendered to the learner,
+  // because which one wrote it says nothing about them.
+  judged: z.string(),
+});
+export type BuildingReport = z.infer<typeof BuildingReport>;
+
+export const EvaluationReport = z.object({
+  generatedAt: z.string(),
+  buildings: z.array(BuildingReport),
+  cumulative: z.array(CompetencyTrack),
+  revenueBadge: z
+    .object({ buildingId: z.string(), revenue: z.number(), label: z.string() })
+    .optional(),
+  /** True when nothing has been played yet — distinct from a report of zeroes. */
+  empty: z.boolean(),
+});
+export type EvaluationReport = z.infer<typeof EvaluationReport>;
 
 // ── Session state (ADR-006 §11) ───────────────────────────────────────────────
 

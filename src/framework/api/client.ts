@@ -14,6 +14,8 @@ import {
   ProfileResponse,
   FollowupPublic,
   FollowupCommit,
+  JourneyFollowup,
+  EvaluationReport,
   JourneyStageResult,
   ConsequenceResult,
   StateEnvelope,
@@ -47,6 +49,18 @@ export interface ConsequenceBody {
   unitId: string;
   choice: string;
   speakerId?: string;
+  worldState?: Record<string, string>;
+}
+
+/**
+ * What a career scene's generated question is asked for. Ids, a letter and a
+ * closed-enum world map — the same absence of free text ConsequenceBody
+ * enforces, because the same rule applies (ADR-007 §13).
+ */
+export interface JourneyFollowupBody {
+  stageId: string;
+  unitId: string;
+  choice: string;
   worldState?: Record<string, string>;
 }
 
@@ -124,6 +138,17 @@ export class ApiClient {
 
   putState(activityId: string, blob: unknown): Promise<unknown> {
     return this.perform("PUT", `/api/v1/progress/${activityId}/state`, blob);
+  }
+
+  /**
+   * The evaluation report: per business, then across all of them.
+   *
+   * Recomputed server-side on every call rather than cached, so it can never
+   * disagree with the evidence it came from. Not silent — unlike the generated
+   * beats, a report the player asked for and did not get should say so.
+   */
+  getReport() {
+    return this.request("GET", "/api/v1/report", EvaluationReport);
   }
 
   /** Trophy Hall (PRD §9.4) — the caller's earned badges. */
@@ -235,6 +260,24 @@ export class ApiClient {
       silent: true,
       signal,
     });
+  }
+
+  /**
+   * Ask for the next generated question on a career scene.
+   *
+   * Silent and cancellable like `aiFollowup`, for the same reason: the room has
+   * already put the authored consequence on screen, so a question that misses
+   * its deadline costs nothing but itself. A `done` response — for ANY reason —
+   * simply moves the player on.
+   */
+  journeyFollowup(buildingId: string, body: JourneyFollowupBody, signal?: AbortSignal) {
+    return this.request(
+      "POST",
+      `/api/v1/city/buildings/${buildingId}/journey/followup`,
+      JourneyFollowup,
+      body,
+      { silent: true, signal },
+    );
   }
 
   // ── Session state (ADR-006 §11) ─────────────────────────────────────────────
