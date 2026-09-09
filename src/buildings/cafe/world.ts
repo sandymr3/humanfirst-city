@@ -10,7 +10,7 @@
 //
 // **Every value is a member of a closed set.** Decisions write world state, and a
 // decision that writes `chalkboard: "oat-ish"` is a decision that silently stops
-// rendering. The reducer drops anything it does not recognise instead of storing
+// rendering. The reducer drops anything it does not recognize instead of storing
 // it, so a bad write is a no-op rather than a room with a hole in it — the same
 // stance the backend takes on the world state it is sent.
 import type { Track } from "@/framework/city/track";
@@ -34,7 +34,7 @@ export const WORLD_KEYS = {
   regulars: ["full", "steady", "thin", "returning"],
   /** The drawer at week 8, and how Priya stands when there is nothing to do. */
   till: ["tight", "healthy", "strained"],
-  /** Idle sets and gaze, and whether the rota has pencil on it. */
+  /** Idle sets and gaze, and whether the schedule has pencil on it. */
   staff: ["easy", "strained", "trusting"],
   /** Ray's truck through the glass, at your kerb or across the road. */
   truck: ["absent", "parked", "gone_rival"],
@@ -42,7 +42,7 @@ export const WORLD_KEYS = {
   machine: ["old", "upgraded"],
   /** The community noticeboard by the door. */
   board: ["clean", "app_card", "direct_card"],
-  /** The sack behind the counter, and the colour of the crema in the cup. */
+  /** The sack behind the counter, and the color of the crema in the cup. */
   beans: ["good", "cheap"],
   /** The awning across the street, and whether it has a board out. */
   rival: ["none", "open", "promo"],

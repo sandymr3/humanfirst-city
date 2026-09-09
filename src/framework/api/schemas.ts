@@ -185,13 +185,30 @@ export const FollowupPublic = z.object({
   followupId: z.string(),
   speaker: z.object({ id: z.string(), name: z.string(), role: z.string() }),
   prompt: z.string(),
-  options: z.array(FollowupOption).length(3),
+  /**
+   * Three options, or none.
+   *
+   * None is an OPEN question: the Café asks the player to write, so the
+   * questions generated from their writing are written back (ADR-008 §1). Two
+   * lengths and no others — a question with one or two options is a generation
+   * that half-reverted to multiple choice, and shipping it would show a menu
+   * with an option missing.
+   */
+  options: z
+    .array(FollowupOption)
+    .refine((o) => o.length === 0 || o.length === 3, "want three options or none"),
 });
 export type FollowupPublic = z.infer<typeof FollowupPublic>;
 
-/** Committing a choice is what releases its consequence — see ADR-006 §7.3. */
+/**
+ * Answering a beat. Committing a CHOICE releases its consequence (ADR-006
+ * §7.3); answering an OPEN question releases nothing, because nothing was
+ * withheld — there was no option, so there is no consequence being kept back
+ * until one is picked. The empty response is the honest one, and the room moves
+ * to the next question rather than to something to read.
+ */
 export const FollowupCommit = z.object({
-  consequence: z.string(),
+  consequence: z.string().optional(),
   world: z.record(z.string()).optional().default({}),
 });
 export type FollowupCommit = z.infer<typeof FollowupCommit>;

@@ -11,6 +11,7 @@
 // comparison to a previous attempt, and any band label using the words the
 // end-of-journey report owns.
 import { useState } from "react";
+import { Dictation } from "@/ui/Dictation";
 import { castById } from "./cast";
 import { currentQuestion, currentStage, useJourneyStore, answer, advance } from "./journeyStore";
 
@@ -69,16 +70,27 @@ export function QA() {
           onKeyDown={(e) => {
             // Enter sends, because this is a conversation. Shift+Enter is a
             // paragraph, because some of these answers want one.
+            //
+            // stopPropagation as well as preventDefault: the room listens for
+            // Enter on the window, and without the second call answering a
+            // question also walks you into whoever is standing nearby. The
+            // panel's input lock covers this too — this is the belt to that
+            // pair of braces.
             if (e.key === "Enter" && !e.shiftKey) {
               e.preventDefault();
+              e.stopPropagation();
               commit();
             }
           }}
           rows={4}
           autoFocus
           className="mt-4 w-full resize-y rounded-xl border border-line/70 bg-surface-2/60 px-4 py-3 text-sm leading-relaxed text-text outline-none transition focus:border-gold/60"
-          placeholder="Answer him."
+          placeholder="Type your response, or use the microphone."
         />
+
+        <div className="mt-3">
+          <Dictation value={draft} onChange={setDraft} label={`your answer to ${stage.title}`} />
+        </div>
 
         <div className="mt-4 flex items-center justify-between">
           <p className="text-xs text-muted">Enter to answer · Shift+Enter for a new line</p>

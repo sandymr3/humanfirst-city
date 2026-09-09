@@ -23,10 +23,12 @@ import {
 import { GATES, guideFor, zoneAt } from "./room";
 import { atAnchors, castById, castFor, guideWithCast } from "./cast";
 import { Decision } from "./Decision";
+import { PhaseHistory } from "./PhaseHistory";
 import { StageChip } from "./StageChip";
 import { QA } from "./QA";
 import { Gate } from "./Gate";
 import { Report } from "./Report";
+import { Waiting } from "@/ui/Waiting";
 import {
   closeStage,
   currentStage,
@@ -54,7 +56,11 @@ export default function CafeInterior({ manifest, onExit }: InteriorProps) {
   const index = useJourneyStore((s) => s.index);
   const journeyWorld = useJourneyStore((s) => s.world);
   const consequence = useJourneyStore((s) => s.consequence);
+  const sceneBeat = useJourneyStore((s) => s.sceneBeat);
+  const closing = useJourneyStore((s) => s.closing);
   const [reportOpen, setReportOpen] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const finishedPhases = useJourneyStore((s) => s.history.length);
 
   // Every visit starts at the door with the flap down, which keeps the store and
   // the canvas's own gate set in step (the canvas boots with no gates open).
@@ -126,6 +132,32 @@ export default function CafeInterior({ manifest, onExit }: InteriorProps) {
       live = false;
     };
   }, [readyToClose, stageKind, stageId, index]);
+
+  /**
+   * The room stops taking input while a panel is up.
+   *
+   * Every consumer already checked `inputLocked` — this file's own key handler
+   * below, and the canvas's click-to-path and WASD paths — and `setInputLocked`
+   * has existed on the room store all along. Nothing in the Café ever called
+   * it, so the guard was built and never armed: a player could walk to Owen and
+   * press E with a decision sheet open, and his speech bubble would stack
+   * underneath it. `Enter` was the same bug in one keystroke, because the
+   * textarea's handler stops the default but not the window listener.
+   *
+   * `fashion_brand/Interior.tsx` does this correctly and is the pattern copied
+   * here. Locking during `closing` matters too: the stage-close await is the
+   * one stretch with nothing on screen to click past.
+   */
+  const panelOpen =
+    reportOpen ||
+    historyOpen ||
+    closing ||
+    (ready &&
+      seasonIn &&
+      (consequence !== null || sceneBeat !== null || stageKind === "gate" || !stageIsDone()));
+  useEffect(() => {
+    useRoomStore.getState().setInputLocked(panelOpen);
+  }, [panelOpen]);
 
   /** The exit stage has nothing to ask, so it closes the moment you reach it. */
   useEffect(() => {
@@ -206,8 +238,15 @@ export default function CafeInterior({ manifest, onExit }: InteriorProps) {
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") {
         // A panel closes first; only then does Escape mean "leave".
+        //
+        // Escape is owned HERE and not by each panel, because two listeners on
+        // `window` cannot reliably stop one another: `stopPropagation` does
+        // nothing between siblings on the same target, and the panel's listener
+        // registers second so the room's would run first anyway. Pressing
+        // Escape in the history panel used to walk the player out of the café.
         const s = useRoomStore.getState();
-        if (s.speakingToId) stopSpeaking();
+        if (historyOpen) setHistoryOpen(false);
+        else if (s.speakingToId) stopSpeaking();
         else leave();
         return;
       }
@@ -221,7 +260,7 @@ export default function CafeInterior({ manifest, onExit }: InteriorProps) {
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [leaveNow, act]);
+  }, [leaveNow, act, historyOpen]);
 
   const prompt = nearExit
     ? "leave the café"
@@ -249,6 +288,12 @@ export default function CafeInterior({ manifest, onExit }: InteriorProps) {
       {ready && seasonIn && stageKind === "qa" && consequence === null && <QA />}
       {ready && seasonIn && stageKind === "gate" && <Gate />}
       {reportOpen && <Report onClose={leaveNow} />}
+      {historyOpen && <PhaseHistory onClose={() => setHistoryOpen(false)} />}
+
+      {/* The stage-close window. The question card has unmounted and the gate
+          has not mounted yet, and the grader may take tens of seconds — before
+          this, the room showed nothing at all for that whole stretch. */}
+      {ready && seasonIn && closing && !reportOpen && <Waiting />}
 
       {(!ready || !seasonIn) && (
         <div className="absolute inset-0 grid place-items-center bg-ink">
@@ -274,6 +319,24 @@ export default function CafeInterior({ manifest, onExit }: InteriorProps) {
         Back to the street
         <span className="rounded bg-line/50 px-1.5 py-0.5 text-xs text-muted">Esc</span>
       </button>
+
+      {/*
+        Looking back at a finished phase. Hidden until there is one, because a
+        button that opens an empty panel teaches a player to stop pressing it.
+        Placed under the door rather than beside a question: this is something
+        you go and look up, not part of answering.
+      */}
+      {ready && seasonIn && finishedPhases > 0 && !reportOpen && (
+        <button
+          onClick={() => {
+            audio.play("ui_open");
+            setHistoryOpen(true);
+          }}
+          className="pointer-events-auto absolute right-5 top-[4.25rem] z-10 flex items-center gap-2 rounded-full border border-line/70 bg-surface/80 px-4 py-1.5 text-xs text-muted backdrop-blur transition hover:border-gold/40 hover:text-text"
+        >
+          What I have answered
+        </button>
+      )}
 
       {prompt && !speaking && (
         <div className="pointer-events-none absolute bottom-10 left-1/2 z-10 -translate-x-1/2 animate-slide-up">

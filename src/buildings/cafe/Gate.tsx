@@ -45,10 +45,13 @@ export function Gate() {
             {/*
               An honest line for the case where nothing graded the sitting — a
               grader outage, or an offline close. Saying so is better than
-              inventing a verdict, and better than silence.
+              inventing a verdict, and better than silence. Named rather than
+              pronouned: the host differs by stage, and the sentence should read
+              the same whoever is sitting across the table.
             */}
-            He heard you out. Nothing came back on the record this time, so take this as a
-            conversation rather than a decision.
+            {host?.name ?? "The interviewer"} heard you out. Nothing came back on the record this
+            time, so take this as a conversation rather than a decision — the roads below are all
+            still open.
           </p>
         )}
 

@@ -46,6 +46,7 @@ import {
 import {
   flushJourney,
   freshJourney,
+  recordStage,
   loadJourney,
   saveJourney,
   saveJourneyNow,
@@ -54,6 +55,7 @@ import {
   type Journey,
   type UnsentStage,
 } from "./journeySession";
+import { transcriptFor } from "./history";
 import { followupFor } from "./followups";
 import { applyPatch, type World, type WorldPatch } from "./world";
 import { treeFor } from "./trees";
@@ -205,6 +207,7 @@ function snapshot(): Journey {
     world: s.world,
     revenue: s.revenue,
     unsent: s.unsent,
+    history: s.history,
   };
 }
 
@@ -241,7 +244,10 @@ export async function choose(letter: string): Promise<void> {
   useJourneyStore.setState({
     decided: [...s.decided, decision],
     world,
-    consequence: scene.consequences[letter] ?? "",
+    // Null rather than "" — every one-beat scene is required to carry all three
+    // authored consequences (validate_registry blocks a missing one), so this
+    // is defensive, and an empty sheet is worse than no sheet.
+    consequence: scene.consequences?.[letter] ?? null,
   });
   saveNow();
 
@@ -251,13 +257,22 @@ export async function choose(letter: string): Promise<void> {
   // time they click on, it has either landed or it never will.
   void fetchSceneBeat(scene.unitId, letter, world);
 
+  // Where the player was standing when this was asked for. A generated
+  // consequence that arrives after they have moved on belongs to a scene they
+  // have already left, and setting it would re-open a sheet over whatever is on
+  // screen now — the gate, the report, or the room itself.
+  const askedAt = { stageId: s.stageId, index: s.index };
+
   const written = await writeConsequence(scene, letter, world);
-  if (written) {
-    useJourneyStore.setState((cur) => ({
-      consequence: written.consequence,
-      world: written.world ? applyPatch(cur.world, written.world as WorldPatch) : cur.world,
-    }));
-  }
+  if (!written || !written.consequence.trim()) return;
+
+  const now = useJourneyStore.getState();
+  if (now.stageId !== askedAt.stageId || now.index !== askedAt.index) return;
+
+  useJourneyStore.setState((cur) => ({
+    consequence: written.consequence,
+    world: written.world ? applyPatch(cur.world, written.world as WorldPatch) : cur.world,
+  }));
 }
 
 /**
@@ -268,13 +283,20 @@ export async function choose(letter: string): Promise<void> {
  * here as "no question", and the scene simply ends on its authored consequence
  * exactly as it did before these existed.
  */
-async function fetchSceneBeat(unitId: string, choice: string, world: World): Promise<void> {
+async function fetchSceneBeat(
+  unitId: string,
+  choice: string,
+  world: World,
+  answer?: string,
+): Promise<void> {
   try {
     const res = await api.journeyFollowup("cafe", {
       stageId: currentStage().id,
       unitId,
       choice,
       worldState: { ...world },
+      answer,
+      background: backgroundForCurrentLevel(),
     });
     if (res.done || !res.question) return;
     const q = res.question;
@@ -313,21 +335,157 @@ export async function answerSceneBeat(optionId: string): Promise<void> {
   let patch: WorldPatch | undefined;
   try {
     const res = await api.commitFollowup(beat.followupId, optionId);
-    consequence = res.consequence;
+    consequence = (res.consequence ?? "").trim();
     patch = res.world as WorldPatch | undefined;
   } catch {
     // The answer is recorded server-side or it is not; either way the room must
     // keep moving, so fall through with nothing to show.
   }
 
+  // Null, not "". A sheet whose only content is an empty paragraph renders as a
+  // bare "Back to the room" button floating over the room — which is exactly
+  // what a failed commit used to put on screen.
   useJourneyStore.setState((cur) => ({
-    consequence,
+    consequence: consequence || null,
     world: patch ? applyPatch(cur.world, patch) : cur.world,
   }));
   saveNow();
 
   const world = useJourneyStore.getState().world;
-  void fetchSceneBeat(beat.unitId, beat.choice, world);
+  await fetchSceneBeat(beat.unitId, beat.choice, world);
+
+  // Awaiting the fetch does not make the player wait — the consequence sheet is
+  // already on screen from the setState above. It is awaited so that, when there
+  // is nothing to read AND nothing further to ask, the room moves on by itself
+  // instead of stranding them with no sheet and no way forward.
+  if (!consequence && !useJourneyStore.getState().sceneBeat) advance();
+}
+
+/**
+ * Answer an open generated question in the player's own words.
+ *
+ * The sibling of `answerSceneBeat`, and it differs in what comes back: nothing.
+ * A chosen option had a consequence withheld until it was picked; an open
+ * question never had one, so there is nothing to release and nothing to read.
+ * The next question is asked for straight away, and if there is not one the
+ * room moves on by itself rather than leaving an empty sheet on screen.
+ */
+export async function answerSceneBeatText(text: string): Promise<void> {
+  const beat = useJourneyStore.getState().sceneBeat;
+  if (!beat) return;
+  const trimmed = text.trim();
+  if (!trimmed) return;
+
+  // Off screen the moment it is answered, for the same reason the option path
+  // clears it: a second submission against one question is a second answer to
+  // something already answered.
+  useJourneyStore.setState({ sceneBeat: null, consequence: null });
+
+  try {
+    await api.answerFollowup(beat.followupId, trimmed);
+  } catch {
+    // Recorded server-side or not; either way the room keeps moving. The next
+    // fetch will see whatever the server actually holds.
+  }
+  saveNow();
+
+  const world = useJourneyStore.getState().world;
+  await fetchSceneBeat(beat.unitId, beat.choice, world);
+
+  // Nothing to read and nothing further to ask: the scene is over, so move on
+  // rather than stranding the player with a blank panel.
+  if (!useJourneyStore.getState().sceneBeat) advance();
+}
+
+/**
+ * Answer an open scene in the player's own words.
+ *
+ * The sibling of `choose`, and the difference is what settles it: a lettered
+ * scene is priced by the letter, an open one by the mark its text is graded at
+ * when the stage closes. Nothing here scores anything — the room moves on the
+ * decision and never on the score, so the answer is recorded and the player
+ * carries on.
+ *
+ * The authored fallback goes on screen straight away for the same reason the
+ * lettered path shows its authored line first: a room that waits for a network
+ * round trip to say what happened is a room that can stall.
+ */
+export async function answerScene(text: string): Promise<void> {
+  const scene = currentScene();
+  if (!scene?.open) return;
+  const trimmed = text.trim();
+  if (!trimmed) return;
+
+  const s = useJourneyStore.getState();
+  useJourneyStore.setState({
+    answers: [
+      ...s.answers.filter((a) => a.unitId !== scene.unitId),
+      { unitId: scene.unitId, text: trimmed },
+    ],
+    consequence: scene.fallbackConsequence ?? null,
+  });
+  saveNow();
+
+  // The scene's generated questions, asked for the moment the authored decision
+  // is answered — the same race the lettered path uses, so the next question is
+  // written while this consequence is being read.
+  //
+  // There is no letter to key the chain on, so the marker stands in for one. The
+  // server keys a chain on (user, unit, choice, beat); an open scene has exactly
+  // one chain per unit, which is what this says.
+  void fetchSceneBeat(scene.unitId, OPEN_CHOICE, s.world, trimmed);
+
+  // And what happened, written from the same words. Raced exactly like the
+  // lettered path: the authored line is already on screen, and this replaces it
+  // only if a better one arrives before the player has moved on.
+  const askedAt = { stageId: s.stageId, index: s.index };
+  const written = await writeConsequence(scene, OPEN_CHOICE, s.world, trimmed);
+  if (!written || !written.consequence.trim()) return;
+
+  const now = useJourneyStore.getState();
+  if (now.stageId !== askedAt.stageId || now.index !== askedAt.index) return;
+
+  useJourneyStore.setState((cur) => ({
+    consequence: written.consequence,
+    world: written.world ? applyPatch(cur.world, written.world as WorldPatch) : cur.world,
+  }));
+}
+
+/**
+ * What goes on the wire in place of a letter for an open scene.
+ *
+ * Deliberately a constant rather than a hash of the answer: re-answering a scene
+ * must continue the same chain rather than start a second one, or a player who
+ * edits their answer gets a fresh set of follow-ups and the earlier ones are
+ * orphaned mid-scene.
+ */
+export const OPEN_CHOICE = "open";
+
+/**
+ * What the player said in the sitting that got them this posting.
+ *
+ * The client's ask, in their words: "Consequence for Level 1 (employee) should
+ * be layered on user answers in interview process followed by the option they
+ * chose in the scenario based question. Level 2 (branch manager) should be
+ * layered on user answers in review session."
+ *
+ * So: the most recent typed sitting before the level in progress. That is the
+ * interview for L1 and review #1 for L2 without either being named here, which
+ * matters because a stage inserted between them should not silently make this
+ * point at the wrong conversation.
+ *
+ * Empty when there is nothing — a run resumed from a save written before the
+ * transcript existed, or a level reached with the sitting queued offline. The
+ * scene still gets its consequence; it is just written from the scene alone.
+ */
+function backgroundForCurrentLevel(): string[] {
+  const s = useJourneyStore.getState();
+  for (let i = s.history.length - 1; i >= 0; i--) {
+    const rec = s.history[i];
+    if (stageById(rec.stageId)?.kind !== "qa") continue;
+    return rec.entries.map((e) => e.answer);
+  }
+  return [];
 }
 
 /**
@@ -339,6 +497,7 @@ async function writeConsequence(
   scene: Scene,
   letter: string,
   world: World,
+  answer?: string,
 ): Promise<{ consequence: string; world?: Record<string, string> } | null> {
   try {
     return await api.aiConsequence({
@@ -348,6 +507,8 @@ async function writeConsequence(
       choice: letter,
       speakerId: scene.speaker,
       worldState: { ...world },
+      answer,
+      background: backgroundForCurrentLevel(),
     });
   } catch {
     return null;
@@ -615,6 +776,10 @@ export async function closeStage(): Promise<StageOutcome | null> {
   const stage = currentStage();
   const units = unitsDecidedIn(stage, s.decided);
   const pending: UnsentStage = { stageId: stage.id, units, answers: s.answers };
+  // What the player put against each question in this phase, captured BEFORE
+  // the close clears `answers` — this is the only moment the typed text and the
+  // stage it belongs to are both in hand.
+  const transcript = transcriptFor(stage, s.answers, units);
 
   let outcome: StageOutcome | null = null;
   try {
@@ -647,16 +812,27 @@ export async function closeStage(): Promise<StageOutcome | null> {
       answers: [],
       outcome,
       closing: false,
+      history: [
+        ...s.history,
+        recordStage(stage.id, outcome.attemptNo, transcript, {
+          band: outcome.band,
+          feedback: outcome.feedback,
+        }),
+      ],
     });
   } catch {
     // The room moves on the decision, never on the score. Queue it and carry on:
     // a gate the player cannot walk through because the network is down is a
     // worse failure than a gate that says nothing.
+    // The phase still happened, and the player should still be able to look
+    // back at it. It is recorded without a band or feedback, because there
+    // genuinely is none — the server never took the close.
     useJourneyStore.setState({
       unsent: [...s.unsent, pending],
       qaDone: [...s.qaDone, ...s.answers.map((a) => a.unitId)],
       answers: [],
       closing: false,
+      history: [...s.history, recordStage(stage.id, 0, transcript)],
     });
   }
 
@@ -766,6 +942,11 @@ export function takeRoad(road: Road): void {
     answers: road === "retry" ? [] : s.answers,
     outcome: null,
     consequence: null,
+    // A beat owed on the stage being left must not follow the player into the
+    // next one. Only `advance` cleared these, so a gate walked through mid-scene
+    // carried a question across and rendered it on top of the new stage's panel.
+    sceneBeat: null,
+    transferBeat: null,
     role: roleOnEntering(nextStage, s.role),
   }));
   saveNow();
@@ -782,6 +963,10 @@ export function goToNextStage(): void {
     taken: {},
     outcome: null,
     consequence: null,
+    // Same reason as `takeRoad`: a beat still owed on the stage being left would
+    // otherwise render on top of the next stage's own panel.
+    sceneBeat: null,
+    transferBeat: null,
     role: roleOnEntering(next, s.role),
   }));
   saveNow();

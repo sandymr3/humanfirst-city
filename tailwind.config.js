@@ -45,6 +45,14 @@ module.exports = {
           "0%": { transform: "translateX(0)" },
           "100%": { transform: "translateX(46px)" },
         },
+        // The waiting-room steam. Three wisps on staggered delays; each rises,
+        // widens and fades, so the loop reads as a cup being watched rather than
+        // a progress bar pretending to know how long the grader will take.
+        steam: {
+          "0%": { opacity: "0", transform: "translateY(0) scaleX(0.7)" },
+          "25%": { opacity: "0.75" },
+          "100%": { opacity: "0", transform: "translateY(-14px) scaleX(1.5)" },
+        },
         // Skyline layers loop by sliding exactly one gradient period.
         "skyline-far": { to: { backgroundPosition: "-88px 0" } },
         "skyline-mid": { to: { backgroundPosition: "-72px 0" } },
@@ -58,6 +66,7 @@ module.exports = {
         twinkle: "twinkle 4s ease-in-out infinite",
         "drift-a": "drift-x 18s ease-in-out infinite alternate",
         "drift-b": "drift-x 26s ease-in-out infinite alternate",
+        steam: "steam 2.4s ease-out infinite",
         "skyline-far": "skyline-far 80s linear infinite",
         "skyline-mid": "skyline-mid 45s linear infinite",
         "skyline-near": "skyline-near 25s linear infinite",

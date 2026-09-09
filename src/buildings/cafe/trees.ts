@@ -133,7 +133,7 @@ const HARD_TREES: Readonly<Record<string, Tree>> = {
           },
           {
             id: "c",
-            text: "Hold at one crate a week, leave the card up another fortnight, and let the reorder rate make the call instead of you.",
+            text: "Hold at one crate a week, leave the card up another two weeks, and let the reorder rate make the call instead of you.",
             consequence:
               "The card stays up. The reorder settles at one crate, steady, week after week. It is not a decision so much as a number you now have and did not have before.",
             world: { chalkboard: "oat" },
@@ -146,7 +146,7 @@ const HARD_TREES: Readonly<Record<string, Tree>> = {
         choices: [
           {
             id: "a",
-            text: "Keep both on. Pulling something a fortnight after adding it makes the place look like it doesn't know what it is.",
+            text: "Keep both on. Pulling something a two weeks after adding it makes the place look like it doesn't know what it is.",
             consequence:
               "Both stay up. The almond goes on sitting there, and every few weeks a carton goes past date and gets poured away at close, quietly, by whoever is on.",
             world: { chalkboard: "oat_plus" },
@@ -217,7 +217,7 @@ const HARD_TREES: Readonly<Record<string, Tree>> = {
         id: "b",
         text: "Keep pushing it. A drink this good takes a month to find its people, and pulling it early kills things that would have worked.",
         consequence:
-          "You leave it up. Four a day becomes four a day becomes four a day, through a hot fortnight when everything else on the board moved.",
+          "You leave it up. Four a day becomes four a day becomes four a day, through a hot two weeks when everything else on the board moved.",
         world: { chalkboard: "iced" },
       },
       {
@@ -251,14 +251,14 @@ const HARD_TREES: Readonly<Record<string, Tree>> = {
             id: "c",
             text: "Write down what we just did — ask, change one thing, count — and use it every time we put something new on that board.",
             consequence:
-              "Priya writes the three steps on the inside of the cupboard door, where the rota used to be. You will find yourself looking at it again in week sixteen.",
+              "Priya writes the three steps on the inside of the cupboard door, where the schedule used to be. You will find yourself looking at it again in week sixteen.",
             world: { staff: "trusting" },
           },
         ],
       },
       b: {
         prompt:
-          "A month gone and it is still four a day, in the hottest fortnight of the year. Priya, not looking up from the docket: “I backed this too, you know.”",
+          "A month gone and it is still four a day, in the hottest two weeks of the year. Priya, not looking up from the docket: “I backed this too, you know.”",
         choices: [
           {
             id: "a",
@@ -470,7 +470,7 @@ const HARD_TREES: Readonly<Record<string, Tree>> = {
             id: "b",
             text: "Keep the number to myself until I have to share it. Worrying the team about a month that might still turn is its own kind of damage.",
             consequence:
-              "You keep it. She stops asking after a fortnight, and starts checking the rota a week further ahead than she used to.",
+              "You keep it. She stops asking after a two weeks, and starts checking the schedule a week further ahead than she used to.",
             world: { staff: "strained" },
           },
           {
@@ -484,7 +484,7 @@ const HARD_TREES: Readonly<Record<string, Tree>> = {
       },
       b: {
         prompt:
-          "October undershoots the cushion by about a fortnight's worth. The loyalty cards are working, but slowly, and slowly is not what a fortnight short needs.",
+          "October undershoots the cushion by about a two weeks's worth. The loyalty cards are working, but slowly, and slowly is not what a two weeks short needs.",
         choices: [
           {
             id: "a",
@@ -495,14 +495,14 @@ const HARD_TREES: Readonly<Record<string, Tree>> = {
           },
           {
             id: "b",
-            text: "Separate the two problems. Fund the fortnight from something reversible and let the scheme run on its own timeline instead of rescuing me.",
+            text: "Separate the two problems. Fund the two weeks from something reversible and let the scheme run on its own timeline instead of rescuing me.",
             consequence:
               "You borrow against the thing you can unwind, and leave the cards alone. They come good in January, on their own schedule, exactly as slowly as before.",
             world: { till: "healthy" },
           },
           {
             id: "c",
-            text: "Trim a fortnight of hours by agreement, close an hour earlier on the dead days, and protect the cushion rather than the schedule.",
+            text: "Trim a two weeks of hours by agreement, close an hour earlier on the dead days, and protect the cushion rather than the schedule.",
             consequence:
               "You close at four on Mondays and Tuesdays through November. Two people take the hours off willingly and one of them is relieved, which you had not expected.",
             world: { till: "healthy", staff: "strained" },
@@ -769,7 +769,7 @@ const HARD_TREES: Readonly<Record<string, Tree>> = {
   "C7-SCA-01": {
     activityId: "C7-SCA-01",
     stage:
-      "First grey day of the autumn. She has been late four times in two weeks, and it lands on whoever opened — which has been Tomas, twice, without saying anything about it. The rota by the pass-through has corrections on it that are not yours.",
+      "First grey day of the autumn. She has been late four times in two weeks, and it lands on whoever opened — which has been Tomas, twice, without saying anything about it. The schedule by the pass-through has corrections on it that are not yours.",
     prompt: "You wanted a word. Here, or out the back?",
     seed: [
       {
@@ -788,7 +788,7 @@ const HARD_TREES: Readonly<Record<string, Tree>> = {
       },
       {
         id: "c",
-        text: "Ask, listen, and then deal with both the behaviour and its cause — adjust what I can support without moving the standard itself.",
+        text: "Ask, listen, and then deal with both the behavior and its cause — adjust what I can support without moving the standard itself.",
         consequence:
           "You move her start to half past and you say out loud that half past is now the time. Both halves of that sentence turn out to matter.",
         world: { staff: "trusting" },
@@ -801,9 +801,9 @@ const HARD_TREES: Readonly<Record<string, Tree>> = {
         choices: [
           {
             id: "a",
-            text: "Tell him it's between me and her. Her reasons are hers, and I'm not trading somebody's private business for a quiet rota.",
+            text: "Tell him it's between me and her. Her reasons are hers, and I'm not trading somebody's private business for a quiet schedule.",
             consequence:
-              "He accepts it and does not believe it. The pencil corrections on the rota stop appearing, which is not the same as them not being wanted.",
+              "He accepts it and does not believe it. The pencil corrections on the schedule stop appearing, which is not the same as them not being wanted.",
             world: { staff: "strained" },
           },
           {
@@ -844,7 +844,7 @@ const HARD_TREES: Readonly<Record<string, Tree>> = {
             id: "c",
             text: "Hold the standard and open the conversation at the same time — this still can't happen, and I want to know why it is.",
             consequence:
-              "Both things get said in the same two minutes. She looks at you differently for the second one, and the rota gets a pencil correction that week that helps.",
+              "Both things get said in the same two minutes. She looks at you differently for the second one, and the schedule gets a pencil correction that week that helps.",
             world: { staff: "trusting" },
           },
         ],
@@ -871,7 +871,7 @@ const HARD_TREES: Readonly<Record<string, Tree>> = {
             id: "c",
             text: "Ask what Friday is for, then see whether there's a version that works — because I said yes to the cause, not to the day.",
             consequence:
-              "It is an appointment that moves. You swap her Friday for a Wednesday and it costs the rota nothing at all, which is the outcome nobody would have found by arguing.",
+              "It is an appointment that moves. You swap her Friday for a Wednesday and it costs the schedule nothing at all, which is the outcome nobody would have found by arguing.",
             world: { staff: "trusting" },
           },
         ],
@@ -930,7 +930,7 @@ const HARD_TREES: Readonly<Record<string, Tree>> = {
             id: "c",
             text: "Find a roaster whose story I can tell just as honestly at a price that works, and be straight with people about the change.",
             consequence:
-              "The new name goes up in December, and the old one comes down, and Priya writes both on the board for a fortnight so it does not look like a swap.",
+              "The new name goes up in December, and the old one comes down, and Priya writes both on the board for a two weeks so it does not look like a swap.",
             world: { beans: "good", chalkboard: "beans_story" },
           },
         ],
@@ -995,7 +995,7 @@ const HARD_TREES: Readonly<Record<string, Tree>> = {
   "C9-SCA-01": {
     activityId: "C9-SCA-01",
     stage:
-      "A new café across the road, open a fortnight. Through two panes of glass you can see two of your regulars sitting in it. The four-top by the window is empty for the first time since you took this place on, and Priya has noticed you noticing.",
+      "A new café across the road, open a two weeks. Through two panes of glass you can see two of your regulars sitting in it. The four-top by the window is empty for the first time since you took this place on, and Priya has noticed you noticing.",
     prompt:
       "Three of the Tuesday lot were in there this morning. I'm not saying it to be cheerful.",
     seed: [
@@ -1078,18 +1078,18 @@ const HARD_TREES: Readonly<Record<string, Tree>> = {
       },
       c: {
         prompt:
-          "You know what they are: fast, bright, and no good for sitting in. Then they put tables outside, and the weather turns fine for a fortnight.",
+          "You know what they are: fast, bright, and no good for sitting in. Then they put tables outside, and the weather turns fine for a two weeks.",
         choices: [
           {
             id: "a",
-            text: "Match them and put tables out too. The pavement's there, the licence isn't hard, and I'm not handing them the good fortnight.",
+            text: "Match them and put tables out too. The pavement's there, the license isn't hard, and I'm not handing them the good two weeks.",
             consequence:
-              "You get three tables out by the second week. They are full on the fine days and in the way on all the others, and the licence took a month.",
+              "You get three tables out by the second week. They are full on the fine days and in the way on all the others, and the license took a month.",
             world: { rival: "promo" },
           },
           {
             id: "b",
-            text: "Stay with what I worked out. A fortnight of weather isn't a change in what they are, and I'd be rebuilding around a forecast.",
+            text: "Stay with what I worked out. A two weeks of weather isn't a change in what they are, and I'd be rebuilding around a forecast.",
             consequence:
               "It rains from the eighteenth. Their tables come in, yours were never out, and the four-top has three people at it on a Tuesday for the first time since August.",
             world: { regulars: "returning" },

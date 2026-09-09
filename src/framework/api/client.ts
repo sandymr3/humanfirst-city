@@ -40,8 +40,8 @@ export interface JourneyStageBody {
 }
 
 /**
- * What a consequence request sends. Ids, a letter, and a closed-enum world map —
- * and nothing a typed answer could travel in.
+ * What a consequence request sends: ids, a letter or the open marker, a
+ * closed-enum world map, and — since ADR-008 — the player's own words.
  */
 export interface ConsequenceBody {
   buildingId: string;
@@ -50,18 +50,50 @@ export interface ConsequenceBody {
   choice: string;
   speakerId?: string;
   worldState?: Record<string, string>;
+  /** The typed answer on an open scene. See JourneyFollowupBody.answer. */
+  answer?: string;
+  /**
+   * What the player said in the sitting that got them this job — the interview
+   * for an Employee scene, the first review for a Branch Manager one.
+   *
+   * The client asked for consequences "layered on user answers in interview
+   * process followed by the option they chose", and this is the first half of
+   * that. It is sent from here rather than read server-side because the server
+   * does not keep it: an attempt row stores scores, band and feedback and never
+   * a word of what was written.
+   *
+   * Bounded and fenced on arrival like every other typed field, and capped at
+   * five entries — the length of the interview.
+   */
+  background?: string[];
 }
 
 /**
- * What a career scene's generated question is asked for. Ids, a letter and a
- * closed-enum world map — the same absence of free text ConsequenceBody
- * enforces, because the same rule applies (ADR-007 §13).
+ * What a career scene's generated question is asked for: ids, a letter or the
+ * open marker, a closed-enum world map, and what the player wrote.
  */
 export interface JourneyFollowupBody {
   stageId: string;
   unitId: string;
   choice: string;
   worldState?: Record<string, string>;
+  /**
+   * What the player said in the sitting that got them this posting. The client
+   * asked for follow-ups written "through all of the context that the user made
+   * in the previous conversations", and the scene's own chain is only the most
+   * recent part of that. See ConsequenceBody.background.
+   */
+  background?: string[];
+  /**
+   * What the player typed on an open scene.
+   *
+   * ADR-007 §13 said this field could never exist — "typed answers go to the
+   * grader only". ADR-008 reverses that one line, because a question written
+   * from a chosen letter cannot follow up on reasoning somebody expressed in
+   * their own words. The server bounds it, strips it and fences it before it
+   * reaches a prompt; nothing on this path can move a mark.
+   */
+  answer?: string;
 }
 
 export interface FollowupParams {
@@ -225,6 +257,24 @@ export class ApiClient {
     );
   }
 
+  /**
+   * Answer an open question — one that shipped with no options because the
+   * player was asked to write.
+   *
+   * Same endpoint as the commit above, because it settles the same row and has
+   * to be the same kind of idempotent: a repeat after a dropped connection is
+   * the first answer standing, not a second answer. It returns nothing to read.
+   */
+  answerFollowup(followupId: string, answer: string) {
+    return this.request(
+      "POST",
+      `/api/v1/ai/followup/${followupId}/commit`,
+      FollowupCommit,
+      { answer },
+      { silent: true },
+    );
+  }
+
   // ── The career journey (ADR-007) ────────────────────────────────────────────
 
   /**
@@ -251,9 +301,14 @@ export class ApiClient {
    * against its own deadline and falls through to the authored line, and there
    * must be no spinner or other tell that this beat is the generated one.
    *
-   * Note what the body cannot carry: there is no free-text field, and there must
-   * never be one. That absence is what keeps the typed interview and the
-   * generator apart (ADR-007 §13).
+   * This body CAN now carry free text, on `answer`, and that is a deliberate
+   * reversal rather than a slip. ADR-007 §13 kept the typed interview and the
+   * generator apart by giving this struct no field an answer could travel in;
+   * ADR-008 retires that, because an open scene's consequence has to follow from
+   * what the player actually wrote. What replaces the absence is enforcement:
+   * the server bounds and fences the text before it reaches a prompt, every
+   * generated line still clears the output gates, and grading stays a separate
+   * call so nothing here can move a mark.
    */
   aiConsequence(body: ConsequenceBody, signal?: AbortSignal) {
     return this.request("POST", "/api/v1/ai/consequence", ConsequenceResult, body, {

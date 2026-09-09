@@ -148,7 +148,7 @@ describe("choice parity — the tier leak nobody looks for", () => {
     //
     // ADR-005's gate for this counts connectives from a small set, which is the
     // right check for generated text but too narrow for authored text: "Keep both
-    // on. Pulling something a fortnight after adding it makes the place look like
+    // on. Pulling something a two weeks after adding it makes the place look like
     // it doesn't know what it is." is PRD §9.3 verbatim, carries its reason in a
     // second sentence, and has none of those words in it. Either form counts here.
     const connective = /\b(because|since|so|and|while|but|before|rather than|instead)\b|—/i;

@@ -5,7 +5,7 @@
 // below survives because it is what the room is graded against and because the
 // stages after this one will want a time of day of their own.
 //
-// Pure. It answers "what colour is this week" and "what do we say about it";
+// Pure. It answers "what color is this week" and "what do we say about it";
 // the canvas owns the fade and the Graphics.
 //
 // **Why a grade and not a lamp.** The room is already a lit island on a dark
@@ -58,7 +58,7 @@ const BY_WEEK: Readonly<Record<number, Light>> = {
     tint: 0xffeed4,
     grade: 0.14,
     glow: 0.06,
-    says: "A shade warmer than a fortnight ago. The room is busy.",
+    says: "A shade warmer than a two weeks ago. The room is busy.",
   },
   5: {
     // The first properly hot day. Glare on the window, and the street is loud
@@ -147,7 +147,7 @@ export function cooled(light: Light): Light {
   };
 }
 
-/** Pull a colour a stop toward blue without changing how bright it reads. */
+/** Pull a color a stop toward blue without changing how bright it reads. */
 function shiftCool(color: number): number {
   const r = Math.max(0, Math.round(((color >> 16) & 0xff) * 0.94));
   const g = (color >> 8) & 0xff;

@@ -10,6 +10,7 @@
 // honest denominator — you do not know how many jobs you will hold — so the
 // posting replaces it, which is the same information a real employee has.
 import { ROLE_LABEL } from "./journey";
+import { Levels } from "./Levels";
 import { currentItem, currentStage, useJourneyStore } from "./journeyStore";
 
 export function StageChip() {
@@ -31,7 +32,10 @@ export function StageChip() {
   return (
     <div className="pointer-events-none absolute left-5 top-24 z-10 max-w-[16rem]">
       <p className="text-xs uppercase tracking-widest text-gold">{ROLE_LABEL[role]}</p>
-      <p className="mt-0.5 font-display text-sm text-text">{line}</p>
+      {/* The shape of the career, not a measure of progress through it — see
+          Levels.tsx for why those are different things here. */}
+      <Levels role={role} />
+      <p className="mt-1.5 font-display text-sm text-text">{line}</p>
       {/* Position, not quality: identical shape and colour for every pip. */}
       {(stage.scenes?.length ?? 0) + (stage.trees?.length ?? 0) > 1 && (
         <p className="mt-1 text-xs text-muted" aria-hidden>

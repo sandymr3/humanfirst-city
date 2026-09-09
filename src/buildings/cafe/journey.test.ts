@@ -36,6 +36,18 @@ function everyScene(): { stage: Stage; scene: Scene }[] {
   return out;
 }
 
+/**
+ * Only the scenes that still offer three options.
+ *
+ * An open scene is answered in the player's own words: its trio moved to the
+ * server's answer key when those texts became grading anchors, so the trio
+ * assertions below have nothing to act on. They keep their teeth on the scenes
+ * that still ship one, and `the answer key stays on the server` covers the rest.
+ */
+function letteredScenes(): { stage: Stage; scene: Scene }[] {
+  return everyScene().filter(({ scene }) => !scene.open);
+}
+
 describe("the stage graph", () => {
   it("starts somewhere real", () => {
     expect(stageById(START_STAGE)).toBeDefined();
@@ -120,15 +132,32 @@ describe("the stage graph", () => {
 });
 
 describe("the scenes", () => {
+  // The leak test. An open scene's three option texts ARE its grading rubric, so
+  // they are answer key — and answer key does not travel to a browser. One left
+  // behind here is one a client can render, and a player who can read the rubric
+  // is a player being told the answer.
+  it("ships no answer key for an open scene", () => {
+    const open = everyScene().filter(({ scene }) => scene.open);
+    expect(open.length, "no open scenes — has the content moved back?").toBeGreaterThan(0);
+    for (const { scene } of open) {
+      expect(scene.choices, `${scene.unitId} still ships its options`).toBeUndefined();
+      expect(
+        scene.consequences,
+        `${scene.unitId} still ships per-letter consequences`,
+      ).toBeUndefined();
+      expect(scene.fallbackConsequence, `${scene.unitId} has no fallback line`).toBeTruthy();
+    }
+  });
+
   it("offer exactly a, b and c", () => {
-    for (const { scene } of everyScene()) {
-      expect(Object.keys(scene.choices).sort(), scene.unitId).toEqual(["a", "b", "c"]);
+    for (const { scene } of letteredScenes()) {
+      expect(Object.keys(scene.choices ?? {}).sort(), scene.unitId).toEqual(["a", "b", "c"]);
     }
   });
 
   it("keeps every option between 13 and 33 words", () => {
-    for (const { scene } of everyScene()) {
-      for (const [letter, text] of Object.entries(scene.choices)) {
+    for (const { scene } of letteredScenes()) {
+      for (const [letter, text] of Object.entries(scene.choices ?? {})) {
         const n = words(text);
         expect(n, `${scene.unitId}.${letter} is ${n} words`).toBeGreaterThanOrEqual(13);
         expect(n, `${scene.unitId}.${letter} is ${n} words`).toBeLessThanOrEqual(33);
@@ -141,8 +170,8 @@ describe("the scenes", () => {
     // reliably the longest, "pick the longest" is a winning strategy and the
     // assessment has stopped measuring judgment. The source workbook's own draft
     // ran a 42-word spread on this exact content.
-    for (const { scene } of everyScene()) {
-      const lengths = Object.values(scene.choices).map(words);
+    for (const { scene } of letteredScenes()) {
+      const lengths = Object.values(scene.choices ?? {}).map(words);
       const spread = Math.max(...lengths) - Math.min(...lengths);
       expect(spread, `${scene.unitId} spread ${spread} (${lengths.join("/")})`).toBeLessThanOrEqual(
         8,
@@ -152,8 +181,8 @@ describe("the scenes", () => {
 
   it("makes every option explain itself", () => {
     const connective = /\b(because|since|so|and|while|if)\b|—|, which|rather than/i;
-    for (const { scene } of everyScene()) {
-      for (const [letter, text] of Object.entries(scene.choices)) {
+    for (const { scene } of letteredScenes()) {
+      for (const [letter, text] of Object.entries(scene.choices ?? {})) {
         expect(connective.test(text), `${scene.unitId}.${letter} carries no reason`).toBe(true);
       }
     }
@@ -162,9 +191,9 @@ describe("the scenes", () => {
   it("gives every choice an authored consequence", () => {
     // A generated consequence can fail six ways. Every one of them lands here,
     // so a missing entry is a scene that breaks in front of a player.
-    for (const { scene } of everyScene()) {
+    for (const { scene } of letteredScenes()) {
       for (const letter of ["a", "b", "c"]) {
-        const text = scene.consequences[letter];
+        const text = scene.consequences![letter];
         expect(text, `${scene.unitId}.${letter} has no consequence`).toBeTruthy();
         expect(words(text), `${scene.unitId}.${letter} consequence`).toBeLessThanOrEqual(45);
       }
@@ -213,8 +242,8 @@ describe("the silent-tier contract", () => {
         check(`${scene.unitId}.title`, scene.title);
         check(`${scene.unitId}.stage`, scene.stage);
         check(`${scene.unitId}.prompt`, scene.prompt);
-        for (const [l, t] of Object.entries(scene.choices)) check(`${scene.unitId}.${l}`, t);
-        for (const [l, t] of Object.entries(scene.consequences))
+        for (const [l, t] of Object.entries(scene.choices ?? {})) check(`${scene.unitId}.${l}`, t);
+        for (const [l, t] of Object.entries(scene.consequences ?? {}))
           check(`${scene.unitId}.consequence.${l}`, t);
       }
       for (const c of s.successors ?? []) {
@@ -238,8 +267,8 @@ describe("the silent-tier contract", () => {
       for (const scene of s.scenes ?? []) {
         note(`${scene.unitId}.prompt`, scene.prompt);
         note(`${scene.unitId}.stage`, scene.stage);
-        for (const [l, t] of Object.entries(scene.choices)) note(`${scene.unitId}.${l}`, t);
-        for (const [l, t] of Object.entries(scene.consequences))
+        for (const [l, t] of Object.entries(scene.choices ?? {})) note(`${scene.unitId}.${l}`, t);
+        for (const [l, t] of Object.entries(scene.consequences ?? {}))
           note(`${scene.unitId}.consequence.${l}`, t);
       }
     }

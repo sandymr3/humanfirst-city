@@ -34,6 +34,42 @@ export interface Answer {
   text: string;
 }
 
+/**
+ * One question, and what the player put against it — the record a completed
+ * phase can be walked back through.
+ *
+ * `answer` is the typed text on a written question, or the option text on a
+ * lettered one, because "what did I say here" is the same question for both and
+ * a player should not have to know which kind of scene they are looking at.
+ *
+ * Truncated on the way in. The whole save is capped at 16KB server-side
+ * (`services.MaxBuildingBlob`), and a career is twenty-odd questions, so an
+ * untruncated transcript is the one field that could push a save over and lose
+ * the run itself.
+ */
+export interface TranscriptEntry {
+  unitId: string;
+  answer: string;
+}
+
+/** The longest answer kept for the history view. */
+export const MAX_TRANSCRIPT_ANSWER = 300;
+
+/**
+ * A phase the player has finished, kept so they can walk back through it.
+ *
+ * Read-only by construction, and by intent: re-answering a closed stage is what
+ * the gate's `retry` road is for. A record here is a record of what happened,
+ * and a second attempt appends its own rather than editing this one.
+ */
+export interface StageRecord {
+  stageId: string;
+  attemptNo: number;
+  band?: string;
+  feedback?: string;
+  entries: TranscriptEntry[];
+}
+
 /** A stage close the server has not taken yet, kept so a retry still counts it. */
 export interface UnsentStage {
   stageId: string;
@@ -64,6 +100,12 @@ export interface JourneyBlob {
   revenue: number;
   /** Stage closes the backend has not taken yet. */
   unsent: UnsentStage[];
+  /**
+   * Finished phases, oldest first, one entry per ATTEMPT. Absent on saves
+   * written before the history view existed, which is why every reader treats
+   * a missing value as an empty run rather than as a broken save.
+   */
+  history?: StageRecord[];
 }
 
 export interface Journey {
@@ -78,6 +120,7 @@ export interface Journey {
   world: World;
   revenue: number;
   unsent: UnsentStage[];
+  history: StageRecord[];
 }
 
 // ── Validation ────────────────────────────────────────────────────────────────
@@ -99,6 +142,23 @@ function isAnswer(v: unknown): v is Answer {
   if (typeof v !== "object" || v === null) return false;
   const a = v as Record<string, unknown>;
   return typeof a.unitId === "string" && typeof a.text === "string";
+}
+
+function isTranscriptEntry(v: unknown): v is TranscriptEntry {
+  if (typeof v !== "object" || v === null) return false;
+  const e = v as Record<string, unknown>;
+  return typeof e.unitId === "string" && typeof e.answer === "string";
+}
+
+function isStageRecord(v: unknown): v is StageRecord {
+  if (typeof v !== "object" || v === null) return false;
+  const r = v as Record<string, unknown>;
+  return (
+    typeof r.stageId === "string" &&
+    typeof r.attemptNo === "number" &&
+    Array.isArray(r.entries) &&
+    r.entries.every(isTranscriptEntry)
+  );
 }
 
 function isUnsent(v: unknown): v is UnsentStage {
@@ -147,6 +207,7 @@ function toBlob(j: Journey): JourneyBlob {
     world: j.world,
     revenue: j.revenue,
     unsent: j.unsent,
+    history: j.history,
   };
 }
 
@@ -180,6 +241,39 @@ function fromBlob(raw: unknown): Journey | null {
     world: applyPatch(openingWorldFor(trackOrDefault()), b.world as WorldPatch),
     revenue: typeof b.revenue === "number" && Number.isFinite(b.revenue) ? b.revenue : 0,
     unsent: Array.isArray(b.unsent) ? (b.unsent as unknown[]).filter(isUnsent) : [],
+    // Missing on every save written before the history view shipped. An empty
+    // run is the right reading of that: the phases were played, and there is no
+    // record of them, which is exactly what the view should show.
+    history: Array.isArray(b.history) ? (b.history as unknown[]).filter(isStageRecord) : [],
+  };
+}
+
+/**
+ * Build the record of a stage that has just closed.
+ *
+ * Answers are truncated here rather than at the point of display, because the
+ * cost being managed is the size of the save and not the size of the panel.
+ */
+export function recordStage(
+  stageId: string,
+  attemptNo: number,
+  entries: readonly TranscriptEntry[],
+  outcome?: { band?: string; feedback?: string },
+): StageRecord {
+  return {
+    stageId,
+    attemptNo,
+    band: outcome?.band,
+    feedback: outcome?.feedback,
+    entries: entries
+      .filter((e) => e.answer.trim() !== "")
+      .map((e) => ({
+        unitId: e.unitId,
+        answer:
+          e.answer.length > MAX_TRANSCRIPT_ANSWER
+            ? e.answer.slice(0, MAX_TRANSCRIPT_ANSWER).trimEnd() + "…"
+            : e.answer,
+      })),
   };
 }
 
@@ -225,5 +319,6 @@ export function freshJourney(): Journey {
     world: openingWorldFor(trackOrDefault()),
     revenue: 0,
     unsent: [],
+    history: [],
   };
 }

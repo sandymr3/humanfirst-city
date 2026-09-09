@@ -37,12 +37,39 @@ if (!existsSync(packPath)) {
 const pack = JSON.parse(readFileSync(packPath, "utf8"));
 const bundle = readFileSync(join(repo, "src/buildings/cafe/journey.ts"), "utf8");
 
+// The answer key, which is the file this check exists to keep OUT of the bundle
+// for open scenes. Absent is tolerated: a checkout without it simply skips the
+// inverse half rather than failing on a missing sibling.
+const keyPath = join(backend, "internal/registry/content/journeykeys/cafe.json");
+const keys = existsSync(keyPath) ? JSON.parse(readFileSync(keyPath, "utf8")) : { units: {} };
+
 const problems = [];
+const leaks = [];
 
 // Every line the server thinks it is grading must be a line the browser shows.
 for (const stage of pack.stages ?? []) {
   for (const scene of stage.scenes ?? []) {
     if (scene.activity) continue; // a two-beat scene lives in trees.ts
+
+    // An OPEN scene inverts this whole check. Its three option texts are the
+    // grading rubric now, which makes them answer key, and answer key must not
+    // travel to a browser — so here the requirement is that they are ABSENT.
+    // Getting this backwards ships the answers to the player, which is why it
+    // is checked rather than trusted.
+    if (scene.open) {
+      const rubric = keys.units?.[scene.unitId]?.rubric ?? {};
+      for (const [tier, text] of Object.entries(rubric)) {
+        if (bundle.includes(text))
+          leaks.push(`${scene.unitId}.${tier} — rubric anchor is in the bundle`);
+      }
+      if (scene.choices || scene.consequences) {
+        leaks.push(`${scene.unitId} — open scene still carries options in the pack`);
+      }
+      if (scene.fallbackConsequence && !bundle.includes(scene.fallbackConsequence)) {
+        problems.push(`${scene.unitId}.fallbackConsequence`);
+      }
+      continue;
+    }
     for (const [letter, text] of Object.entries(scene.choices ?? {})) {
       if (!bundle.includes(text)) problems.push(`${scene.unitId}.${letter} — choice`);
     }
@@ -74,6 +101,19 @@ for (const stage of pack.stages ?? []) {
   }
 }
 
+// The leak is reported first and on its own, because it is the more serious of
+// the two failures by a distance: a drifted mirror shows the player one line and
+// grades another, but a leak shows the player the answer.
+if (leaks.length) {
+  console.error("ANSWER KEY IN THE BUNDLE. An open scene's grading rubric reached the browser:\n");
+  for (const l of leaks) console.error(`  - ${l}`);
+  console.error(
+    `\n${leaks.length} leak(s). Those texts are what the grader scores against —` +
+      ` they belong in internal/registry/content/journeykeys/cafe.json and nowhere a client can read.`,
+  );
+  process.exit(1);
+}
+
 if (problems.length) {
   console.error(
     "The journey's two copies have drifted. Present on the server, missing in the bundle:\n",
@@ -86,4 +126,4 @@ if (problems.length) {
   process.exit(1);
 }
 
-console.log("journey mirror OK — every server line is in the bundle");
+console.log("journey mirror OK — every server line is in the bundle, and no answer key is");

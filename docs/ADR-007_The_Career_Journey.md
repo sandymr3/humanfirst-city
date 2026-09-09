@@ -536,6 +536,8 @@ A free-text question shows nothing. There is no trio, no position, no length, no
 
 ## 13. Free text, and the §5.5 posture
 
+> **Amended by [ADR-008](ADR-008_Open_Answering_and_Player_Text_In_Prompts.md) (2026-09-09).** The first row of the table below — _"player text reaches a generator prompt: never"_ — **is superseded**, along with the sentence naming the absent struct field as the enforcement. Typed answers now reach the consequence and follow-up generators on three named paths, bounded and fenced, and can influence prose only. Read ADR-008 §4 before relying on anything in this section. Every other row below still stands.
+
 `PRD_Backend_Missions §5.5` currently reads, in part: _"the player never types anything… There is no free text anywhere in the path, and there must not be one added later without revisiting this section."_
 
 This ADR is that revisit. **The posture changes; the guarantees do not.**

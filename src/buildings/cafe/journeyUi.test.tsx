@@ -38,7 +38,7 @@ describe("the typed question", () => {
   it("asks, and says how much of the sitting is left", () => {
     useJourneyStore.setState({ stageId: "cafe.interview", index: 0 });
     render(<QA />);
-    expect(screen.getByText(/Start me off/)).toBeInTheDocument();
+    expect(screen.getByText(/Tell me about yourself/)).toBeInTheDocument();
     // The ordinal is pacing information a player legitimately needs. It says
     // nothing about how they are doing.
     expect(screen.getByText(/1 of 5/)).toBeInTheDocument();
@@ -183,12 +183,13 @@ describe("the decision", () => {
     // re-opened the scene that had just been decided, so a level never ended and
     // the same decision came round forever. Reading what happened and moving on
     // are one act.
-    useJourneyStore.setState({ stageId: "cafe.l1", index: 0, decided: [] });
+    useJourneyStore.setState({ stageId: "cafe.l1", index: 0, decided: [], answers: [] });
     render(<Decision />);
 
     const before = useJourneyStore.getState().index;
-    await userEvent.click(screen.getAllByRole("button")[0]);
-    expect(useJourneyStore.getState().decided).toHaveLength(1);
+    await userEvent.type(screen.getByRole("textbox"), "I would ask her what she wanted.");
+    await userEvent.click(screen.getByRole("button", { name: "Answer" }));
+    expect(useJourneyStore.getState().answers).toHaveLength(1);
 
     await userEvent.click(await screen.findByRole("button", { name: "Back to the room" }));
     expect(useJourneyStore.getState().index).toBe(before + 1);
@@ -199,11 +200,28 @@ describe("the decision", () => {
     // Authored trios are written weakest-first because that is the readable
     // order to review in. Shipping that order would make "pick the first one"
     // learnable in two beats.
-    useJourneyStore.setState({ stageId: "cafe.l1", index: 0 });
-    const { container } = render(<Decision />);
-    const shown = Array.from(container.querySelectorAll("li button")).map((b) => b.textContent);
-    const authored = Object.values(stageById("cafe.l1")!.scenes![0].choices);
-    expect(new Set(shown)).toEqual(new Set(authored));
-    expect(shown).not.toEqual(authored);
+    // The succession scenes, because L1 and L2 are answered in the player's own
+    // words now and ship no trio at all. Index 1 is the first of the two
+    // questions put to whoever you chose; the pick comes first in this stage.
+    //
+    // Asserted across every remaining lettered scene rather than on one of them:
+    // the shuffle is seeded per unit, so any single scene can legitimately come
+    // out in authored order, and pinning one seed tests the seed and not the
+    // rule. What must not happen is the authored order shipping everywhere.
+    const lettered = (stageById("cafe.succession")!.scenes ?? []).filter((s) => !s.open);
+    expect(lettered.length).toBeGreaterThan(0);
+
+    let anyShuffled = false;
+    for (const [i] of lettered.entries()) {
+      useJourneyStore.setState({ stageId: "cafe.succession", index: i + 1 });
+      const { container, unmount } = render(<Decision />);
+      const shown = Array.from(container.querySelectorAll("li button")).map((b) => b.textContent);
+      const authored = Object.values(lettered[i].choices ?? {});
+      // Integrity first: the same three things, however they are ordered.
+      expect(new Set(shown), lettered[i].unitId).toEqual(new Set(authored));
+      if (shown.join("|") !== authored.join("|")) anyShuffled = true;
+      unmount();
+    }
+    expect(anyShuffled, "every lettered scene shipped in authored order").toBe(true);
   });
 });

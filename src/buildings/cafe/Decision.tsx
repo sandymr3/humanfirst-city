@@ -20,12 +20,15 @@
 // What is deliberately absent: a result view, a proficiency, a pass/fail line, a
 // spinner while the consequence is being written, and any mark distinguishing a
 // generated consequence from an authored one.
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { presentationOrder } from "@/lib/decisionTree";
+import { Dictation } from "@/ui/Dictation";
 import { castById } from "./cast";
 import {
   advance,
+  answerScene,
   answerSceneBeat,
+  answerSceneBeatText,
   choose,
   chooseTransferBeat,
   chooseTreeBeat,
@@ -44,14 +47,18 @@ export function Decision() {
 
   const options = useMemo(() => {
     if (!scene) return [];
-    const items = Object.entries(scene.choices).map(([id, text]) => ({ id, text }));
+    const items = Object.entries(scene.choices ?? {}).map(([id, text]) => ({ id, text }));
     return presentationOrder(scene.unitId, [], items);
   }, [scene]);
 
   // Reading the consequence and moving on are the same act. Clearing the sheet
   // without advancing would re-open the scene you just decided — which is what
   // it did, until an end-to-end run walked into the same decision forever.
-  if (consequence !== null) {
+  // Blank counts as nothing to read, not as something to show. The store no
+  // longer writes "", and this is the belt to that pair of braces: a sheet whose
+  // paragraph is empty renders as a lone "Back to the room" button hanging over
+  // the room, which is how this was first noticed.
+  if (consequence !== null && consequence.trim() !== "") {
     return (
       <Sheet>
         <p className="text-sm leading-relaxed text-text">{consequence}</p>
@@ -87,14 +94,80 @@ export function Decision() {
         </>
       }
     >
-      <ul className="space-y-2">
-        {options.map((o) => (
-          <li key={o.id}>
-            <ChoiceButton onClick={() => void choose(o.id)}>{o.text}</ChoiceButton>
-          </li>
-        ))}
-      </ul>
+      {scene.open ? (
+        <OpenAnswer unitId={scene.unitId} />
+      ) : (
+        <ul className="space-y-2">
+          {options.map((o) => (
+            <li key={o.id}>
+              <ChoiceButton onClick={() => void choose(o.id)}>{o.text}</ChoiceButton>
+            </li>
+          ))}
+        </ul>
+      )}
     </Sheet>
+  );
+}
+
+/**
+ * An open scene answered in the player's own words.
+ *
+ * Deliberately the same box, the same hint and the same key handling as the
+ * interview (`QA.tsx`) — a scenario and an interview question are the same act
+ * for the player now, and two different-looking text boxes in one room would
+ * imply a difference that is not there.
+ *
+ * Enter submits and Shift+Enter is a newline, and both `preventDefault` and
+ * `stopPropagation` fire: the room's own key handler is listening on the window
+ * for `Enter`, and without the second call answering a question also walks you
+ * into whoever is standing nearby.
+ */
+function OpenAnswer({ unitId }: { unitId: string }) {
+  const [draft, setDraft] = useState("");
+  const ready = draft.trim().length > 0;
+
+  const commit = () => {
+    if (!ready) return;
+    void answerScene(draft);
+    setDraft("");
+  };
+
+  return (
+    <div>
+      <label htmlFor={`scene-${unitId}`} className="sr-only">
+        Your answer
+      </label>
+      <textarea
+        id={`scene-${unitId}`}
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            e.stopPropagation();
+            commit();
+          }
+        }}
+        rows={4}
+        autoFocus
+        placeholder="Describe what you would do, or use the microphone."
+        className="w-full resize-y rounded-xl border border-line/70 bg-surface-2/50 px-4 py-3 text-sm leading-relaxed text-text outline-none transition-colors placeholder:text-muted/70 focus:border-gold/50"
+      />
+      <div className="mt-3">
+        <Dictation value={draft} onChange={setDraft} label="your answer to this scene" />
+      </div>
+
+      <div className="mt-4 flex items-center justify-between gap-4">
+        <p className="text-xs text-muted">Enter to answer · Shift+Enter for a new line</p>
+        <button
+          onClick={commit}
+          disabled={!ready}
+          className="rounded-lg bg-gold px-4 py-1.5 text-xs font-semibold text-ink transition disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          Answer
+        </button>
+      </div>
+    </div>
   );
 }
 
@@ -176,10 +249,18 @@ function NotAScene() {
 
 /**
  * One of the two or three questions a scenario scene generates from what this
- * player actually chose.
+ * player actually said.
  *
- * Options are run through presentationOrder like every other decision, so the
- * server's shuffle and the client's ordering agree and position carries nothing.
+ * Two shapes, and which one arrives is the server's decision rather than this
+ * component's: an OPEN scene generates open questions, so the beat comes back
+ * with no options and is answered in prose (ADR-008 §1). A lettered scene — the
+ * CEO trees — still generates a trio, and those are run through
+ * presentationOrder like every other decision so the server's shuffle and the
+ * client's ordering agree and position carries nothing.
+ *
+ * Rendering the trio when there is one and the box when there is not is the
+ * whole of the difference. A player answering a written question after writing
+ * their way through the scene should not notice a seam.
  */
 function SceneBeat() {
   const beat = useJourneyStore((s) => s.sceneBeat);
@@ -207,14 +288,75 @@ function SceneBeat() {
         </p>
       }
     >
-      <ul className="space-y-2">
-        {options.map((o) => (
-          <li key={o.id}>
-            <ChoiceButton onClick={() => void answerSceneBeat(o.id)}>{o.text}</ChoiceButton>
-          </li>
-        ))}
-      </ul>
+      {options.length === 0 ? (
+        // Keyed on the question so the box is empty for each one rather than
+        // inheriting the last answer's text.
+        <OpenReply key={beat.followupId} unitId={beat.followupId} />
+      ) : (
+        <ul className="space-y-2">
+          {options.map((o) => (
+            <li key={o.id}>
+              <ChoiceButton onClick={() => void answerSceneBeat(o.id)}>{o.text}</ChoiceButton>
+            </li>
+          ))}
+        </ul>
+      )}
     </Sheet>
+  );
+}
+
+/**
+ * The box a generated question is answered in.
+ *
+ * Deliberately the same box as `OpenAnswer` above and as the interview's — the
+ * player is doing one thing, in one room, and three text boxes that looked
+ * different would imply three different acts.
+ */
+function OpenReply({ unitId }: { unitId: string }) {
+  const [draft, setDraft] = useState("");
+  const ready = draft.trim().length > 0;
+
+  const commit = () => {
+    if (!ready) return;
+    void answerSceneBeatText(draft);
+    setDraft("");
+  };
+
+  return (
+    <div>
+      <label htmlFor={`beat-${unitId}`} className="sr-only">
+        Your answer
+      </label>
+      <textarea
+        id={`beat-${unitId}`}
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            e.stopPropagation();
+            commit();
+          }
+        }}
+        rows={3}
+        autoFocus
+        placeholder="Type your reply, or use the microphone."
+        className="w-full resize-y rounded-xl border border-line/70 bg-surface-2/50 px-4 py-3 text-sm leading-relaxed text-text outline-none transition-colors placeholder:text-muted/70 focus:border-gold/50"
+      />
+      <div className="mt-3">
+        <Dictation value={draft} onChange={setDraft} label="your reply" />
+      </div>
+      <div className="mt-4 flex items-center justify-between gap-4">
+        <p className="text-xs text-muted">Enter to answer · Shift+Enter for a new line</p>
+        <button
+          onClick={commit}
+          disabled={!ready}
+          className="rounded-lg bg-gold px-4 py-1.5 text-xs font-semibold text-ink transition disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          Answer
+        </button>
+      </div>
+    </div>
   );
 }
 

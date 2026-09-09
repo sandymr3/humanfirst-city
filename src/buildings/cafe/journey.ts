@@ -53,14 +53,32 @@ export interface Scene {
   prompt: string;
   /** Cast id, or "room" when the register is narration. */
   speaker: string;
-  /** Keyed by the letter that goes on the wire — "a" | "b" | "c". */
-  choices: Readonly<Record<string, string>>;
+  /**
+   * True when the scene is answered in the player's own words.
+   *
+   * An open scene ships NO options and NO per-letter consequences, and that
+   * absence is load-bearing rather than incidental: the three option texts are
+   * now the grading rubric, which makes them answer key, and answer key does
+   * not travel to a browser. They live in the server's journey key beside the
+   * tiers they describe. `check_journey_mirror.mjs` asserts they are absent
+   * here, which is the inverse of what it asserts for a lettered scene.
+   */
+  open?: boolean;
+  /**
+   * The one line served when the generator cannot say what happened. Outcome-
+   * neutral by construction: there is no letter and no mark to key a tiered
+   * line off, and picking one would be a proficiency readout in prose.
+   */
+  fallbackConsequence?: string;
+
+  /** Keyed by the letter that goes on the wire — "a" | "b" | "c". Lettered scenes only. */
+  choices?: Readonly<Record<string, string>>;
   /**
    * The authored consequence per letter, served whenever the generated one is
    * unavailable. Shipped to the browser on purpose: a room that has to wait for
    * a network round trip to say what happened is a room that can stall.
    */
-  consequences: Readonly<Record<string, string>>;
+  consequences?: Readonly<Record<string, string>>;
   world?: Readonly<Record<string, WorldPatch>>;
 }
 
@@ -116,81 +134,49 @@ const L1_SCENES: readonly Scene[] = [
   {
     unitId: "cafe.l1.s1",
     competency: "C1",
-    title: "The Dairy-Free Question",
+    title: "Customer Scene 1 — Customer Needs",
     stage:
       "Mid-morning. The queue is four deep and Nadia is at the front, already reaching for her card.",
     prompt: "You still don't do oat, do you?",
     speaker: "nadia",
-    choices: {
-      a: "Apologise, offer soy for today, and write the request on the back-of-house board so the manager sees it at shift change.",
-      b: "Apologise and offer soy so the line keeps moving, because the queue is backing up and she still gets her drink.",
-      c: "Apologise, offer soy, and ask whether she'd want oat every visit, because that answer is what the manager needs, not the ask itself.",
-    },
-    consequences: {
-      a: "You write it up between orders. At handover Priya reads the board, adds a tally mark under it, and says nothing.",
-      b: "She takes the soy without comment and is gone in ninety seconds. The queue moves. By the afternoon you have forgotten she asked.",
-      c: "She says every visit — she has been buying it at the place by the station on the way in. Priya's eyebrows go up when you tell her.",
-    },
-    world: { a: { chalkboard: "oat_asked" }, c: { chalkboard: "oat_asked" } },
+    open: true,
+    fallbackConsequence:
+      "You finish the drink and hand it across. Later that morning the manager reads the board on the way past the fridge.",
   },
   {
     unitId: "cafe.l1.s2",
     competency: "C7",
-    title: "The Wrong Order",
+    title: "Customer Scene 2 — Difficult Customer",
     stage: "A flat white goes out to a table that ordered a cortado. It comes back fast.",
     prompt: "This isn't what I asked for. I've been sitting there ten minutes.",
     speaker: "room",
-    choices: {
-      a: "Apologise once and remake it straight away, because they have waited long enough already and the rest of the queue is watching.",
-      b: "Apologise, remake it, then glance at the ticket to see where it went wrong, since two similar names called together will do this again.",
-      c: "Apologise, remake it, and put something on the house, then check they are happy before they go, because a bad visit rarely ends at the counter.",
-    },
-    consequences: {
-      a: "They take the cortado and sit back down. Nothing more is said about it, then or later.",
-      b: "The ticket shows two names called within a few seconds of each other. You mention it to Tomas, who nods slowly and looks at the rail.",
-      c: "They leave warmer than they arrived and wave on the way out. Priya notices the comp on the till and asks nothing about it.",
-    },
-    world: { b: { staff: "easy" }, c: { regulars: "steady" } },
+    open: true,
+    fallbackConsequence:
+      "The remake goes out. The customer carries it to the window table and stays another twenty minutes.",
   },
   {
     unitId: "cafe.l1.s3",
     competency: "C7",
-    title: "Five Past Close",
+    title: "Customer Scene 3 — Empathy",
     stage:
       "The till is open and half counted. The door goes, and someone comes in out of the cold looking hopeful.",
     prompt: "Is there any chance of a sandwich? I've come straight off a shift.",
     speaker: "room",
-    choices: {
-      a: "Ask your shift lead whether one sandwich still fits the close, and if not, point them somewhere open nearby rather than just turning them away.",
-      b: "Explain kindly that the till is counted and the kitchen is down, because closing works only if it means the same thing every night.",
-      c: "Check with your shift lead tonight, and mention to the manager that late arrivals keep happening, because a grab-and-go shelf would settle it permanently.",
-    },
-    consequences: {
-      a: "Tomas shrugs and says go on then. They eat it standing up and thank you twice on the way out.",
-      b: "They take it well and go back out into the cold. The close runs exactly to time, the way it always does.",
-      c: "Tomas makes the sandwich. The next morning Priya asks you how often this has been happening, and writes the answer down.",
-    },
-    world: { a: { staff: "trusting" }, c: { staff: "trusting" } },
+    open: true,
+    fallbackConsequence:
+      "The register is counted nine minutes later than usual. Tomas is still wiping down when you leave.",
   },
   {
     unitId: "cafe.l1.s4",
     competency: "C1",
-    title: "The Queue",
+    title: "Customer Scene 4 — Process Improvement",
     stage:
       "Marcus has been in his usual chair for an hour. On the way out he stops at the counter.",
     prompt: "It's always a wait to get to you lot. Every time.",
     speaker: "marcus",
-    choices: {
-      a: "Apologise for the wait and get back to taking orders quickly, because the fastest thing you can do right now is move the queue.",
-      b: "Apologise, then track for a few days when it backs up and whether it is ordering or pickup, because those two need different fixes.",
-      c: "Apologise, then tell your manager the mornings are the problem and suggest a second register, since you are the one watching it build up.",
-    },
-    consequences: {
-      a: "He nods and goes. The queue clears by half ten, the way it does most days, and nobody mentions it again.",
-      b: "Four mornings of scribbles say eight to nine, and it is order-taking, not the kitchen. Priya reads it twice.",
-      c: "Priya says she has wondered the same thing. She asks when exactly, and you realise you are guessing.",
-    },
-    world: { b: { regulars: "steady" }, c: { regulars: "steady" } },
+    open: true,
+    fallbackConsequence:
+      "The line clears by ten. The next morning it forms again at the same time, in the same place.",
   },
 ];
 
@@ -200,82 +186,50 @@ const L2_SCENES: readonly Scene[] = [
   {
     unitId: "cafe.l2.s1",
     competency: "C7",
-    title: "The Late Opener",
+    title: "Team Scene 1 — Attendance",
     stage:
       "Fifth morning running, the opener comes through the door with the queue already outside it.",
     prompt: "Sorry — sorry. Buses.",
     speaker: "room",
-    choices: {
-      a: "Ask quietly what is making mornings hard, listen first, then agree one clear expectation and tell them you will check back in a week.",
-      b: "Take them aside before the shift and remind them punctuality matters, because openers who drift make the whole morning start behind.",
-      c: "Ask what is making mornings hard, and separately look at the opening shift itself, because two other openers have been trickling in late too.",
-    },
-    consequences: {
-      a: "It turns out to be a school run that moved. You shift their start by fifteen minutes and the lateness stops that week.",
-      b: "They are on time the next day, and the day after. They also stop asking you things they used to ask you.",
-      c: "The school run explains theirs. The rota explains the other two — the opening shift starts fifteen minutes before the first bus arrives.",
-    },
-    world: { a: { staff: "trusting" }, b: { staff: "strained" }, c: { staff: "trusting" } },
+    open: true,
+    fallbackConsequence:
+      "She opens on time on Thursday. On Friday the bus is late again, and this time she texts ahead.",
   },
   {
     unitId: "cafe.l2.s2",
     competency: "C7",
     also: ["C5"],
-    title: "The Line, Mid-Rush",
+    title: "Team Scene 2 — Conflict Between Team Members",
     stage:
       "Twelve forty. The chef and one of the counter staff are going at it over the pass, in front of everybody.",
     prompt: "Tell him. Tell him what he just did.",
     speaker: "tomas",
-    choices: {
-      a: "Step in now and tell them both to leave it until later, because customers are waiting and the rush is not the place for this.",
-      b: "Hear them out separately, bring them together, and set one shared rule for mid-shift disagreements, so the next one does not need you in it.",
-      c: "Once it quietens, hear each of them out alone, and bring them together to agree how they will handle the next busy stretch.",
-    },
-    consequences: {
-      a: "The rush finishes. Neither of them says anything else about it, to you or to each other, for the rest of the week.",
-      b: "They agree the rule between themselves — flag it, park it, finish the rush. Three weeks later they use it without telling you.",
-      c: "Each of them had half the story. They shake on how to handle the next one, and the next one goes fine.",
-    },
-    world: { a: { staff: "strained" }, b: { staff: "trusting" }, c: { staff: "trusting" } },
+    open: true,
+    fallbackConsequence:
+      "The rush ends. Both of them work the rest of the shift, and the pass stays quiet until close.",
   },
   {
     unitId: "cafe.l2.s3",
     competency: "C7",
-    title: "The Good Save",
+    title: "Team Scene 3 — Recognizing Good Work",
     stage:
       "A customer arrives furious about something that happened somewhere else, and leaves twenty minutes later laughing.",
     prompt: "(You watched the whole thing from the pass.)",
     speaker: "room",
-    choices: {
-      a: "Name exactly what they did and why it mattered, then put it in the shift log so the next manager sees it too.",
-      b: "Tell them it was good work as you pass, because the shift is busy and a quick word still lands in the moment.",
-      c: "Name what they did and log it, and start working out how moments like this get noticed routinely rather than whenever you happen past.",
-    },
-    consequences: {
-      a: "They go slightly pink and say it was nothing. It is in the log at handover, and the evening manager mentions it too.",
-      b: "They smile and carry on. By the end of the shift you are not sure they registered which customer you meant.",
-      c: "The log entry lands. So does the question you leave with Priya about how anyone else's good weeks get seen.",
-    },
-    world: { a: { staff: "trusting" }, c: { staff: "trusting" } },
+    open: true,
+    fallbackConsequence:
+      "The shift ends. On Saturday the same customer comes back and asks for her by name at the counter.",
   },
   {
     unitId: "cafe.l2.s4",
     competency: "C5",
-    title: "The Holiday Rota",
+    title: "Team Scene 4 — Holiday Workload",
     stage: "Six weeks of the busiest trading in the year, and the team has gone quiet about it.",
     prompt: "We doing the same as last year, then.",
     speaker: "tomas",
-    choices: {
-      a: "Ask what specifically feels heaviest, then move breaks and add weekend cover based on what they say, and check partway whether it helped.",
-      b: "Gather everyone for a quick lift and remind them it is a few weeks, because this team has come through every season so far.",
-      c: "Ask what feels heaviest, and map the whole season's rota now instead of weekly, because cover lined up late is cover nobody feels.",
-    },
-    consequences: {
-      a: "It is the back-to-back weekends, not the hours. You split them differently and the mood lifts by the second week.",
-      b: "They say the right things and go back to work. Two of them book leave in the first week of January.",
-      c: "The whole season goes up on the wall in one go. People start swapping shifts with each other instead of with you.",
-    },
-    world: { a: { staff: "trusting" }, b: { staff: "strained" }, c: { staff: "trusting" } },
+    open: true,
+    fallbackConsequence:
+      "The schedule goes up on Sunday. By Tuesday two people have swapped a shift between themselves without asking you.",
   },
 ];
 
@@ -312,7 +266,7 @@ const SUCCESSION_SCENES: readonly Scene[] = [
   {
     unitId: "cafe.succession.q1",
     competency: "C8",
-    title: "How Would You Grow It?",
+    title: "Succession Interview 1 — Growing the Business",
     stage: "You ask all three the same two questions. This is the first.",
     prompt: "How would you make this place more money than I did?",
     speaker: "room",
@@ -331,7 +285,7 @@ const SUCCESSION_SCENES: readonly Scene[] = [
   {
     unitId: "cafe.succession.q2",
     competency: "C2",
-    title: "How Would You Take It?",
+    title: "Succession Interview 2 — Receiving Feedback",
     stage: "The second question, and the one you actually care about.",
     prompt: "Someone tells you you're getting it wrong. Then what?",
     speaker: "room",
@@ -364,28 +318,28 @@ export const STAGES: readonly Stage[] = [
       {
         unitId: "cafe.interview.q1",
         competency: "C6",
-        prompt: "Start me off. Who am I talking to?",
+        prompt: "Tell me about yourself.",
       },
       {
         unitId: "cafe.interview.q2",
         competency: "C2",
-        prompt: "Why this place? You could pull shots anywhere on this street.",
+        prompt: "Why did you choose the Café?",
       },
       {
         unitId: "cafe.interview.q3",
         competency: "C2",
-        prompt: "Tell me about something that went wrong on you, and what you did about it.",
+        prompt: "Tell me about a challenge you faced and how you handled it.",
       },
       {
         unitId: "cafe.interview.q4",
         competency: "C8",
-        prompt: "What are you good at, and what are you still working on?",
+        prompt: "What are your strengths, and one area you want to grow?",
       },
       {
         unitId: "cafe.interview.q5",
         competency: "C6",
         prompt:
-          "Last one. Someone on your shift gets an order wrong in front of a customer. What do you say to them?",
+          "A colleague on your shift gets an order wrong in front of a customer. How do you respond?",
       },
     ],
   },
@@ -423,13 +377,13 @@ export const STAGES: readonly Stage[] = [
       {
         unitId: "cafe.review1.q1",
         competency: "C8",
-        prompt: "You've had a few months on the counter. What did you do well?",
+        prompt: "What did you do well as an Employee?",
       },
-      { unitId: "cafe.review1.q2", competency: "C6", prompt: "Why do you want the branch?" },
+      { unitId: "cafe.review1.q2", competency: "C6", prompt: "Why do you want to be promoted?" },
       {
         unitId: "cafe.review1.q3",
         competency: "C2",
-        prompt: "What's the one thing you'd work on?",
+        prompt: "What is the one thing you want to work on?",
       },
     ],
   },
@@ -467,17 +421,17 @@ export const STAGES: readonly Stage[] = [
       {
         unitId: "cafe.review2.q1",
         competency: "C8",
-        prompt: "You've had the branch for a while now. What did you do well?",
+        prompt: "What did you do well as a Branch Manager?",
       },
       {
         unitId: "cafe.review2.q2",
         competency: "C6",
-        prompt: "Why should the whole thing be yours?",
+        prompt: "Why do you want to be promoted to CEO?",
       },
       {
         unitId: "cafe.review2.q3",
         competency: "C2",
-        prompt: "Last time you named something you wanted to work on. Where did that get to?",
+        prompt: "What is the one thing you want to work on as CEO?",
       },
     ],
   },
@@ -507,21 +461,26 @@ export const STAGES: readonly Stage[] = [
       {
         unitId: "cafe.l3.s1",
         competency: "C2",
-        title: "The Drink That Didn't",
+        title: "Business Scene 1 — A New Product Underperforming",
         activityId: "C2-SCA-01",
       },
       {
         unitId: "cafe.l3.s2",
         competency: "C3",
         also: ["C6"],
-        title: "The Truck",
+        title: "Business Scene 2 — The Food Truck Request",
         activityId: "C3-SCA-01",
       },
-      { unitId: "cafe.l3.s3", competency: "C4", title: "The Good Month", activityId: "C4-SCA-01" },
+      {
+        unitId: "cafe.l3.s3",
+        competency: "C4",
+        title: "Business Scene 3 — A Good Month, A Slower Stretch Ahead",
+        activityId: "C4-SCA-01",
+      },
       {
         unitId: "cafe.l3.s4",
         competency: "C9",
-        title: "The Place Across the Street",
+        title: "Business Scene 4 — New Competition Across the Street",
         activityId: "C9-SCA-01",
       },
     ],

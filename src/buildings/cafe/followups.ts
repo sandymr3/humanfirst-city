@@ -113,9 +113,9 @@ const HARD_FOLLOWUPS: Readonly<Record<string, FollowupBeat>> = {
       },
       {
         id: "o_c2c",
-        text: "Put the old one back on for a fortnight beside the new one and let the two of them settle it between them.",
+        text: "Put the old one back on for a two weeks beside the new one and let the two of them settle it between them.",
         consequence:
-          "Both go up. The new one outsells the old three to one over a fortnight, and the woman who asked buys the new one twice in the second week.",
+          "Both go up. The new one outsells the old three to one over a two weeks, and the woman who asked buys the new one twice in the second week.",
         world: { chalkboard: "iced" },
       },
     ],
@@ -289,7 +289,7 @@ const HARD_FOLLOWUPS: Readonly<Record<string, FollowupBeat>> = {
         id: "o_c7a",
         text: "Say yes. It's close enough to what I agreed that arguing the difference makes the original agreement feel like a trick.",
         consequence:
-          "She takes the Saturday off the rota. Tomas closes it instead, for the fourth week running, and says nothing about that either.",
+          "She takes the Saturday off the schedule. Tomas closes it instead, for the fourth week running, and says nothing about that either.",
         world: { staff: "strained" },
       },
       {
@@ -301,9 +301,9 @@ const HARD_FOLLOWUPS: Readonly<Record<string, FollowupBeat>> = {
       },
       {
         id: "o_c7c",
-        text: "Ask what she needs the Saturday for, and then work out whether there's a version of it the rota can actually carry.",
+        text: "Ask what she needs the Saturday for, and then work out whether there's a version of it the schedule can actually carry.",
         consequence:
-          "It is one Saturday a month rather than all of them. That the rota can carry, and it takes four minutes to find out and costs nothing.",
+          "It is one Saturday a month rather than all of them. That the schedule can carry, and it takes four minutes to find out and costs nothing.",
         world: { staff: "trusting" },
       },
     ],
@@ -348,7 +348,7 @@ const HARD_FOLLOWUPS: Readonly<Record<string, FollowupBeat>> = {
     prompt: (world) => {
       const across =
         world.rival === "promo"
-          ? "They have had a board out on the pavement for a fortnight."
+          ? "They have had a board out on the pavement for a two weeks."
           : world.rival === "open"
             ? "They have been open two months now."
             : "The unit opposite is quiet again.";

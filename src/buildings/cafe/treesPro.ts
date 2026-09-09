@@ -32,7 +32,7 @@ export const PRO_TREES: Readonly<Record<string, Tree>> = {
       },
       {
         id: "b",
-        text: "Order oat and almond for Thursday, because six people have asked in a fortnight and in a room this size that is a queue already forming somewhere else.",
+        text: "Order oat and almond for Thursday, because six people have asked in a two weeks and in a room this size that is a queue already forming somewhere else.",
         consequence:
           "Two crates land Thursday. The oat goes. Six weeks later the almond is behind the milk fridge, unopened, and Nadia is still not in on the mornings she is not in.",
         world: { chalkboard: "oat_plus", till: "tight" },
@@ -61,14 +61,14 @@ export const PRO_TREES: Readonly<Record<string, Tree>> = {
             id: "b",
             text: "Order the oat and start asking the same question of everybody who orders something we nearly don't do, since one answer is an anecdote.",
             consequence:
-              "You ask it eleven times in a fortnight and write the answers on the back of the rota. Two of them are about opening times and have nothing to do with milk.",
+              "You ask it eleven times in a two weeks and write the answers on the back of the schedule. Two of them are about opening times and have nothing to do with milk.",
             world: { chalkboard: "oat" },
           },
           {
             id: "c",
             text: "Order the oat, and work out what else in this room is costing somebody nine minutes that nobody has thought to mention to us.",
             consequence:
-              "The oat goes on. You spend a fortnight noticing that the queue at the till bends round the pastry case, and that three people a morning leave rather than join it.",
+              "The oat goes on. You spend a two weeks noticing that the queue at the till bends round the pastry case, and that three people a morning leave rather than join it.",
             world: { chalkboard: "oat" },
           },
         ],
@@ -86,7 +86,7 @@ export const PRO_TREES: Readonly<Record<string, Tree>> = {
           },
           {
             id: "b",
-            text: "Keep the almond on until the quarter ends, because a range that changes every fortnight tells people this place has not decided what it is.",
+            text: "Keep the almond on until the quarter ends, because a range that changes every two weeks tells people this place has not decided what it is.",
             consequence:
               "It stays on the board until December. Nobody orders it and nobody comments on it, and you throw away rather more of it than you would like to write down.",
             world: { till: "tight" },
@@ -102,7 +102,7 @@ export const PRO_TREES: Readonly<Record<string, Tree>> = {
       },
       c: {
         prompt:
-          "Eleven ticks, nine of them before half eight, and two names you do not recognise. Tomas says one of them asks him every Tuesday and he has been saying no.",
+          "Eleven ticks, nine of them before half eight, and two names you do not recognize. Tomas says one of them asks him every Tuesday and he has been saying no.",
         choices: [
           {
             id: "a",
@@ -113,7 +113,7 @@ export const PRO_TREES: Readonly<Record<string, Tree>> = {
           },
           {
             id: "b",
-            text: "Order it and leave the card up, because two days of ticks is a start and the next fortnight is what tells us whether it holds.",
+            text: "Order it and leave the card up, because two days of ticks is a start and the next two weeks is what tells us whether it holds.",
             consequence:
               "The card stays up three weeks and collects nineteen more ticks, most of them from the same eleven people. It holds, and now you know what holding looks like here.",
             world: { chalkboard: "oat" },
@@ -149,7 +149,7 @@ export const PRO_TREES: Readonly<Record<string, Tree>> = {
       },
       {
         id: "b",
-        text: "Hold the line. Reversing a fortnight after you asked the team to commit teaches them that your decisions are weather.",
+        text: "Hold the line. Reversing a two weeks after you asked the team to commit teaches them that your decisions are weather.",
         consequence:
           "You leave it another three weeks. It stays flat. Tomas stops rewriting the board on Mondays, and when the chalk runs out nobody replaces it.",
         world: { staff: "strained" },
@@ -169,9 +169,9 @@ export const PRO_TREES: Readonly<Record<string, Tree>> = {
         choices: [
           {
             id: "a",
-            text: "Run it again for a fortnight at the same price, because a threshold set honestly is worth nothing if you stop at the first number that clears it.",
+            text: "Run it again for a two weeks at the same price, because a threshold set honestly is worth nothing if you stop at the first number that clears it.",
             consequence:
-              "The fortnight comes in at eleven cups over. You put the price change in permanently, and Priya writes the new number on the board without asking you first.",
+              "The two weeks comes in at eleven cups over. You put the price change in permanently, and Priya writes the new number on the board without asking you first.",
             world: { chalkboard: "iced_renamed", staff: "trusting" },
           },
           {
@@ -223,9 +223,9 @@ export const PRO_TREES: Readonly<Record<string, Tree>> = {
         choices: [
           {
             id: "a",
-            text: "Say that I do not know, put the old name back for a fortnight at the new recipe, and actually find out.",
+            text: "Say that I do not know, put the old name back for a two weeks at the new recipe, and actually find out.",
             consequence:
-              "The fortnight says it was the recipe. The name goes back to the new one anyway because Tomas prefers it, and everybody knows which part of that was measured.",
+              "The two weeks says it was the recipe. The name goes back to the new one anyway because Tomas prefers it, and everybody knows which part of that was measured.",
             world: { chalkboard: "iced_renamed", staff: "trusting" },
           },
           {
@@ -325,7 +325,7 @@ export const PRO_TREES: Readonly<Record<string, Tree>> = {
             id: "c",
             text: "Hold. The stock is bought and the saving is real, and panicking a fifth of the way into a bad month is how you turn one into three.",
             consequence:
-              "You hold. November comes in ahead of October and the reserve stops draining in the third week, and there is a fortnight in there you would not want to live through twice.",
+              "You hold. November comes in ahead of October and the reserve stops draining in the third week, and there is a two weeks in there you would not want to live through twice.",
             world: { till: "strained" },
           },
         ],
@@ -420,7 +420,7 @@ export const PRO_TREES: Readonly<Record<string, Tree>> = {
       },
       b: {
         prompt:
-          "October undershoots your reserve by about a fortnight's worth. The loyalty cards are working — but slowly, and slowly is not what a fortnight short needs.",
+          "October undershoots your reserve by about a two weeks's worth. The loyalty cards are working — but slowly, and slowly is not what a two weeks short needs.",
         choices: [
           {
             id: "a",
@@ -431,14 +431,14 @@ export const PRO_TREES: Readonly<Record<string, Tree>> = {
           },
           {
             id: "b",
-            text: "Separate the two problems. Fund the fortnight from something reversible, and let the loyalty scheme run on its own timeline instead of asking it to rescue you.",
+            text: "Separate the two problems. Fund the two weeks from something reversible, and let the loyalty scheme run on its own timeline instead of asking it to rescue you.",
             consequence:
               "You take a short overdraft you clear by December. The cards keep doing what cards do, which is slowly, and by March they are the reason the mornings are steady.",
             world: { till: "healthy" },
           },
           {
             id: "c",
-            text: "Trim a fortnight of hours by agreement, close an hour earlier on the dead days, and protect the reserve rather than the schedule.",
+            text: "Trim a two weeks of hours by agreement, close an hour earlier on the dead days, and protect the reserve rather than the schedule.",
             consequence:
               "Everyone agrees to it and nobody enjoys it. The reserve holds, and the six o'clock closes stay after the reason for them has gone.",
             world: { staff: "strained", till: "healthy" },
@@ -528,7 +528,7 @@ export const PRO_TREES: Readonly<Record<string, Tree>> = {
             id: "c",
             text: "Put the app prices up to cover it, and stop pretending that the two channels are the same business.",
             consequence:
-              "The app prices go up nine per cent overnight. Volume dips for a fortnight and comes back, and the margin on it stops being something you avoid looking at.",
+              "The app prices go up nine per cent overnight. Volume dips for a two weeks and comes back, and the margin on it stops being something you avoid looking at.",
             world: { chalkboard: "app" },
           },
         ],
@@ -711,28 +711,28 @@ export const PRO_TREES: Readonly<Record<string, Tree>> = {
   "C7-SCB-01": {
     activityId: "C7-SCB-01",
     stage:
-      "First grey day. Tomas is the fastest pair of hands you have and the reason two other people have started swapping shifts to avoid him. The rota by the hatch has been rewritten twice this fortnight, and not by you.",
-    prompt: "You've seen it. I'm not going to keep rewriting the rota round it.",
+      "First grey day. Tomas is the fastest pair of hands you have and the reason two other people have started swapping shifts to avoid him. The schedule by the hatch has been rewritten twice this two weeks, and not by you.",
+    prompt: "You've seen it. I'm not going to keep rewriting the schedule round it.",
     seed: [
       {
         id: "a",
         text: "Back the performer. Results carry a small business, and the rest of the team adjusts to reality faster than they admit.",
         consequence:
-          "You leave it. The bar is fast all quarter and the rota keeps getting rewritten, and in November the one who has been swapping shifts hands you four weeks' notice instead.",
+          "You leave it. The bar is fast all quarter and the schedule keeps getting rewritten, and in November the one who has been swapping shifts hands you four weeks' notice instead.",
         world: { staff: "strained", regulars: "steady" },
       },
       {
         id: "b",
-        text: "Deal with the behaviour directly with him, and protect morale by being open with everybody else about what I'm doing.",
+        text: "Deal with the behavior directly with him, and protect morale by being open with everybody else about what I'm doing.",
         consequence:
-          "You have it out by the hatch and then say at handover exactly what you have asked of him, and nothing about why. The floor is careful for a fortnight and then it is normal.",
+          "You have it out by the hatch and then say at handover exactly what you have asked of him, and nothing about why. The floor is careful for a two weeks and then it is normal.",
         world: { staff: "trusting" },
       },
       {
         id: "c",
         text: "Set one standard that applies to everybody, coach him toward it, and accept that holding it might cost me him.",
         consequence:
-          "You write the standard down and it applies to Priya too, which she notices out loud. Tomas is a fortnight of very cold politeness and then, unexpectedly, better.",
+          "You write the standard down and it applies to Priya too, which she notices out loud. Tomas is a two weeks of very cold politeness and then, unexpectedly, better.",
         world: { staff: "trusting" },
       },
     ],
@@ -745,7 +745,7 @@ export const PRO_TREES: Readonly<Record<string, Tree>> = {
             id: "a",
             text: "Say no, tell him exactly why those shifts came free, and have the conversation I should have had in September.",
             consequence:
-              "He is quiet for most of it and then says he had assumed you did not mind. Neither of you enjoys the afternoon and the rota stops moving.",
+              "He is quiet for most of it and then says he had assumed you did not mind. Neither of you enjoys the afternoon and the schedule stops moving.",
             world: { staff: "trusting" },
           },
           {
@@ -894,14 +894,14 @@ export const PRO_TREES: Readonly<Record<string, Tree>> = {
             id: "b",
             text: "Put the hours back and take the last third out of my own draw, since I am the one who chose the beans.",
             consequence:
-              "Nobody is told and everybody works it out. It is a lean November for you and the rota stops being something people check twice.",
+              "Nobody is told and everybody works it out. It is a lean November for you and the schedule stops being something people check twice.",
             world: { staff: "trusting", till: "tight" },
           },
           {
             id: "c",
             text: "Leave it, and say plainly that the coffee was the thing I would not move and the hours were what was left.",
             consequence:
-              "You say it once and do not repeat it. It is accepted, and the word that comes back to you second-hand a fortnight later is not a warm one.",
+              "You say it once and do not repeat it. It is accepted, and the word that comes back to you second-hand a two weeks later is not a warm one.",
             world: { staff: "strained" },
           },
         ],
@@ -941,7 +941,7 @@ export const PRO_TREES: Readonly<Record<string, Tree>> = {
   "C9-SCB-01": {
     activityId: "C9-SCB-01",
     stage:
-      "Well-funded competition, three straight weeks of decline, and staff who have started reading the room. Marcus's chair has been empty twice this fortnight. This is the third hard stretch this year and the first that has not turned by itself.",
+      "Well-funded competition, three straight weeks of decline, and staff who have started reading the room. Marcus's chair has been empty twice this two weeks. This is the third hard stretch this year and the first that has not turned by itself.",
     prompt: "Three weeks. I'm not panicking. I'd just like to know what we're doing.",
     seed: [
       {
@@ -962,7 +962,7 @@ export const PRO_TREES: Readonly<Record<string, Tree>> = {
         id: "c",
         text: "Absorb it. Work out precisely what to hold and what to change, and use the pressure to make the business and myself harder to move.",
         consequence:
-          "Two lists. Everything on the first one holds and four things on the second one change. Nothing improves for a fortnight and then, without any single reason, it does.",
+          "Two lists. Everything on the first one holds and four things on the second one change. Nothing improves for a two weeks and then, without any single reason, it does.",
         world: { regulars: "returning" },
       },
     ],
@@ -980,7 +980,7 @@ export const PRO_TREES: Readonly<Record<string, Tree>> = {
           },
           {
             id: "b",
-            text: "Hold the discount into a fifth week, since a fortnight is not long enough to know whether habit has moved back or not.",
+            text: "Hold the discount into a fifth week, since a two weeks is not long enough to know whether habit has moved back or not.",
             consequence:
               "The fifth week is flat and the sixth is down again, and by then the discount is what people expect rather than what brings them in.",
             world: { till: "strained" },
@@ -1023,7 +1023,7 @@ export const PRO_TREES: Readonly<Record<string, Tree>> = {
       },
       c: {
         prompt:
-          "A fortnight of nothing, and then two of the four changes start working at once. Priya asks which of them you are planning to keep.",
+          "A two weeks of nothing, and then two of the four changes start working at once. Priya asks which of them you are planning to keep.",
         choices: [
           {
             id: "a",
@@ -1034,9 +1034,9 @@ export const PRO_TREES: Readonly<Record<string, Tree>> = {
           },
           {
             id: "b",
-            text: "Keep all four another month, since two working out of four in a fortnight is not enough to start cutting things on.",
+            text: "Keep all four another month, since two working out of four in a two weeks is not enough to start cutting things on.",
             consequence:
-              "The other two never come good and cost you a fortnight each in attention. The two that worked keep working, slightly slower than they would have.",
+              "The other two never come good and cost you a two weeks each in attention. The two that worked keep working, slightly slower than they would have.",
             world: { till: "tight" },
           },
           {

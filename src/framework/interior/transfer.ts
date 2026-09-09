@@ -85,7 +85,10 @@ export async function commitTransfer(
 ): Promise<{ consequence: string; world?: Record<string, string> } | null> {
   try {
     const res = await api.commitFollowup(followupId, optionId);
-    return { consequence: res.consequence, world: res.world };
+    // A mission beat is always a chosen option, so it always has a consequence
+    // — the optional field on the shared schema is the Café's open questions,
+    // which do not come through here.
+    return { consequence: res.consequence ?? "", world: res.world };
   } catch (e) {
     // A decision is a decision: committing the same option twice returns the
     // original, and the server says so with a 409 rather than a body we can use.

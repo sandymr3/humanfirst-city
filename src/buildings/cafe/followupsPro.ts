@@ -23,7 +23,7 @@ export const PRO_FOLLOWUPS: Readonly<Record<string, FollowupBeat>> = {
     options: [
       {
         id: "o_p1a",
-        text: "Not unless it turns out to matter. Give me a fortnight to find out what seven o'clock is actually worth to the people who use it.",
+        text: "Not unless it turns out to matter. Give me a two weeks to find out what seven o'clock is actually worth to the people who use it.",
         consequence:
           "You count the door before eight for two weeks. It is fourteen people, and eleven of them are the same eleven every single morning.",
         world: { regulars: "steady" },
@@ -66,7 +66,7 @@ export const PRO_FOLLOWUPS: Readonly<Record<string, FollowupBeat>> = {
       },
       {
         id: "o_p2b",
-        text: "Just try something. Pastries are not a drink, the shelf life is two days, and a fortnight of design costs more than the experiment does.",
+        text: "Just try something. Pastries are not a drink, the shelf life is two days, and a two weeks of design costs more than the experiment does.",
         consequence:
           "She swaps two lines on the Tuesday. Something moves and something does not, and by Friday neither of you can reconstruct exactly what was changed when.",
       },
@@ -228,8 +228,8 @@ export const PRO_FOLLOWUPS: Readonly<Record<string, FollowupBeat>> = {
     prompt: (world) => {
       const room =
         world.staff === "trusting"
-          ? "The rota has been in your handwriting for six weeks and nobody has been near it."
-          : "There is fresh pencil on the rota again, in two different hands.";
+          ? "The schedule has been in your handwriting for six weeks and nobody has been near it."
+          : "There is fresh pencil on the schedule again, in two different hands.";
       return `A month on. ${room} Priya, at the hatch: “The new one starts Monday. What do you want me to tell her about how it works in here?”`;
     },
     options: [
@@ -285,7 +285,7 @@ export const PRO_FOLLOWUPS: Readonly<Record<string, FollowupBeat>> = {
         id: "o_p8c",
         text: "Yes, if he'll do it on a Tuesday morning — the room is quiet, the regulars are in, and those are the people it is actually for.",
         consequence:
-          "Six people, all of them yours, on a Tuesday. Nobody new comes in at all, and the four-top talks about it for a fortnight afterwards.",
+          "Six people, all of them yours, on a Tuesday. Nobody new comes in at all, and the four-top talks about it for a two weeks afterwards.",
         world: { regulars: "full" },
       },
     ],
