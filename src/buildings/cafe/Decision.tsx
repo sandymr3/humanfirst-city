@@ -24,6 +24,7 @@ import { useMemo, useState } from "react";
 import { presentationOrder } from "@/lib/decisionTree";
 import { Dictation } from "@/ui/Dictation";
 import { castById } from "./cast";
+import { ChoiceButton, Sheet } from "./Sheet";
 import {
   advance,
   answerScene,
@@ -162,73 +163,12 @@ function OpenAnswer({ unitId }: { unitId: string }) {
         <button
           onClick={commit}
           disabled={!ready}
-          className="rounded-lg bg-gold px-4 py-1.5 text-xs font-semibold text-ink transition disabled:cursor-not-allowed disabled:opacity-40"
+          className="rounded-lg bg-gold px-4 py-1.5 text-xs font-semibold text-ink transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40 disabled:active:scale-100"
         >
           Answer
         </button>
       </div>
     </div>
-  );
-}
-
-/**
- * The decision's own surface. Not the hotspot Modal: a decision is the room
- * talking to you, so it sits in the room rather than covering it, and it never
- * offers a way to dismiss it without answering.
- *
- * It is BOUNDED, which it was not. Anchored to the bottom with no ceiling, a
- * long prompt and three long options grew the card straight off the top of the
- * screen and the text was simply gone — no scrollbar, no way back to it. The
- * generated questions made that routine rather than rare: an authored option is
- * written to a length, a generated one is written to a rule.
- *
- * `head` is pinned while the rest scrolls, so the question you are answering
- * stays on screen while you read past the bottom of the third option. Scrolling
- * away from the thing you are deciding about is how you forget what it asked.
- */
-function Sheet({ head, children }: { head?: React.ReactNode; children: React.ReactNode }) {
-  return (
-    <div className="pointer-events-auto absolute inset-x-0 bottom-0 z-30 flex justify-center px-4 pb-5 pt-4">
-      <div
-        role="dialog"
-        aria-label="A decision"
-        className="animate-slide-up relative flex max-h-[min(72vh,34rem)] w-[min(38rem,100%)] flex-col overflow-hidden rounded-2xl border border-line/70 bg-gradient-to-b from-surface/95 to-surface-2/90 shadow-[0_28px_60px_-24px_rgb(0_0_0/0.9)] ring-1 ring-inset ring-white/[0.07] backdrop-blur-md"
-      >
-        {head && <div className="shrink-0 border-b border-line/50 px-6 pb-4 pt-6">{head}</div>}
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 py-5">
-          {children}
-        </div>
-        {/* The room is dark and the card fades into it, so a cut-off option
-            would look like the end of the list rather than the edge of the box. */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-x-0 bottom-0 h-6 bg-gradient-to-t from-surface-2/90 to-transparent"
-        />
-      </div>
-    </div>
-  );
-}
-
-/**
- * One thing you can choose. Five copies of this markup had already drifted apart
- * by a class or two; they are one component now.
- *
- * The rail on the left lights on hover and on keyboard focus — the focus ring
- * was missing entirely, which made the whole decision surface unusable without
- * a mouse.
- */
-function ChoiceButton({ onClick, children }: { onClick: () => void; children: React.ReactNode }) {
-  return (
-    <button
-      onClick={onClick}
-      className="group relative w-full overflow-hidden rounded-xl border border-line/70 bg-surface-2/50 py-3 pl-5 pr-4 text-left text-sm leading-relaxed text-text transition-colors duration-200 hover:border-gold/50 hover:bg-surface-2 focus-visible:border-gold/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/40"
-    >
-      <span
-        aria-hidden
-        className="absolute inset-y-0 left-0 w-[3px] bg-transparent transition-colors duration-200 group-hover:bg-gold/70 group-focus-visible:bg-gold/70"
-      />
-      {children}
-    </button>
   );
 }
 
@@ -351,7 +291,7 @@ function OpenReply({ unitId }: { unitId: string }) {
         <button
           onClick={commit}
           disabled={!ready}
-          className="rounded-lg bg-gold px-4 py-1.5 text-xs font-semibold text-ink transition disabled:cursor-not-allowed disabled:opacity-40"
+          className="rounded-lg bg-gold px-4 py-1.5 text-xs font-semibold text-ink transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40 disabled:active:scale-100"
         >
           Answer
         </button>

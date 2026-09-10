@@ -49,6 +49,16 @@
     @apply outline-none ring-2 ring-gold/60;
   }
 
+  /* A base keyboard-focus ring for any plain button that has not styled its
+     own — several across the building had none at all, which made whole
+     screens unusable without a mouse. Tailwind's utilities layer is applied
+     after this one regardless of selector specificity, so a button defining
+     its own focus-visible treatment (the decision sheet's ChoiceButton, the
+     gold CTAs) keeps that instead of this default. */
+  button:focus-visible {
+    @apply outline-none ring-2 ring-gold/60;
+  }
+
   select {
     @apply cursor-pointer appearance-none rounded-lg border border-line bg-surface-2 py-2 pl-3 pr-8 text-text;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4 6.5l4 4 4-4' fill='none' stroke='%238c96aa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");

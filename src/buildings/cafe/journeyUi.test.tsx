@@ -95,6 +95,31 @@ describe("the gate", () => {
     expect(screen.getByText(/Nothing came back on the record/)).toBeInTheDocument();
   });
 
+  it("says the same honest thing when a verdict came back with nothing in it", () => {
+    // The bug this locks down: an outcome object that arrived (the network
+    // call succeeded) but whose band and feedback are both empty reads, on a
+    // truthy check alone, as "there is a verdict to show" — and shows neither
+    // the honest line nor anything else, a blank gap under the stage title
+    // where a player came here to read something.
+    useJourneyStore.setState({
+      stageId: "cafe.gate1",
+      outcome: {
+        stageId: "cafe.interview",
+        attemptNo: 1,
+        bestAttemptNo: 1,
+        rawScore: 0,
+        questionScores: [],
+        band: "",
+        feedback: "",
+        revenue: 0,
+        revenueDelta: 0,
+        coinsBanked: 0,
+      },
+    });
+    render(<Gate />);
+    expect(screen.getByText(/Nothing came back on the record/)).toBeInTheDocument();
+  });
+
   it("shows the band and the feedback when there is some", () => {
     useJourneyStore.setState({
       stageId: "cafe.gate1",

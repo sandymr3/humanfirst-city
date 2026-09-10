@@ -9,6 +9,7 @@
 // to read what you said in it would lose the room's own state, and the player is
 // mid-career: they are looking something up, not going somewhere.
 import { useEffect, useState } from "react";
+import { ModalClose } from "@/ui/Modal";
 import { useRoomStore } from "./roomStore";
 import { historyPhases } from "./history";
 import { useJourneyStore } from "./journeyStore";
@@ -45,12 +46,14 @@ export function PhaseHistory({ onClose }: { onClose: () => void }) {
             <p className="text-xs uppercase tracking-widest text-muted">Your career so far</p>
             <p className="mt-1 font-display text-lg text-text">What you have answered</p>
           </div>
-          <button
-            onClick={onClose}
-            className="rounded-lg border border-line/70 px-3 py-1.5 text-xs font-medium text-muted transition hover:border-gold/40 hover:text-text"
-          >
-            Close
-          </button>
+          {/*
+            The same close affordance every other panel in the building uses —
+            a real 32px target, not the bare text button this one had drifted
+            onto. `ModalClose` alone, not `Modal`: this dialog keeps its own
+            hand-rolled frame on purpose (see the note below on Escape), it
+            only borrowed the button.
+          */}
+          <ModalClose onClose={onClose} label="Close what you have answered" />
         </header>
 
         {ordered.length === 0 ? (

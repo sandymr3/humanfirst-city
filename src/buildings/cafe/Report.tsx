@@ -92,7 +92,7 @@ export function Report({ onClose }: { onClose: () => void }) {
 
         <button
           onClick={onClose}
-          className="mt-6 rounded-lg bg-gold px-5 py-2 font-medium text-ink hover:brightness-110"
+          className="mt-6 rounded-lg bg-gold px-5 py-2 font-medium text-ink transition hover:brightness-110 active:scale-[0.98]"
         >
           Out onto the street
         </button>

@@ -14,6 +14,7 @@
 //     who takes the job and walks after the counter has played a complete
 //     journey that scores exactly what they played.
 import { castById } from "./cast";
+import { ChoiceButton, Sheet } from "./Sheet";
 import { currentStage, takeRoad, useJourneyStore, type Road } from "./journeyStore";
 import { gateRoads, ROLE_LABEL, stageById } from "./journey";
 
@@ -29,57 +30,59 @@ export function Gate() {
 
   const go = (road: Road) => () => takeRoad(road);
 
+  // A verdict that came back with nothing in it reads the same as none
+  // arriving at all — better an honest line than a heading with a blank
+  // space under it, the same gap the decision sheet's own consequence once
+  // had (an empty paragraph, standing in for what a player came here to read).
+  const hasFeedback = Boolean(outcome && (outcome.band || outcome.feedback));
+
   return (
-    <div className="pointer-events-auto absolute inset-x-0 bottom-0 z-30 flex justify-center p-4">
-      <div
-        role="dialog"
-        aria-label={stage.title}
-        className="animate-slide-up w-[min(38rem,100%)] rounded-2xl border border-line/70 bg-surface/95 p-6 shadow-2xl backdrop-blur"
-      >
-        <h2 className="font-display text-lg font-semibold text-gold">{stage.title}</h2>
+    <Sheet head={<h2 className="font-display text-lg font-semibold text-gold">{stage.title}</h2>}>
+      {hasFeedback ? (
+        <Feedback host={host?.name ?? "Owen"} band={outcome!.band} feedback={outcome!.feedback} />
+      ) : (
+        <p className="text-sm leading-relaxed text-muted">
+          {/*
+            An honest line for the case where nothing graded the sitting — a
+            grader outage, or an offline close. Saying so is better than
+            inventing a verdict, and better than silence. Named rather than
+            pronouned: the host differs by stage, and the sentence should read
+            the same whoever is sitting across the table.
+          */}
+          {host?.name ?? "The interviewer"} heard you out. Nothing came back on the record this
+          time, so take this as a conversation rather than a decision — the roads below are all
+          still open.
+        </p>
+      )}
 
-        {outcome ? (
-          <Feedback host={host?.name ?? "Owen"} band={outcome.band} feedback={outcome.feedback} />
-        ) : (
-          <p className="mt-3 text-sm leading-relaxed text-muted">
-            {/*
-              An honest line for the case where nothing graded the sitting — a
-              grader outage, or an offline close. Saying so is better than
-              inventing a verdict, and better than silence. Named rather than
-              pronouned: the host differs by stage, and the sentence should read
-              the same whoever is sitting across the table.
-            */}
-            {host?.name ?? "The interviewer"} heard you out. Nothing came back on the record this
-            time, so take this as a conversation rather than a decision — the roads below are all
-            still open.
-          </p>
-        )}
-
-        <ul className="mt-6 space-y-2">
-          <li>
-            <Road
-              onClick={go("accept")}
-              label={nextRole ? `Take it — ${nextRole}` : "Take it"}
-              hint="Start the next posting."
-              primary
-            />
-          </li>
-          <li>
-            <Road
-              onClick={go("retry")}
-              label="Go again"
-              // Not "try harder" and not a penalty. The earlier attempt stays on
-              // the record either way — it is the baseline the report measures
-              // improvement from, and it is never overwritten.
-              hint="Sit it a second time. What you said the first time stays on the record."
-            />
-          </li>
-          <li>
-            <Road onClick={go("exit")} label="Leave the café" hint="Take what you have and go." />
-          </li>
-        </ul>
-      </div>
-    </div>
+      <ul className="mt-6 space-y-2">
+        <li>
+          <ChoiceButton onClick={go("accept")} primary>
+            <span className="block text-sm font-medium text-text">
+              {nextRole ? `Take it — ${nextRole}` : "Take it"}
+            </span>
+            <span className="mt-0.5 block text-xs text-muted">Start the next posting.</span>
+          </ChoiceButton>
+        </li>
+        <li>
+          <ChoiceButton onClick={go("retry")}>
+            <span className="block text-sm font-medium text-text">Go again</span>
+            {/* Not "try harder" and not a penalty. The earlier attempt stays on
+                the record either way — it is the baseline the report measures
+                improvement from, and it is never overwritten. */}
+            <span className="mt-0.5 block text-xs text-muted">
+              Sit it a second time. What you said the first time stays on the record.
+            </span>
+          </ChoiceButton>
+        </li>
+        <li>
+          <ChoiceButton onClick={go("exit")}>
+            <span className="block text-sm font-medium text-text">Leave the café</span>
+            <span className="mt-0.5 block text-xs text-muted">Take what you have and go.</span>
+          </ChoiceButton>
+        </li>
+      </ul>
+    </Sheet>
   );
 }
 
@@ -94,7 +97,7 @@ export function Gate() {
 function Feedback({ host, band, feedback }: { host: string; band: string; feedback: string }) {
   return (
     <>
-      {band && <p className="mt-3 text-xs uppercase tracking-widest text-gold">{band}</p>}
+      {band && <p className="text-xs uppercase tracking-widest text-gold">{band}</p>}
       {feedback && (
         <p className="mt-3 text-sm leading-relaxed text-text">
           <span className="font-semibold text-gold">{host}: </span>
@@ -102,31 +105,5 @@ function Feedback({ host, band, feedback }: { host: string; band: string; feedba
         </p>
       )}
     </>
-  );
-}
-
-function Road({
-  onClick,
-  label,
-  hint,
-  primary,
-}: {
-  onClick: () => void;
-  label: string;
-  hint: string;
-  primary?: boolean;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className={
-        primary
-          ? "w-full rounded-xl border border-gold/60 bg-gold/10 px-4 py-3 text-left transition hover:bg-gold/20"
-          : "w-full rounded-xl border border-line/70 bg-surface-2/60 px-4 py-3 text-left transition hover:border-gold/60 hover:bg-surface-2"
-      }
-    >
-      <span className="block text-sm font-medium text-text">{label}</span>
-      <span className="mt-0.5 block text-xs text-muted">{hint}</span>
-    </button>
   );
 }

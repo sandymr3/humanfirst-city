@@ -13,6 +13,7 @@
 import { useState } from "react";
 import { Dictation } from "@/ui/Dictation";
 import { castById } from "./cast";
+import { Sheet } from "./Sheet";
 import { currentQuestion, currentStage, useJourneyStore, answer, advance } from "./journeyStore";
 
 export function QA() {
@@ -40,69 +41,67 @@ export function QA() {
   };
 
   return (
-    <div className="pointer-events-auto absolute inset-x-0 bottom-0 z-30 flex justify-center p-4">
-      <div
-        role="dialog"
-        aria-label={stage.title}
-        className="animate-slide-up w-[min(38rem,100%)] rounded-2xl border border-line/70 bg-surface/95 p-6 shadow-2xl backdrop-blur"
-      >
-        {/*
-          The ordinal is the pacing information a player legitimately needs —
-          how much of this sitting is left — and it says nothing about how they
-          are doing.
-        */}
-        <p className="text-xs uppercase tracking-widest text-muted">
-          {stage.title} · {Math.min(index + 1, total)} of {total}
-        </p>
+    <Sheet
+      head={
+        <>
+          {/*
+            The ordinal is the pacing information a player legitimately needs —
+            how much of this sitting is left — and it says nothing about how
+            they are doing.
+          */}
+          <p className="text-xs uppercase tracking-widest text-muted">
+            {stage.title} · {Math.min(index + 1, total)} of {total}
+          </p>
 
-        <p className="mt-3 text-sm leading-relaxed text-text">
-          {host && <span className="font-semibold text-gold">{host.name}: </span>}
-          {host ? `“${question.prompt}”` : question.prompt}
-        </p>
+          <p className="mt-3 text-sm leading-relaxed text-text">
+            {host && <span className="font-semibold text-gold">{host.name}: </span>}
+            {host ? `“${question.prompt}”` : question.prompt}
+          </p>
+        </>
+      }
+    >
+      <label className="sr-only" htmlFor={`answer-${question.unitId}`}>
+        Your answer
+      </label>
+      <textarea
+        id={`answer-${question.unitId}`}
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onKeyDown={(e) => {
+          // Enter sends, because this is a conversation. Shift+Enter is a
+          // paragraph, because some of these answers want one.
+          //
+          // stopPropagation as well as preventDefault: the room listens for
+          // Enter on the window, and without the second call answering a
+          // question also walks you into whoever is standing nearby. The
+          // panel's input lock covers this too — this is the belt to that
+          // pair of braces.
+          if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            e.stopPropagation();
+            commit();
+          }
+        }}
+        rows={4}
+        autoFocus
+        className="w-full resize-y rounded-xl border border-line/70 bg-surface-2/50 px-4 py-3 text-sm leading-relaxed text-text outline-none transition-colors placeholder:text-muted/70 focus:border-gold/50"
+        placeholder="Type your response, or use the microphone."
+      />
 
-        <label className="sr-only" htmlFor={`answer-${question.unitId}`}>
-          Your answer
-        </label>
-        <textarea
-          id={`answer-${question.unitId}`}
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          onKeyDown={(e) => {
-            // Enter sends, because this is a conversation. Shift+Enter is a
-            // paragraph, because some of these answers want one.
-            //
-            // stopPropagation as well as preventDefault: the room listens for
-            // Enter on the window, and without the second call answering a
-            // question also walks you into whoever is standing nearby. The
-            // panel's input lock covers this too — this is the belt to that
-            // pair of braces.
-            if (e.key === "Enter" && !e.shiftKey) {
-              e.preventDefault();
-              e.stopPropagation();
-              commit();
-            }
-          }}
-          rows={4}
-          autoFocus
-          className="mt-4 w-full resize-y rounded-xl border border-line/70 bg-surface-2/60 px-4 py-3 text-sm leading-relaxed text-text outline-none transition focus:border-gold/60"
-          placeholder="Type your response, or use the microphone."
-        />
-
-        <div className="mt-3">
-          <Dictation value={draft} onChange={setDraft} label={`your answer to ${stage.title}`} />
-        </div>
-
-        <div className="mt-4 flex items-center justify-between">
-          <p className="text-xs text-muted">Enter to answer · Shift+Enter for a new line</p>
-          <button
-            onClick={commit}
-            disabled={!ready}
-            className="rounded-lg bg-gold px-5 py-2 text-sm font-medium text-ink transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            {index + 1 >= total ? "That's me done" : "Next"}
-          </button>
-        </div>
+      <div className="mt-3">
+        <Dictation value={draft} onChange={setDraft} label={`your answer to ${stage.title}`} />
       </div>
-    </div>
+
+      <div className="mt-4 flex items-center justify-between gap-4">
+        <p className="text-xs text-muted">Enter to answer · Shift+Enter for a new line</p>
+        <button
+          onClick={commit}
+          disabled={!ready}
+          className="rounded-lg bg-gold px-5 py-2 text-sm font-medium text-ink transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/40 focus-visible:ring-offset-2 focus-visible:ring-offset-surface active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40 disabled:active:scale-100"
+        >
+          {index + 1 >= total ? "That's me done" : "Next"}
+        </button>
+      </div>
+    </Sheet>
   );
 }
