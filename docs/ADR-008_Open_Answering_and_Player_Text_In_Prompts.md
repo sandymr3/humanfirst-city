@@ -186,8 +186,24 @@ This matters more than it looks. Sending an empty string to a grader gets it mar
 
 ---
 
-## 7. What is still owed
+## 7. Two decisions this one deliberately did not make
 
-- `api/openapi.yaml` gains `/journey/followup`, `/api/v1/report` and the `answer` fields.
-- Voice input, phase back-navigation and the levels graphic are Stage 3 and do not touch this decision.
-- L3 remains letter-based: its scenes are two-beat trees with nine audited terminals, and making them open collapses those terminals into a revenue table. Open-endedness is a per-scene flag, so this is a content decision rather than a code one — but it is a decision, and it has not been taken.
+Both were left open when this ADR was first written, and both have since been taken. They are recorded here rather than in a new document because each is a boundary on §1's "the player types" — and a reader who finds an exception without finding the reason will assume it is an oversight and open it up.
+
+### 7.1 The CEO round stays lettered
+
+**L3 is not open, and that is the decision rather than the leftover.**
+
+Its four scenes are two-beat decision trees with nine audited terminals each, written in the workbook. Opening them would collapse two moves into one typed answer and retire thirty-six authored outcomes as anything but revenue anchors — the largest piece of content in the building, spent to buy consistency.
+
+It also gives the career a shape worth having: you **write** your way up through the counter and the flap, and at the top you **choose** between paths someone has already costed. That is a fair description of the job, and it means the instrument measures expression where expression is what is being tested and judgement where judgement is.
+
+Reopening it is a per-scene `open` flag plus twelve rubric descriptors, because the tree prose is written as options and not as tier anchors. Cheap, but not free, and not to be done by accident.
+
+### 7.2 Voice is not in the succession round
+
+The succession asks the player to interview three candidates and pick one. There is no box to speak into because there is nothing to write: the assessment **is** the pick.
+
+The client's request — voice in "interview, review process and ceo succession interview" — is met where the player actually speaks, which is the job interview and both reviews. Adding a microphone to a screen with no text field would be a control that does nothing, which is worse than its absence.
+
+If this is revisited, the smallest honest version is one open "why them?" question after the pick — a box, so dictation attaches to it, and one more piece of evidence for the report. Rewriting the round so the player is interviewed **for** the CEO job is a different scene from the workbook's and removes the succession decision itself, which is the single most consequential choice in the journey; that one goes back to the client rather than being taken here.
