@@ -208,6 +208,7 @@ function snapshot(): Journey {
     revenue: s.revenue,
     unsent: s.unsent,
     history: s.history,
+    beats: s.beats,
   };
 }
 
@@ -330,6 +331,7 @@ export async function answerSceneBeat(optionId: string): Promise<void> {
   // Clear it first: the question is answered, and leaving it on screen while the
   // commit is in flight invites a second click on a different option.
   useJourneyStore.setState({ sceneBeat: null });
+  rememberBeat(beat.unitId, beat.prompt, beat.options.find((o) => o.id === optionId)?.text ?? "");
 
   let consequence = "";
   let patch: WorldPatch | undefined;
@@ -362,6 +364,26 @@ export async function answerSceneBeat(optionId: string): Promise<void> {
 }
 
 /**
+ * Keep a generated question and the answer given to it.
+ *
+ * The authored questions are recovered at stage close from `answers` and
+ * `decided`, both of which the store already holds. A generated one is not in
+ * either: it existed for one beat, on the screen, and then it was gone. If it
+ * is not written down here the history can only ever show the authored half of
+ * a conversation, and the client asked to see "all the questions the user have
+ * been asked and what they responded".
+ *
+ * Folded into the stage's record when the stage closes, and cleared with it.
+ */
+function rememberBeat(unitId: string, prompt: string, answer: string): void {
+  const clean = answer.trim();
+  if (!clean) return;
+  useJourneyStore.setState((s) => ({
+    beats: [...s.beats, { unitId, prompt, answer: clean }],
+  }));
+}
+
+/**
  * Answer an open generated question in the player's own words.
  *
  * The sibling of `answerSceneBeat`, and it differs in what comes back: nothing.
@@ -380,6 +402,7 @@ export async function answerSceneBeatText(text: string): Promise<void> {
   // clears it: a second submission against one question is a second answer to
   // something already answered.
   useJourneyStore.setState({ sceneBeat: null, consequence: null });
+  rememberBeat(beat.unitId, beat.prompt, trimmed);
 
   try {
     await api.answerFollowup(beat.followupId, trimmed);
@@ -779,7 +802,8 @@ export async function closeStage(): Promise<StageOutcome | null> {
   // What the player put against each question in this phase, captured BEFORE
   // the close clears `answers` — this is the only moment the typed text and the
   // stage it belongs to are both in hand.
-  const transcript = transcriptFor(stage, s.answers, units);
+  // The authored questions, then the generated ones that grew out of them.
+  const transcript = [...transcriptFor(stage, s.answers, units), ...s.beats];
 
   let outcome: StageOutcome | null = null;
   try {
@@ -810,6 +834,7 @@ export async function closeStage(): Promise<StageOutcome | null> {
       role: ROLES.includes(res.roleReached as Role) ? (res.roleReached as Role) : s.role,
       qaDone: [...s.qaDone, ...s.answers.map((a) => a.unitId)],
       answers: [],
+      beats: [],
       outcome,
       closing: false,
       history: [
@@ -831,6 +856,7 @@ export async function closeStage(): Promise<StageOutcome | null> {
       unsent: [...s.unsent, pending],
       qaDone: [...s.qaDone, ...s.answers.map((a) => a.unitId)],
       answers: [],
+      beats: [],
       closing: false,
       history: [...s.history, recordStage(stage.id, 0, transcript)],
     });

@@ -37,7 +37,10 @@ export function Gate() {
   const hasFeedback = Boolean(outcome && (outcome.band || outcome.feedback));
 
   return (
-    <Sheet head={<h2 className="font-display text-lg font-semibold text-gold">{stage.title}</h2>}>
+    <Sheet
+      label={stage.title}
+      head={<h2 className="font-display text-lg font-semibold text-gold">{stage.title}</h2>}
+    >
       {hasFeedback ? (
         <Feedback host={host?.name ?? "Owen"} band={outcome!.band} feedback={outcome!.feedback} />
       ) : (

@@ -42,6 +42,7 @@ export function QA() {
 
   return (
     <Sheet
+      label={stage.title}
       head={
         <>
           {/*

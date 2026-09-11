@@ -61,7 +61,7 @@ export function Decision() {
   // the room, which is how this was first noticed.
   if (consequence !== null && consequence.trim() !== "") {
     return (
-      <Sheet>
+      <Sheet label="A decision">
         <p className="text-sm leading-relaxed text-text">{consequence}</p>
         <button
           onClick={advance}
@@ -85,6 +85,7 @@ export function Decision() {
 
   return (
     <Sheet
+      label="A decision"
       head={
         <>
           {scene.stage && <p className="mb-4 text-sm leading-relaxed text-muted">{scene.stage}</p>}
@@ -219,6 +220,7 @@ function SceneBeat() {
 
   return (
     <Sheet
+      label="A decision"
       head={
         <p className="text-sm leading-relaxed text-text">
           {beat.speakerName && (
@@ -321,6 +323,7 @@ function TreeBeat() {
     );
     return (
       <Sheet
+        label="A decision"
         head={
           <p className="text-sm leading-relaxed text-text">
             {transferBeat.speakerName && (
@@ -354,7 +357,7 @@ function TreeBeat() {
   );
 
   return (
-    <Sheet>
+    <Sheet label="A decision">
       {onSeed && tree.stage && (
         <p className="mb-4 text-sm leading-relaxed text-muted">{tree.stage}</p>
       )}
@@ -389,7 +392,7 @@ function Successors() {
   );
 
   return (
-    <Sheet>
+    <Sheet label="A decision">
       <p className="text-sm leading-relaxed text-text">
         Three people want it. You can only hand it to one.
       </p>

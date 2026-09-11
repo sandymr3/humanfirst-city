@@ -21,13 +21,28 @@ import type { ReactNode } from "react";
  * you are answering stays on screen while you read past the bottom of a long
  * option or a long piece of feedback — scrolling away from the thing you are
  * deciding about is how you forget what it asked.
+ *
+ * `label` is what the dialog announces itself as, and every caller must pass
+ * its own. The shape is shared; the name is not. When this was extracted the
+ * label came with it hardcoded, and three different screens — a decision, an
+ * interview question, a gate offering three roads — all told a screen reader
+ * they were "A decision". The card being identical is the point; the screens
+ * being indistinguishable is a bug.
  */
-export function Sheet({ head, children }: { head?: ReactNode; children: ReactNode }) {
+export function Sheet({
+  label,
+  head,
+  children,
+}: {
+  label: string;
+  head?: ReactNode;
+  children: ReactNode;
+}) {
   return (
     <div className="pointer-events-auto absolute inset-x-0 bottom-0 z-30 flex justify-center px-4 pb-5 pt-4">
       <div
         role="dialog"
-        aria-label="A decision"
+        aria-label={label}
         className="animate-slide-up relative flex max-h-[min(72vh,34rem)] w-[min(38rem,100%)] flex-col overflow-hidden rounded-2xl border border-line/70 bg-gradient-to-b from-surface/95 to-surface-2/90 shadow-[0_28px_60px_-24px_rgb(0_0_0/0.9)] ring-1 ring-inset ring-white/[0.07] backdrop-blur-md"
       >
         {head && <div className="shrink-0 border-b border-line/50 px-6 pb-4 pt-6">{head}</div>}

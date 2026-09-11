@@ -50,6 +50,16 @@ export interface Answer {
 export interface TranscriptEntry {
   unitId: string;
   answer: string;
+  /**
+   * The question, carried with the answer instead of looked up.
+   *
+   * Only generated follow-ups need this. An authored question resolves its
+   * prompt from the content by unit id, which is smaller and survives a reword;
+   * a generated one was written for this player on this run and exists nowhere
+   * else, so if the record does not carry it the history can only show the
+   * answer to a question nobody can see.
+   */
+  prompt?: string;
 }
 
 /** The longest answer kept for the history view. */
@@ -106,6 +116,12 @@ export interface JourneyBlob {
    * a missing value as an empty run rather than as a broken save.
    */
   history?: StageRecord[];
+  /**
+   * Generated follow-ups answered in the stage still in progress, folded into
+   * that stage's record when it closes. Saved rather than held in memory
+   * because a player who reloads mid-level has still answered them.
+   */
+  beats?: TranscriptEntry[];
 }
 
 export interface Journey {
@@ -121,6 +137,7 @@ export interface Journey {
   revenue: number;
   unsent: UnsentStage[];
   history: StageRecord[];
+  beats: TranscriptEntry[];
 }
 
 // ── Validation ────────────────────────────────────────────────────────────────
@@ -147,7 +164,11 @@ function isAnswer(v: unknown): v is Answer {
 function isTranscriptEntry(v: unknown): v is TranscriptEntry {
   if (typeof v !== "object" || v === null) return false;
   const e = v as Record<string, unknown>;
-  return typeof e.unitId === "string" && typeof e.answer === "string";
+  return (
+    typeof e.unitId === "string" &&
+    typeof e.answer === "string" &&
+    (e.prompt === undefined || typeof e.prompt === "string")
+  );
 }
 
 function isStageRecord(v: unknown): v is StageRecord {
@@ -208,6 +229,7 @@ function toBlob(j: Journey): JourneyBlob {
     revenue: j.revenue,
     unsent: j.unsent,
     history: j.history,
+    beats: j.beats,
   };
 }
 
@@ -245,6 +267,7 @@ function fromBlob(raw: unknown): Journey | null {
     // run is the right reading of that: the phases were played, and there is no
     // record of them, which is exactly what the view should show.
     history: Array.isArray(b.history) ? (b.history as unknown[]).filter(isStageRecord) : [],
+    beats: Array.isArray(b.beats) ? (b.beats as unknown[]).filter(isTranscriptEntry) : [],
   };
 }
 
@@ -273,6 +296,7 @@ export function recordStage(
           e.answer.length > MAX_TRANSCRIPT_ANSWER
             ? e.answer.slice(0, MAX_TRANSCRIPT_ANSWER).trimEnd() + "…"
             : e.answer,
+        ...(e.prompt ? { prompt: e.prompt } : {}),
       })),
   };
 }
@@ -320,5 +344,6 @@ export function freshJourney(): Journey {
     revenue: 0,
     unsent: [],
     history: [],
+    beats: [],
   };
 }

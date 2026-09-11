@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { advance, answerScene, resetJourney, useJourneyStore } from "./journeyStore";
+import { advance, choose, resetJourney, useJourneyStore } from "./journeyStore";
 
 // Everything about these tests is the state machine, not the network, so the
 // client is stubbed and each test decides what the server said.
@@ -56,12 +56,12 @@ describe("a scenario scene's generated questions", () => {
   it("is fetched as the authored decision is answered, not when it is shown", async () => {
     vi.mocked(api.journeyFollowup).mockResolvedValue(question("f1", "And the next one?"));
 
-    await answerScene("I would ask her what she actually wanted, and write it down.");
+    await choose("a");
 
     expect(api.journeyFollowup).toHaveBeenCalledTimes(1);
     expect(vi.mocked(api.journeyFollowup).mock.calls[0][1]).toMatchObject({
       unitId: "cafe.l1.s1",
-      choice: "open",
+      choice: "a",
     });
     // It is held, not shown: the consequence still owns the screen. For an open
     // scene that is the one authored fallback line, not a per-letter one.
@@ -75,7 +75,7 @@ describe("a scenario scene's generated questions", () => {
     vi.mocked(api.journeyFollowup).mockResolvedValue(question("f1", "And the next one?"));
     const startIndex = useJourneyStore.getState().index;
 
-    await answerScene("I would ask her what she actually wanted, and write it down.");
+    await choose("a");
     advance();
 
     expect(useJourneyStore.getState().index).toBe(startIndex);
@@ -96,7 +96,7 @@ describe("a scenario scene's generated questions", () => {
     }
     const startIndex = useJourneyStore.getState().index;
 
-    await answerScene("I would ask her what she actually wanted, and write it down.");
+    await choose("a");
     expect(useJourneyStore.getState().sceneBeat).toBeNull();
 
     advance();
@@ -114,7 +114,7 @@ describe("a scenario scene's generated questions", () => {
       world: {},
     });
 
-    await answerScene("I would ask her what she actually wanted, and write it down.");
+    await choose("a");
     advance();
 
     const { answerSceneBeat } = await import("./journeyStore");
@@ -135,7 +135,7 @@ describe("a scenario scene's generated questions", () => {
     vi.mocked(api.journeyFollowup).mockResolvedValue(question("f1", "Which way?"));
     vi.mocked(api.commitFollowup).mockResolvedValue({ consequence: "It lands.", world: {} });
 
-    await answerScene("I would ask her what she actually wanted, and write it down.");
+    await choose("a");
     advance();
     const { answerSceneBeat } = await import("./journeyStore");
     const pending = answerSceneBeat("o_1");
@@ -153,7 +153,7 @@ describe("a scenario scene's generated questions", () => {
       .mockResolvedValue({ done: true });
     vi.mocked(api.commitFollowup).mockRejectedValue(new Error("offline"));
 
-    await answerScene("I would ask her what she actually wanted, and write it down.");
+    await choose("a");
     advance();
     const { answerSceneBeat } = await import("./journeyStore");
     await answerSceneBeat("o_1");
@@ -174,7 +174,7 @@ describe("a scenario scene's generated questions", () => {
       .mockResolvedValueOnce(openQuestion("f1", "What did you write down?"))
       .mockResolvedValueOnce(openQuestion("f2", "And who reads that board?"));
 
-    await answerScene("I would ask her what she actually wanted, and write it down.");
+    await choose("a");
     advance();
 
     const { answerSceneBeatText } = await import("./journeyStore");
@@ -198,7 +198,7 @@ describe("a scenario scene's generated questions", () => {
       .mockResolvedValue({ done: true });
     const startIndex = useJourneyStore.getState().index;
 
-    await answerScene("I would ask her what she actually wanted, and write it down.");
+    await choose("a");
     advance();
     const { answerSceneBeatText } = await import("./journeyStore");
     await answerSceneBeatText("The drink and the date.");
@@ -215,7 +215,7 @@ describe("a scenario scene's generated questions", () => {
       openQuestion("f1", "What did you write down?"),
     );
 
-    await answerScene("I would ask her what she actually wanted, and write it down.");
+    await choose("a");
     advance();
     const { answerSceneBeatText } = await import("./journeyStore");
     await answerSceneBeatText("   ");
@@ -235,7 +235,7 @@ describe("a scenario scene's generated questions", () => {
     vi.mocked(api.aiConsequence).mockReturnValue(late as never);
     vi.mocked(api.journeyFollowup).mockResolvedValue({ done: true });
 
-    const pending = answerScene("I would ask her what she actually wanted, and write it down.");
+    const pending = choose("a");
     // The player reads the authored line and walks on before the server answers.
     advance();
     const movedTo = useJourneyStore.getState().index;
@@ -253,7 +253,7 @@ describe("a scenario scene's generated questions", () => {
       .mockResolvedValueOnce(question("f1", "Waiting."))
       .mockResolvedValue({ done: true });
 
-    await answerScene("I would ask her what she actually wanted, and write it down.");
+    await choose("a");
     advance(); // shows the question
     expect(useJourneyStore.getState().sceneBeat).not.toBeNull();
 

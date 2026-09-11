@@ -15,11 +15,14 @@
 // One rule that still binds here: **thin evidence must not be narrated as a
 // pattern.** Three of the nine competencies rest on a single decision, and "you
 // had one call to make on this and you made it well" is the honest register.
+import { useState } from "react";
 import { Modal } from "@/ui/Modal";
+import { Evaluation } from "@/ui/Evaluation";
 import { ROLE_LABEL, STAGES } from "./journey";
 import { useJourneyStore } from "./journeyStore";
 
 export function Report({ onClose }: { onClose: () => void }) {
+  const [showAssessment, setShowAssessment] = useState(false);
   const role = useJourneyStore((s) => s.role);
   const revenue = useJourneyStore((s) => s.revenue);
   const decided = useJourneyStore((s) => s.decided);
@@ -28,6 +31,28 @@ export function Report({ onClose }: { onClose: () => void }) {
   const outcome = useJourneyStore((s) => s.outcome);
 
   const banked = outcome?.stageId === "cafe.exit" ? outcome.coinsBanked : 0;
+
+  if (showAssessment) {
+    return (
+      <div className="pointer-events-auto">
+        <Modal onClose={onClose} width="lg">
+          <h2 className="font-display text-xl font-semibold text-gold">Your assessment</h2>
+          <p className="mt-2 text-xs leading-relaxed text-muted">
+            Read back from what you actually decided, across every business you have worked in.
+          </p>
+          <div className="mt-6">
+            <Evaluation />
+          </div>
+          <button
+            onClick={() => setShowAssessment(false)}
+            className="mt-8 rounded-lg border border-line/70 px-5 py-2 text-sm font-medium text-muted transition hover:border-gold/40 hover:text-text"
+          >
+            Back to the year
+          </button>
+        </Modal>
+      </div>
+    );
+  }
 
   return (
     <div className="pointer-events-auto">
@@ -73,15 +98,28 @@ export function Report({ onClose }: { onClose: () => void }) {
         </ol>
 
         {/*
-          The honest gap. A learner reading this deserves to know that the part
-          they most want — where they were strong, and how much they moved — is
-          not being withheld, it is not built.
+          The gap this file used to record — "scored but not yet shown, it needs
+          an endpoint that hands a learner their own results back, and that does
+          not exist" — is closed. GET /api/v1/report exists, and this is the
+          door to it.
+
+          It is a door and not the report itself on purpose. What is above is
+          the year: how far you got, what you decided, what the business did.
+          What is behind the button is the assessment: what came out
+          consistently, what is still emerging, and how far you moved from your
+          first attempt. Two different questions, and putting the second one
+          inline would bury the first.
         */}
-        <p className="mt-6 rounded-xl border border-line/70 bg-surface-2/50 p-4 text-xs leading-relaxed text-muted">
-          Your competency read-out — what came out consistently, what is still emerging, and how far
-          you moved from your first attempt — is scored but not yet shown. It needs an endpoint that
-          hands a learner their own results back, and that does not exist.
-        </p>
+        <button
+          onClick={() => setShowAssessment(true)}
+          className="mt-6 w-full rounded-xl border border-line/70 bg-surface-2/50 p-4 text-left transition hover:border-gold/50 hover:bg-surface-2"
+        >
+          <span className="block text-sm font-medium text-text">See your full assessment</span>
+          <span className="mt-1 block text-xs leading-relaxed text-muted">
+            Your natural strengths and emerging skills, where you started and how far you moved, and
+            which business you earned the most in.
+          </span>
+        </button>
 
         {unsent.length > 0 && (
           <p className="mt-3 text-xs text-muted">

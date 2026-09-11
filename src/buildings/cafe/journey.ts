@@ -139,9 +139,16 @@ const L1_SCENES: readonly Scene[] = [
       "Mid-morning. The queue is four deep and Nadia is at the front, already reaching for her card.",
     prompt: "You still don't do oat, do you?",
     speaker: "nadia",
-    open: true,
-    fallbackConsequence:
-      "You finish the drink and hand it across. Later that morning the manager reads the board on the way past the fridge.",
+    choices: {
+      a: "You apologize, offer the closest substitute you have (soy or almond), and let them know you'll pass along that they asked. You jot a note on the back-of-house whiteboard so the manager sees it at shift change.",
+      b: "You apologize and quickly suggest soy milk instead so the line keeps moving. The customer accepts, gets their drink, and you move to the next order.",
+      c: "You apologize, offer a substitute for today, and also ask a follow-up question — “Is oat milk something you'd want every visit, or just curious today?” Based on the answer, you log the request with context (how often they'd buy, any dietary reason mentioned) in the shared suggestions log, and mention to your manager that this is the third oat-milk ask this week, not just one customer's preference.",
+    },
+    consequences: {
+      a: "You write it up between orders. At handover Priya reads the board, adds a tally mark under it, and says nothing.",
+      b: "She takes the soy without comment and is gone in ninety seconds. The queue moves. By the afternoon you have forgotten she asked.",
+      c: "She says every visit — she has been buying it at the place by the station on the way in. Priya's eyebrows go up when you tell her.",
+    },
   },
   {
     unitId: "cafe.l1.s2",
@@ -150,9 +157,16 @@ const L1_SCENES: readonly Scene[] = [
     stage: "A flat white goes out to a table that ordered a cortado. It comes back fast.",
     prompt: "This isn't what I asked for. I've been sitting there ten minutes.",
     speaker: "room",
-    open: true,
-    fallbackConsequence:
-      "The remake goes out. The customer carries it to the window table and stays another twenty minutes.",
+    choices: {
+      a: "You apologize once, quickly remake the correct item, and hand it over without further comment so the line keeps moving and the customer isn't kept waiting any longer.",
+      b: "You apologize sincerely, remake the order right away, and offer a small goodwill gesture (a free cookie or discount on their next visit). You check that they're satisfied before they leave.",
+      c: "You apologize sincerely and remake the order immediately, same as above — but you also glance at the ticket to see where the mix-up happened (mislabeled cup? two similar names called back-to-back?), mention it to a teammate calmly and non-accusingly, and flag it to your manager as a pattern to watch rather than a one-off mistake. You check in with the customer, and if they're a regular, you make a mental note to greet them warmly next visit to rebuild trust.",
+    },
+    consequences: {
+      a: "They take the cortado and sit back down. Nothing more is said about it, then or later.",
+      b: "They leave warmer than they arrived and wave on the way out. Priya notices the comp on the till and asks nothing about it.",
+      c: "The ticket shows two names called within a few seconds of each other. You mention it to Tomas, who nods slowly and looks at the rail.",
+    },
   },
   {
     unitId: "cafe.l1.s3",
@@ -162,9 +176,16 @@ const L1_SCENES: readonly Scene[] = [
       "The till is open and half counted. The door goes, and someone comes in out of the cold looking hopeful.",
     prompt: "Is there any chance of a sandwich? I've come straight off a shift.",
     speaker: "room",
-    open: true,
-    fallbackConsequence:
-      "The register is counted nine minutes later than usual. Tomas is still wiping down when you leave.",
+    choices: {
+      a: "You explain kindly that the kitchen and register are already closing down, but you check with your shift lead whether one quick sandwich is still doable without throwing off the close. If yes, you make it fast; if not, you point them to another place nearby that's still open and apologize for the timing.",
+      b: "You firmly but politely explain that you're closed and the till is already being counted, so you're not able to serve them tonight — rules keep the closing process fair and consistent for everyone.",
+      c: "You check with your shift lead the same way as a quick, fair call — and beyond just resolving tonight, you mention to your manager afterward that a few people have shown up right at close asking for food, and suggest it might be worth stocking a couple of grab-and-go items that don't need the full kitchen open, so late arrivals can still be helped without disrupting the close process.",
+    },
+    consequences: {
+      a: "Tomas shrugs and says go on then. They eat it standing up and thank you twice on the way out.",
+      b: "They take it well and go back out into the cold. The close runs exactly to time, the way it always does.",
+      c: "Tomas makes the sandwich. The next morning Priya asks you how often this has been happening, and writes the answer down.",
+    },
   },
   {
     unitId: "cafe.l1.s4",
@@ -174,9 +195,16 @@ const L1_SCENES: readonly Scene[] = [
       "Marcus has been in his usual chair for an hour. On the way out he stops at the counter.",
     prompt: "It's always a wait to get to you lot. Every time.",
     speaker: "marcus",
-    open: true,
-    fallbackConsequence:
-      "The line clears by ten. The next morning it forms again at the same time, in the same place.",
+    choices: {
+      a: "You apologize for the wait, tell them you appreciate the patience, and get back to taking orders as quickly as you can to help the line move.",
+      b: "You apologize, and later mention to your manager that customers have been complaining about the line, especially in the mornings — you suggest opening a second register during the rush based on what you've noticed.",
+      c: "You apologize, and afterward start actually tracking it for a few days — roughly how long the line gets and at what times, and whether it's the ordering step or the pickup step that backs up. You bring your manager the pattern (e.g., “mornings 8–9am, the bottleneck is order-taking, not the kitchen”) with a specific proposal — like a second register or splitting simple/complex orders — and suggest measuring wait times for two weeks after the change to see if it actually worked.",
+    },
+    consequences: {
+      a: "He nods and goes. The queue clears by half ten, the way it does most days, and nobody mentions it again.",
+      b: "Priya says she has wondered the same thing. She asks when exactly, and you realise you are guessing.",
+      c: "Four mornings of scribbles say eight to nine, and it is order-taking, not the kitchen. Priya reads it twice.",
+    },
   },
 ];
 
@@ -191,9 +219,16 @@ const L2_SCENES: readonly Scene[] = [
       "Fifth morning running, the opener comes through the door with the queue already outside it.",
     prompt: "Sorry — sorry. Buses.",
     speaker: "room",
-    open: true,
-    fallbackConsequence:
-      "She opens on time on Thursday. On Friday the bus is late again, and this time she texts ahead.",
+    choices: {
+      a: "You ask the employee to step aside for a quick private word and ask what's been making mornings hard for them lately, listening before responding. Together you agree on one clear expectation going forward, and you let them know you'll check back in a week to see how it's going.",
+      b: "You ask the employee to step aside and ask what's been making mornings hard, listening before responding, while also noting that a couple of other openers have been trickling in late lately too. You agree on a plan with this employee, and separately look at whether the opening shift itself needs adjusting.",
+      c: "You pull the employee aside before their shift and let them know the lateness has been noticed, reminding them that punctuality matters for the team and for customers waiting at open. You make a mental note in case it keeps happening and head back to prepping for the day ahead.",
+    },
+    consequences: {
+      a: "It turns out to be a school run that moved. You shift their start by fifteen minutes and the lateness stops that week.",
+      b: "The school run explains theirs. The rota explains the other two — the opening shift starts fifteen minutes before the first bus arrives.",
+      c: "They are on time the next day, and the day after. They also stop asking you things they used to ask you.",
+    },
   },
   {
     unitId: "cafe.l2.s2",
@@ -204,9 +239,16 @@ const L2_SCENES: readonly Scene[] = [
       "Twelve forty. The chef and one of the counter staff are going at it over the pass, in front of everybody.",
     prompt: "Tell him. Tell him what he just did.",
     speaker: "tomas",
-    open: true,
-    fallbackConsequence:
-      "The rush ends. Both of them work the rest of the shift, and the pass stays quiet until close.",
+    choices: {
+      a: "You step in while it's happening, tell both of them to knock it off and get back to work since customers are waiting, and figure it's just a rough day between two people who don't always get along. You check the rest of the shift ran fine and move on to the next task.",
+      b: "Once the rush dies down, you pull each of them aside separately to hear their side of it without interrupting, then bring them together so they can agree on how to handle the next busy stretch. You let them both know you're available if anything like it comes up again.",
+      c: "Once the rush dies down, you hear each of them out separately, then bring them together to agree on how they'll handle the next busy stretch. You also use the moment to set one simple, shared ground rule for how disagreements get handled mid-shift, so the next one doesn't need you in the middle.",
+    },
+    consequences: {
+      a: "The rush finishes. Neither of them says anything else about it, to you or to each other, for the rest of the week.",
+      b: "Each of them had half the story. They shake on how to handle the next one, and the next one goes fine.",
+      c: "They agree the rule between themselves — flag it, park it, finish the rush. Three weeks later they use it without telling you.",
+    },
   },
   {
     unitId: "cafe.l2.s3",
@@ -216,9 +258,16 @@ const L2_SCENES: readonly Scene[] = [
       "A customer arrives furious about something that happened somewhere else, and leaves twenty minutes later laughing.",
     prompt: "(You watched the whole thing from the pass.)",
     speaker: "room",
-    open: true,
-    fallbackConsequence:
-      "The shift ends. On Saturday the same customer comes back and asks for her by name at the counter.",
+    choices: {
+      a: "You notice the great service in the moment, tell the employee it was great with that customer as you pass by, and keep moving since it's a busy shift and there's still a line at the counter.",
+      b: "You pull the employee aside briefly to name specifically what they did well and why it mattered to the customer, and you mention it at the shift handover so the next manager sees it too. It goes into the shift log as a positive note on their record.",
+      c: "You name specifically what the employee did well and why it mattered to the customer, and mention it at the handover so it's visible. You also start thinking about a simple way to recognize moments like this going forward, so it's something the whole team can work toward.",
+    },
+    consequences: {
+      a: "They smile and carry on. By the end of the shift you are not sure they registered which customer you meant.",
+      b: "They go slightly pink and say it was nothing. It is in the log at handover, and the evening manager mentions it too.",
+      c: "The log entry lands. So does the question you leave with Priya about how anyone else's good weeks get seen.",
+    },
   },
   {
     unitId: "cafe.l2.s4",
@@ -227,9 +276,16 @@ const L2_SCENES: readonly Scene[] = [
     stage: "Six weeks of the busiest trading in the year, and the team has gone quiet about it.",
     prompt: "We doing the same as last year, then.",
     speaker: "tomas",
-    open: true,
-    fallbackConsequence:
-      "The schedule goes up on Sunday. By Tuesday two people have swapped a shift between themselves without asking you.",
+    choices: {
+      a: "You gather the team for a quick pep talk, remind everyone it's only for a few weeks, and tell them you know they can push through it like every year has gone before, same as always. You handle any complaints about the schedule as they come up during the busy stretch itself.",
+      b: "You sit down with the team and ask what specifically feels heaviest about the next few weeks, then adjust breaks and bring in some extra weekend coverage based on what people tell you. You check back in partway through the season to see whether it's actually helping.",
+      c: "You ask the team what specifically feels heaviest about the next few weeks, and also map out the season's schedule now instead of week to week, lining up extra coverage before the busiest stretch hits. You think ahead to how the team feels coming out of it, not just getting through it.",
+    },
+    consequences: {
+      a: "They say the right things and go back to work. Two of them book leave in the first week of January.",
+      b: "It is the back-to-back weekends, not the hours. You split them differently and the mood lifts by the second week.",
+      c: "The whole season goes up on the wall in one go. People start swapping shifts with each other instead of with you.",
+    },
   },
 ];
 
@@ -333,13 +389,12 @@ export const STAGES: readonly Stage[] = [
       {
         unitId: "cafe.interview.q4",
         competency: "C8",
-        prompt: "What are your strengths, and one area you want to grow?",
+        prompt: "Strengths and one area to grow?",
       },
       {
         unitId: "cafe.interview.q5",
         competency: "C6",
-        prompt:
-          "A colleague on your shift gets an order wrong in front of a customer. How do you respond?",
+        prompt: "Professional Responses.",
       },
     ],
   },
@@ -426,12 +481,12 @@ export const STAGES: readonly Stage[] = [
       {
         unitId: "cafe.review2.q2",
         competency: "C6",
-        prompt: "Why do you want to be promoted to CEO?",
+        prompt: "Why do you want to be promoted?",
       },
       {
         unitId: "cafe.review2.q3",
         competency: "C2",
-        prompt: "What is the one thing you want to work on as CEO?",
+        prompt: "What is the one thing you want to work on?",
       },
     ],
   },

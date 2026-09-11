@@ -122,7 +122,11 @@ export function historyPhases(records: readonly StageRecord[]): HistoryPhase[] {
 
     const questions: HistoryQuestion[] = [];
     for (const entry of rec.entries) {
-      const found = promptFor(stage, entry.unitId);
+      // A generated follow-up carries its own prompt, because there is nothing
+      // to look it up in — it was written for this player and this run.
+      const found = entry.prompt
+        ? { title: "Follow-up", prompt: entry.prompt }
+        : promptFor(stage, entry.unitId);
       if (!found) continue;
       questions.push({ unitId: entry.unitId, ...found, answer: entry.answer });
     }

@@ -89,3 +89,37 @@ describe("what a finished phase remembers", () => {
     expect(historyPhases([])).toEqual([]);
   });
 });
+
+describe("the generated questions, in the record", () => {
+  // The client asked to see "all the questions the user have been asked and
+  // what they responded". The authored half was already there; a generated
+  // follow-up exists nowhere but the screen it was shown on, so it has to
+  // carry its own prompt or the history shows an answer to nothing.
+  it("shows a follow-up's own prompt beside the answer given to it", () => {
+    const rec = recordStage(l1.id, 1, [
+      { unitId: l1.scenes![0].unitId, answer: "The option I took." },
+      {
+        unitId: l1.scenes![0].unitId,
+        prompt: "What did you write on the board, exactly?",
+        answer: "The drink and the date, so a pattern would show.",
+      },
+    ]);
+    const [phase] = historyPhases([rec]);
+
+    expect(phase.questions).toHaveLength(2);
+    const followUp = phase.questions[1];
+    expect(followUp.prompt).toBe("What did you write on the board, exactly?");
+    expect(followUp.answer).toBe("The drink and the date, so a pattern would show.");
+    // Labelled, so it reads as the follow-up it was rather than as a second
+    // authored question the content does not have.
+    expect(followUp.title).toBe("Follow-up");
+  });
+
+  it("truncates a long follow-up answer like any other", () => {
+    const rec = recordStage(l1.id, 1, [
+      { unitId: "cafe.l1.s1", prompt: "Why?", answer: "y".repeat(MAX_TRANSCRIPT_ANSWER + 200) },
+    ]);
+    expect(rec.entries[0].answer.length).toBeLessThanOrEqual(MAX_TRANSCRIPT_ANSWER + 1);
+    expect(rec.entries[0].prompt).toBe("Why?");
+  });
+});
