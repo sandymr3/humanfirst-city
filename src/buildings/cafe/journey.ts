@@ -47,8 +47,14 @@ export interface Scene {
   /** Further competencies this scene is evidence for, if it tests more than one. */
   also?: readonly string[];
   title: string;
-  /** The room before anybody speaks. */
-  stage: string;
+  /**
+   * The room before anybody speaks, where the content has one.
+   *
+   * Optional since the scenarios became the workbook's: it states a case in a
+   * single line and writes nothing around it, so inventing a paragraph to sit
+   * above that line is exactly the dramatisation that was asked to stop.
+   */
+  stage?: string;
   /** The line that opens it. */
   prompt: string;
   /** Cast id, or "room" when the register is narration. */
@@ -135,9 +141,7 @@ const L1_SCENES: readonly Scene[] = [
     unitId: "cafe.l1.s1",
     competency: "C1",
     title: "Customer Scene 1 — Customer Needs",
-    stage:
-      "Mid-morning. The queue is four deep and Nadia is at the front, already reaching for her card.",
-    prompt: "You still don't do oat, do you?",
+    prompt: "A regular customer asks if you carry oat milk. You don't.",
     speaker: "nadia",
     choices: {
       a: "You apologize, offer the closest substitute you have (soy or almond), and let them know you'll pass along that they asked. You jot a note on the back-of-house whiteboard so the manager sees it at shift change.",
@@ -154,8 +158,7 @@ const L1_SCENES: readonly Scene[] = [
     unitId: "cafe.l1.s2",
     competency: "C7",
     title: "Customer Scene 2 — Difficult Customer",
-    stage: "A flat white goes out to a table that ordered a cortado. It comes back fast.",
-    prompt: "This isn't what I asked for. I've been sitting there ten minutes.",
+    prompt: "A customer is upset — they were given the wrong order.",
     speaker: "room",
     choices: {
       a: "You apologize once, quickly remake the correct item, and hand it over without further comment so the line keeps moving and the customer isn't kept waiting any longer.",
@@ -172,9 +175,8 @@ const L1_SCENES: readonly Scene[] = [
     unitId: "cafe.l1.s3",
     competency: "C7",
     title: "Customer Scene 3 — Empathy",
-    stage:
-      "The till is open and half counted. The door goes, and someone comes in out of the cold looking hopeful.",
-    prompt: "Is there any chance of a sandwich? I've come straight off a shift.",
+    prompt:
+      "Five minutes after closing, someone walks in hungry and asks if they can still get a sandwich.",
     speaker: "room",
     choices: {
       a: "You explain kindly that the kitchen and register are already closing down, but you check with your shift lead whether one quick sandwich is still doable without throwing off the close. If yes, you make it fast; if not, you point them to another place nearby that's still open and apologize for the timing.",
@@ -191,9 +193,7 @@ const L1_SCENES: readonly Scene[] = [
     unitId: "cafe.l1.s4",
     competency: "C1",
     title: "Customer Scene 4 — Process Improvement",
-    stage:
-      "Marcus has been in his usual chair for an hour. On the way out he stops at the counter.",
-    prompt: "It's always a wait to get to you lot. Every time.",
+    prompt: "A customer complains there's always a long wait to reach the counter.",
     speaker: "marcus",
     choices: {
       a: "You apologize for the wait, tell them you appreciate the patience, and get back to taking orders as quickly as you can to help the line move.",
@@ -215,9 +215,7 @@ const L2_SCENES: readonly Scene[] = [
     unitId: "cafe.l2.s1",
     competency: "C7",
     title: "Team Scene 1 — Attendance",
-    stage:
-      "Fifth morning running, the opener comes through the door with the queue already outside it.",
-    prompt: "Sorry — sorry. Buses.",
+    prompt: "Employee keeps clocking late every day.",
     speaker: "room",
     choices: {
       a: "You ask the employee to step aside for a quick private word and ask what's been making mornings hard for them lately, listening before responding. Together you agree on one clear expectation going forward, and you let them know you'll check back in a week to see how it's going.",
@@ -235,9 +233,7 @@ const L2_SCENES: readonly Scene[] = [
     competency: "C7",
     also: ["C5"],
     title: "Team Scene 2 — Conflict Between Team Members",
-    stage:
-      "Twelve forty. The chef and one of the counter staff are going at it over the pass, in front of everybody.",
-    prompt: "Tell him. Tell him what he just did.",
+    prompt: "Conflict between chef and employee.",
     speaker: "tomas",
     choices: {
       a: "You step in while it's happening, tell both of them to knock it off and get back to work since customers are waiting, and figure it's just a rough day between two people who don't always get along. You check the rest of the shift ran fine and move on to the next task.",
@@ -254,9 +250,7 @@ const L2_SCENES: readonly Scene[] = [
     unitId: "cafe.l2.s3",
     competency: "C7",
     title: "Team Scene 3 — Recognizing Good Work",
-    stage:
-      "A customer arrives furious about something that happened somewhere else, and leaves twenty minutes later laughing.",
-    prompt: "(You watched the whole thing from the pass.)",
+    prompt: "You notice great customer service by an employee.",
     speaker: "room",
     choices: {
       a: "You notice the great service in the moment, tell the employee it was great with that customer as you pass by, and keep moving since it's a busy shift and there's still a line at the counter.",
@@ -273,8 +267,7 @@ const L2_SCENES: readonly Scene[] = [
     unitId: "cafe.l2.s4",
     competency: "C5",
     title: "Team Scene 4 — Holiday Workload",
-    stage: "Six weeks of the busiest trading in the year, and the team has gone quiet about it.",
-    prompt: "We doing the same as last year, then.",
+    prompt: "Process improvement — team demotivated about holiday workload.",
     speaker: "tomas",
     choices: {
       a: "You gather the team for a quick pep talk, remind everyone it's only for a few weeks, and tell them you know they can push through it like every year has gone before, same as always. You handle any complaints about the schedule as they come up during the busy stretch itself.",
@@ -322,8 +315,8 @@ const SUCCESSION_SCENES: readonly Scene[] = [
   {
     unitId: "cafe.succession.q1",
     competency: "C8",
-    title: "Succession Interview 1 — Growing the Business",
     stage: "You ask all three the same two questions. This is the first.",
+    title: "Succession Interview 1 — Growing the Business",
     prompt: "How would you make this place more money than I did?",
     speaker: "room",
     choices: {
@@ -341,8 +334,8 @@ const SUCCESSION_SCENES: readonly Scene[] = [
   {
     unitId: "cafe.succession.q2",
     competency: "C2",
-    title: "Succession Interview 2 — Receiving Feedback",
     stage: "The second question, and the one you actually care about.",
+    title: "Succession Interview 2 — Receiving Feedback",
     prompt: "Someone tells you you're getting it wrong. Then what?",
     speaker: "room",
     choices: {

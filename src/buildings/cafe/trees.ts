@@ -202,27 +202,26 @@ const HARD_TREES: Readonly<Record<string, Tree>> = {
   // and every consequence are authored against it.
   "C2-SCA-01": {
     activityId: "C2-SCA-01",
-    stage:
-      "Two weeks in. Priya has the numbers on the back of a docket and has clearly been waiting for you to ask. The iced drink went up on the board in your handwriting and it has been doing four a day since.",
-    prompt: "So. Are we talking about the iced thing, or are we leaving it up there?",
+    stage: "",
+    prompt: "The new iced drink you were sure would be a hit is barely selling, two weeks in.",
     seed: [
       {
         id: "a",
-        text: "Ask the people who walked past it why they didn't order it, and then change the recipe on whatever they actually tell you.",
+        text: "Ask a few people who skipped the drink why they passed, then adjust the recipe.",
         consequence:
           "You ask eleven people over two days. Nine of them say the same word, which is sweet, and two say they did not know what was in it. Priya changes the syrup that afternoon.",
         world: { chalkboard: "iced" },
       },
       {
         id: "b",
-        text: "Keep pushing it. A drink this good takes a month to find its people, and pulling it early kills things that would have worked.",
+        text: "Keep promoting it harder — good drinks take time to catch on.",
         consequence:
           "You leave it up. Four a day becomes four a day becomes four a day, through a hot two weeks when everything else on the board moved.",
         world: { chalkboard: "iced" },
       },
       {
         id: "c",
-        text: "Change exactly one thing — the price or the name, not both — for a week, and let the difference in the numbers decide it.",
+        text: "Test one change — the price or the name — for a week, and let the numbers make the call.",
         consequence:
           "You pick the name and give it a week. It goes from four a day to seven, which is not nothing, and you have a docket with two numbers on it that mean something.",
         world: { chalkboard: "iced_renamed" },
@@ -315,27 +314,27 @@ const HARD_TREES: Readonly<Record<string, Tree>> = {
 
   "C3-SCA-01": {
     activityId: "C3-SCA-01",
-    stage:
-      "The hottest day of the year. Ray's truck is at the kerb before he is at the door, and the smell of it is in the room before he is. He needs an answer tomorrow, he says, because the market wants the same pitch.",
-    prompt: "Your crowd, my fries, Saturday. Tell me what's wrong with that.",
+    stage: "",
+    prompt:
+      "A food truck operator asks to park outside your café on weekends starting this Saturday. It could bring foot traffic your way, or it could pull your lunch crowd instead. They need your answer by tomorrow, and you don't have real data on how it'll actually play out.",
     seed: [
       {
         id: "a",
-        text: "Yes, but structured: you sell the drinks, he sells the food, and you split a combo so both sides have a reason to send people across.",
+        text: "You decline the request — it's too risky to commit to without knowing how it'll affect your own sales, and there isn't really time to work out proper terms before tomorrow anyway, so you tell them you'll pass on it for now.",
         consequence:
           "You shake on it at the counter and Priya chalks the combo under the menu. Saturday is louder than this room has been since you took it on.",
         world: { truck: "parked", chalkboard: "combo" },
       },
       {
         id: "b",
-        text: "Say no. You'd be handing your Saturday lunch trade to a man with a fryer, and you can't model what that costs until it's already gone.",
+        text: "You say yes on the spot, but instead of just handing over the space, you propose your own structure — you sell drinks and desserts, they sell food, and you split a combo deal built around terms you set, not the ones they walked in with.",
         consequence:
           "Ray takes it well, which is worse. Two Saturdays later the truck is on the opposite kerb, outside the shuttered unit, with a queue down the pavement.",
         world: { truck: "gone_rival" },
       },
       {
         id: "c",
-        text: "Yes to a month, with a date in the diary to look at the numbers together and a clean way out if it isn't working.",
+        text: "You ask the truck operator two quick questions — what they'd pay you for the spot, and whether it's exclusive to weekends — then agree to a one-month trial with simple terms and a set check-in date, so you can walk away cleanly if it doesn't work out.",
         consequence:
           "You write the date on the back of the docket and he writes it on his hand. The first Saturday does two hundred covers between you and neither of you knows yet whose they were.",
         world: { truck: "parked" },
@@ -428,27 +427,27 @@ const HARD_TREES: Readonly<Record<string, Tree>> = {
 
   "C4-SCA-01": {
     activityId: "C4-SCA-01",
-    stage:
-      "22:30. Chairs up, machine cooling and ticking as it goes. One pendant on over the counter. The month's takings are stacked in front of you — the best four weeks since you took the place on. It is also August, and you have run this room long enough to know what September looks like.",
-    prompt: "The takings are still on the counter. It is twenty to eleven.",
+    stage: "",
+    prompt:
+      "You had a strong month, but it looks seasonal, and a slower stretch is coming. You have surplus cash and several ways to use it.",
     seed: [
       {
         id: "a",
-        text: "Replace the machine. It's the oldest thing in the room, it's what everything runs through, and a good month is exactly when you fix it.",
+        text: "Buy the upgraded espresso machine — you earned it, and it'll impress people.",
         consequence:
           "The new one lands on the counter in week three of September and it is beautiful. The payment lands on the third of every month after that.",
         world: { machine: "upgraded", till: "strained" },
       },
       {
         id: "b",
-        text: "Put most of it aside as a cushion and spend a little on the one thing customers have actually asked for out loud.",
+        text: "Set aside enough to cover the projected slow season, then put the rest into the highest-return option.",
         consequence:
           "You put a number on the back of a receipt and move it somewhere you cannot get at easily. What is left buys the loyalty cards Priya has been asking about for a year.",
         world: { till: "healthy", staff: "trusting" },
       },
       {
         id: "c",
-        text: "Back the single spend most likely to bring the same people through that door again next week, and leave the rest exactly where it is.",
+        text: "Treat the spike as seasonal. Protect your cash first, and invest only money that could survive a slow off-season.",
         consequence:
           "You spend it on the thing that makes people come back rather than the thing that makes them notice, which is less satisfying and takes about a month to show up.",
         world: { till: "healthy" },
@@ -994,28 +993,27 @@ const HARD_TREES: Readonly<Record<string, Tree>> = {
 
   "C9-SCA-01": {
     activityId: "C9-SCA-01",
-    stage:
-      "A new café across the road, open a two weeks. Through two panes of glass you can see two of your regulars sitting in it. The four-top by the window is empty for the first time since you took this place on, and Priya has noticed you noticing.",
+    stage: "",
     prompt:
-      "Three of the Tuesday lot were in there this morning. I'm not saying it to be cheerful.",
+      "A new café opened right across the street, and some of your regulars are trying it out. Your sales dipped this week.",
     seed: [
       {
         id: "a",
-        text: "Cut prices while they're still deciding. Habit is the whole business at this size, and habit is cheapest to defend before it breaks.",
+        text: "Quickly drop your prices to win the regulars back fast.",
         consequence:
           "You take twenty pence off everything on the Monday. The Tuesday lot come back, and so does about a fifth less money for the same number of cups.",
         world: { rival: "open", till: "strained" },
       },
       {
         id: "b",
-        text: "Stay steady. Ask the regulars what they actually come here for, and then put everything I have into that one thing.",
+        text: "Stay calm, ask your regulars what they love about you, and lean harder into that.",
         consequence:
           "You ask nine people over a week. Six of them say some version of the same thing, and none of them mention coffee, which is not what you expected.",
         world: { rival: "open", regulars: "steady" },
       },
       {
         id: "c",
-        text: "Treat it as information. Work out what the new place genuinely does well, work out what I do that they can't, and compete on that.",
+        text: "Study what the new café does well, sharpen what makes you different, and win on your strengths.",
         consequence:
           "You go in on a Thursday and buy a flat white. It is good, it is fast, and there is nowhere in it you could sit for an hour with a newspaper.",
         world: { rival: "open" },

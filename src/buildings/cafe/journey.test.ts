@@ -253,7 +253,7 @@ describe("the silent-tier contract", () => {
       for (const q of s.questions ?? []) check(`${q.unitId}.prompt`, q.prompt);
       for (const scene of s.scenes ?? []) {
         check(`${scene.unitId}.title`, scene.title);
-        check(`${scene.unitId}.stage`, scene.stage);
+        if (scene.stage) check(`${scene.unitId}.stage`, scene.stage);
         check(`${scene.unitId}.prompt`, scene.prompt);
         // An OPTION is not the game speaking — it is the action the player is
         // considering. The workbook writes "remake the correct item", where
@@ -293,7 +293,7 @@ describe("the silent-tier contract", () => {
       }
       for (const scene of s.scenes ?? []) {
         note(`${scene.unitId}.prompt`, scene.prompt);
-        note(`${scene.unitId}.stage`, scene.stage);
+        if (scene.stage) note(`${scene.unitId}.stage`, scene.stage);
         for (const [l, t] of Object.entries(scene.choices ?? {})) note(`${scene.unitId}.${l}`, t);
         for (const [l, t] of Object.entries(scene.consequences ?? {}))
           note(`${scene.unitId}.consequence.${l}`, t);

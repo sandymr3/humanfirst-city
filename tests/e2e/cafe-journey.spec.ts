@@ -43,12 +43,19 @@ test.describe("the Café career (dev world bypass)", () => {
    *
    * "Strong" is not in this list and that is deliberate: it is an ordinary
    * English word and banning it here would fail on a line like "a firm opinion"
-   * being rewritten badly. The content lint bans it in *authored content*, which
-   * is where it would be a tier label; here we are reading whatever the page
-   * happened to render, including feedback written by a model.
+   * being rewritten badly. The content lint bans it in *authored content*,
+   * which is where it would be a tier label; here we are reading whatever the
+   * page happened to render, including feedback written by a model.
+   *
+   * "passed" came off the list for the same reason, and with a specific
+   * sentence behind it. The workbook writes, as a CEO option, "Ask a few
+   * people who skipped the drink why they passed, then adjust the recipe" —
+   * customers who declined to order, not a grade. That text is the client's
+   * and may not be edited, so the check has to be the thing that gets more
+   * precise. "failed" and "incorrect" stay: neither has an innocent reading
+   * anywhere in this content.
    */
-  const FORBIDDEN =
-    /\b(developing|advanced|proficiency|passed|failed|incorrect)\b|\b\d\s*\/\s*3\b/i;
+  const FORBIDDEN = /\b(developing|advanced|proficiency|failed|incorrect)\b|\b\d\s*\/\s*3\b/i;
 
   async function bootCity(page: Page) {
     await page.goto("/");

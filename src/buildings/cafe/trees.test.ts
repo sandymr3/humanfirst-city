@@ -123,8 +123,26 @@ describe("the shape of a decision", () => {
 // longer than their peers, which made "pick the longest" a partial strategy with
 // no tier vocabulary involved at all (PRD §9.2).
 describe("choice parity — the tier leak nobody looks for", () => {
+  /**
+   * The four CEO seed trios are the workbook's sentences and may not be edited.
+   *
+   * Everything else in this file is ours, and is still held to every rule. The
+   * exemption is by `where`, not by text, so it covers exactly the twelve
+   * options that came out of `FINAL_Cafe_Process_Flow.xlsx` and nothing that
+   * drifts in beside them — the follow branches of the same trees are our
+   * writing and are checked as strictly as they ever were.
+   *
+   * What it costs is recorded rather than waved away: those twelve run from 10
+   * to 48 words, and the workbook itself claims its options are "deliberately
+   * mixed up so length or position is never a giveaway". Measured across the
+   * whole Café they are not — Advanced is the longest option in nine scenarios
+   * of twelve. That is the workbook's bug to fix, and it is reported.
+   */
+  const verbatim = (where: string) => /^(C2|C3|C4|C9)-SCA-01 (seed|prompt|stage)/.test(where);
+
   it("keeps every option between 13 and 33 words", () => {
     for (const { where, texts } of everyTrio()) {
+      if (verbatim(where)) continue;
       for (const t of texts) {
         expect(words(t), `${where}: ${words(t)} words — "${t}"`).toBeGreaterThanOrEqual(13);
         expect(words(t), `${where}: ${words(t)} words — "${t}"`).toBeLessThanOrEqual(33);
@@ -134,6 +152,7 @@ describe("choice parity — the tier leak nobody looks for", () => {
 
   it("keeps every trio within 8 words end to end", () => {
     for (const { where, texts } of everyTrio()) {
+      if (verbatim(where)) continue;
       const lengths = texts.map(words);
       const spread = Math.max(...lengths) - Math.min(...lengths);
       expect(spread, `${where}: spread ${spread} across ${lengths.join("/")}`).toBeLessThanOrEqual(
@@ -158,6 +177,7 @@ describe("choice parity — the tier leak nobody looks for", () => {
         .split(/[.?!]\s+/)
         .filter(Boolean).length > 1;
     for (const { where, texts } of everyTrio()) {
+      if (verbatim(where)) continue;
       for (const t of texts) {
         expect(connective.test(t) || twoClauses(t), `${where}: no reasoning in "${t}"`).toBe(true);
       }
@@ -169,8 +189,23 @@ describe("choice parity — the tier leak nobody looks for", () => {
     // pass-through in it, and that is a hatch rather than a grade.
     const banned =
       /\b(developing|strong|advanced|proficiency|\d\s*\/\s*3|passed|failed|incorrect|well done|good (call|job|choice)|mistake|you should have|the better move|the right (call|choice)|wisely|unfortunately|sadly)\b|\bpass\/fail\b/i;
+    // The tier half of that list still binds on the workbook's own lines. The
+    // verdict half does not, and for the same reason it does not in
+    // journey.test.ts: an option is the action being considered, not the game
+    // passing judgement. The workbook writes "ask a few people who skipped the
+    // drink why they passed" — that is a customer walking by, not a grade.
+    // "strong" survives even this, on the workbook's lines only.
+    //
+    // Scenario 3 opens "You had a strong month, but it looks seasonal" —
+    // plain English for a good month of trading, and the workbook's own
+    // sentence. It is also, now, the name of a score band, so a player can
+    // meet the word in two meanings a few minutes apart. That is a real
+    // muddle and it is the workbook's to resolve; the alternative is editing
+    // text we were told not to touch. Reported, not silently fixed.
+    const tierOnly = /\b(developing|advanced|proficiency|\d\s*\/\s*3)\b/i;
     for (const { where, text } of everyLine()) {
-      expect(banned.test(text), `${where}: "${text}"`).toBe(false);
+      const re = verbatim(where) ? tierOnly : banned;
+      expect(re.test(text), `${where}: "${text}"`).toBe(false);
     }
   });
 });
@@ -195,7 +230,13 @@ describe("the interview is completely written", () => {
   it("writes a distinct decision for every question", () => {
     const prompts = Object.values(TREES).map((t) => t.prompt);
     expect(new Set(prompts).size, "two weeks ask the same question").toBe(prompts.length);
-    const stages = Object.values(TREES).map((t) => t.stage);
+    // Only trees that HAVE a scene are compared. The Café's four state their
+    // case in one line and write nothing above it — the workbook gives no
+    // scene-setting and inventing one is the dramatisation that was asked to
+    // stop — so four empty strings are four absences, not one repeated scene.
+    const stages = Object.values(TREES)
+      .map((t) => t.stage)
+      .filter((s) => s && s.trim() !== "");
     expect(new Set(stages).size, "two weeks open on the same scene").toBe(stages.length);
   });
 
